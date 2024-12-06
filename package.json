@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "lucide-vue-next": "^0.468.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-loader": "^9.2.1"
+  }
+}
