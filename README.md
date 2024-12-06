@@ -1,2 +1,1 @@
-# final-project
-aiw-final-project
+# Snapish
