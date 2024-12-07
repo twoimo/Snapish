@@ -1,21 +1,10 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import VueApexCharts from "vue-apexcharts";
-import store from './store/store';
-import Vuetify from 'vuetify'
-import 'vuetify/dist/vuetify.min.css'
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+import store from "./store";
+import "./assets/tailwind.css";
 
-const vuetifyOptions = {}
-Vue.use(Vuetify)
-
-Vue.config.productionTip = false;
-
-Vue.component("apexchart", VueApexCharts);
-
-new Vue({
-  store,
-  router,
-  vuetify: new Vuetify(vuetifyOptions),
-  render: h => h(App)
-}).$mount('#app')
+createApp(App)
+  .use(store)
+  .use(router)
+  .mount("#app");

@@ -1,28 +1,19 @@
 <template>
-  <div id="app">
-    <v-app>
-      <Header />
-      <v-content class="body-1 font-weight-medium">
-        <router-view />
-      </v-content>
-      <BottomNavigation />
-      <Footer />
-    </v-app>
+  <div class="min-h-screen bg-gray-100 flex justify-center">
+    <div class="w-full max-w-md bg-white shadow-lg">
+      <router-view></router-view>
+    </div>
   </div>
 </template>
 
 <script>
-import Header from "./components/layout/Header";
-import Footer from "./components/layout/Footer";
-import BottomNavigation from "./components/layout/BottomNavigation";
 export default {
-  name: "app",
-  components: {
-    Header,
-    BottomNavigation,
-    Footer
-  }
-};
+  name: 'App'
+}
 </script>
 
-<style></style>
+<style>
+body {
+  @apply antialiased text-gray-900 bg-gray-100;
+}
+</style>
