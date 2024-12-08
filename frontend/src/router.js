@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "./views/Home.vue";
-import FishWarning from "./views/FishWarning.vue";
+import Community from "./views/Community.vue";
 import Profile from "./views/Profile.vue";
-import Questions from "./views/Questions.vue";
+import FishWarning from "./views/FishWarning.vue";
 
 const routes = [
   {
@@ -11,9 +11,9 @@ const routes = [
     component: Home,
   },
   {
-    path: "/fish-warning",
-    name: "FishWarning",
-    component: FishWarning,
+    path: "/community",
+    name: "Community",
+    component: Community,
   },
   {
     path: "/profile",
@@ -21,9 +21,9 @@ const routes = [
     component: Profile,
   },
   {
-    path: "/questions",
-    name: "Questions",
-    component: Questions,
+    path: "/fish-warning",
+    name: "FishWarning",
+    component: FishWarning,
   },
 ];
 
