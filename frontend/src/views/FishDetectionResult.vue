@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex justify-center">
     <div class="w-full max-w-md bg-white shadow-lg">
-      <!-- Header -->
+      <!-- 헤더 -->
       <header class="sticky top-0 bg-white z-50 px-4 py-3 flex items-center justify-between border-b">
         <div class="flex items-center">
           <button class="mr-2">
@@ -19,14 +19,14 @@
         </div>
       </header>
 
-      <!-- Main Content -->
+      <!-- 메인 콘텐츠 -->
       <main class="pb-20 px-4">
-        <!-- Fish Image -->
+        <!-- 물고기 이미지 -->
         <div class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
           <img src="@/../public/sample-img.jpg" alt="물고기 사진" class="w-full h-full object-cover" />
         </div>
 
-        <!-- AI Detection Result -->
+        <!-- AI 판별 결과 -->
         <div class="mt-6 bg-blue-50 rounded-lg p-4">
           <h2 class="text-lg font-bold text-blue-700 mb-2">AI 판별 결과</h2>
           <p class="text-blue-600">
@@ -38,7 +38,7 @@
           </p>
         </div>
 
-        <!-- Fish Details -->
+        <!-- 물고기 상세 정보 -->
         <div class="mt-6 space-y-4">
           <div class="bg-gray-50 rounded-lg p-4">
             <h2 class="text-xl font-bold mb-2">{{ mainResult }}</h2>
@@ -48,7 +48,7 @@
           </div>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- 액션 버튼 -->
         <div class="mt-6 space-y-3">
           <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center">
             <PlusIcon class="w-5 h-5 mr-2" />
@@ -61,7 +61,7 @@
         </div>
       </main>
 
-      <!-- Bottom Navigation -->
+      <!-- 하단 네비게이션 -->
       <nav class="fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-2 max-w-md mx-auto">
         <div class="flex justify-between items-center">
           <button class="flex flex-col items-center p-2">
@@ -96,10 +96,10 @@ import {
 import { ref } from 'vue'
 
 // 예시 데이터 (실제로는 props나 API로 받아올 수 있습니다)
-const mainResult = ref('광어')
-const confidence = ref(95)
-const alternativeFish = ref(['참돔', '농어'])
-const commonName = ref('넙치')
-const scientificName = ref('Paralichthys olivaceus')
-const fishDescription = ref('광어는 한국의 대표적인 양식 어종으로, 맛있는 횟감으로 널리 알려져 있습니다. 평평한 몸체와 양쪽 눈이 한쪽에 몰려있는 특징을 가지고 있습니다.')
+const mainResult = ref('광어') // AI 판별 결과
+const confidence = ref(95) // 신뢰도
+const alternativeFish = ref(['참돔', '농어']) // 다른 후보 물고기
+const commonName = ref('넙치') // 일반적인 이름
+const scientificName = ref('Paralichthys olivaceus') // 학명
+const fishDescription = ref('광어는 한국의 대표적인 양식 어종으로, 맛있는 횟감으로 널리 알려져 있습니다. 평평한 몸체와 양쪽 눈이 한쪽에 몰려있는 특징을 가지고 있습니다.') // 물고기 설명
 </script>

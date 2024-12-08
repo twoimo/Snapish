@@ -1,7 +1,7 @@
 <template>
   <div class="image-upload">
     <h2>Upload Fish Image</h2>
-    <!-- Add image upload functionality here -->
+    <!-- 여기서 이미지 업로드 기능을 추가하세요 -->
   </div>
 </template>
 

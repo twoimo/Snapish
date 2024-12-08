@@ -2,15 +2,15 @@ import { createStore } from "vuex";
 
 export default createStore({
   state: {
-    // Define your state here
+    // 여기에 상태를 정의하세요
   },
   mutations: {
-    // Define your mutations here
+    // 여기에 변이를 정의하세요
   },
   actions: {
-    // Define your actions here
+    // 여기에 액션을 정의하세요
   },
   modules: {
-    // Define your modules here
+    // 여기에 모듈을 정의하세요
   },
 });

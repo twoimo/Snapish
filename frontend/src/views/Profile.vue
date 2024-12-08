@@ -1,5 +1,5 @@
 <template>
-    <!-- Header -->
+    <!-- 헤더 -->
     <header class="sticky top-0 bg-white z-50 px-4 py-3 flex justify-between items-center border-b">
         <h1 class="text-xl font-bold">SNAPish</h1>
         <div class="flex items-center gap-4">
@@ -13,7 +13,7 @@
     </header>
     <div class="min-h-screen bg-gray-100">
         <div class="bg-white pb-6">
-            <!-- Profile Header -->
+            <!-- 프로필 헤더 -->
             <div class="p-4 flex flex-col items-center">
                 <div class="w-24 h-24 rounded-full bg-gray-200 mb-4"></div>
                 <h1 class="text-xl font-bold mb-1">홍길동</h1>
@@ -26,7 +26,7 @@
                 </button>
             </div>
 
-            <!-- Stats -->
+            <!-- 통계 -->
             <div class="flex justify-around py-4 border-t border-b">
                 <div class="text-center">
                     <div class="font-bold">156</div>
@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <!-- Recent Activities -->
+        <!-- 최근 활동 -->
         <div class="p-4">
             <h2 class="text-lg font-bold mb-4">최근 활동</h2>
             <div class="space-y-4">
@@ -66,6 +66,7 @@
 <script setup>
 import { FishIcon, BellIcon, Settings2Icon } from 'lucide-vue-next'
 
+// 최근 활동 데이터
 const recentActivities = [
     {
         fish: '농어',
