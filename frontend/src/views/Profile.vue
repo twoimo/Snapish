@@ -1,4 +1,16 @@
 <template>
+    <!-- Header -->
+    <header class="sticky top-0 bg-white z-50 px-4 py-3 flex justify-between items-center border-b">
+        <h1 class="text-xl font-bold">SNAPish</h1>
+        <div class="flex items-center gap-4">
+            <button class="p-2">
+                <BellIcon class="w-6 h-6" />
+            </button>
+            <button class="p-2">
+                <Settings2Icon class="w-6 h-6" />
+            </button>
+        </div>
+    </header>
     <div class="min-h-screen bg-gray-100">
         <div class="bg-white pb-6">
             <!-- Profile Header -->
@@ -52,7 +64,7 @@
 </template>
 
 <script setup>
-import { FishIcon } from 'lucide-vue-next'
+import { FishIcon, BellIcon, Settings2Icon } from 'lucide-vue-next'
 
 const recentActivities = [
     {
@@ -65,6 +77,12 @@ const recentActivities = [
         fish: '고등어',
         location: '제주 서귀포',
         date: '2024.02.10',
+        image: '/placeholder.svg?height=80&width=80'
+    },
+    {
+        fish: '광어',
+        location: '인천 월미도',
+        date: '2024.01.10',
         image: '/placeholder.svg?height=80&width=80'
     }
 ]

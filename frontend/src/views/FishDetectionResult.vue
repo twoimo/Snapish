@@ -23,57 +23,40 @@
       <main class="pb-20 px-4">
         <!-- Fish Image -->
         <div class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-          <img src="@/../public/sample-img-1.jpg" alt="물고기 사진" class="w-full h-full object-cover" />
+          <img src="@/../public/sample-img.jpg" alt="물고기 사진" class="w-full h-full object-cover" />
         </div>
 
-        <!-- Warning Message -->
-        <div class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
-          <div class="flex items-center mb-2">
-            <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
-            <h2 class="text-lg font-bold text-red-700">주의: 현재 포획 금지 어종</h2>
-          </div>
-          <p class="text-red-600 mt-2">이 물고기는 <strong>참돔</strong>입니다.
-            <span class="text-sm text-red-500">(신뢰도: {{ confidence }}%)</span>
+        <!-- AI Detection Result -->
+        <div class="mt-6 bg-blue-50 rounded-lg p-4">
+          <h2 class="text-lg font-bold text-blue-700 mb-2">AI 판별 결과</h2>
+          <p class="text-blue-600">
+            이 물고기는 <strong>{{ mainResult }}</strong>입니다.
+            <span class="text-sm text-blue-500">(신뢰도: {{ confidence }}%)</span>
           </p>
-          <p class="text-red-600 mt-2">현재 포획 금지되어 있습니다.</p>
+          <p class="text-sm text-blue-600 mt-2">
+            다른 후보: <span class="text-blue-500">{{ alternativeFish.join(', ') }}</span>
+          </p>
         </div>
 
         <!-- Fish Details -->
-        <div class="mt-6 bg-gray-50 rounded-lg p-4">
-          <h2 class="text-xl font-bold mb-2">참돔</h2>
-          <p class="text-gray-600">학명: Pagrus major</p>
-          <p class="mt-2 text-gray-700">참돔은 한국 연안에서 흔히 볼 수 있는 어종이지만, 현재 자원 보호를 위해 포획이 제한되어 있습니다.</p>
-        </div>
-
-        <!-- Reason for Restriction -->
-        <div class="mt-6 bg-yellow-50 rounded-lg p-4">
-          <h3 class="font-bold text-yellow-700 mb-2">포획 제한 이유</h3>
-          <ul class="list-disc list-inside text-yellow-800">
-            <li>산란기 보호 (5월 1일 ~ 6월 30일)</li>
-            <li>어족 자원 회복을 위한 조치</li>
-            <li>생태계 균형 유지</li>
-          </ul>
-        </div>
-
-        <!-- Recommended Actions -->
-        <div class="mt-6 bg-green-50 rounded-lg p-4">
-          <h3 class="font-bold text-green-700 mb-2">권장 행동</h3>
-          <ul class="list-disc list-inside text-green-800">
-            <li>즉시 물고기를 놓아주세요.</li>
-            <li>가능한 한 물고기에 상처를 주지 않도록 주의하세요.</li>
-            <li>다른 낚시꾼들에게 현재 상황을 알려주세요.</li>
-          </ul>
+        <div class="mt-6 space-y-4">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h2 class="text-xl font-bold mb-2">{{ mainResult }}</h2>
+            <p class="text-gray-600">일반적인 이름: {{ commonName }}</p>
+            <p class="text-gray-600">학명: {{ scientificName }}</p>
+            <p class="mt-2 text-gray-700">{{ fishDescription }}</p>
+          </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="mt-6 space-y-3">
           <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center">
-            <InfoIcon class="w-5 h-5 mr-2" />
-            <span>더 자세한 정보 보기</span>
+            <PlusIcon class="w-5 h-5 mr-2" />
+            <span>내 기록에 추가</span>
           </button>
           <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center">
             <Share2Icon class="w-5 h-5 mr-2" />
-            <span>이 정보 공유하기</span>
+            <span>공유하기</span>
           </button>
         </div>
       </main>
@@ -104,15 +87,19 @@ import {
   BellIcon,
   Settings2Icon,
   ChevronLeftIcon,
-  AlertTriangleIcon,
-  InfoIcon,
+  PlusIcon,
   Share2Icon,
   HomeIcon,
   CameraIcon,
   UserIcon
 } from 'lucide-vue-next'
-</script>
+import { ref } from 'vue'
 
-<style scoped>
-/* Add any component-specific styles here */
-</style>
+// 예시 데이터 (실제로는 props나 API로 받아올 수 있습니다)
+const mainResult = ref('광어')
+const confidence = ref(95)
+const alternativeFish = ref(['참돔', '농어'])
+const commonName = ref('넙치')
+const scientificName = ref('Paralichthys olivaceus')
+const fishDescription = ref('광어는 한국의 대표적인 양식 어종으로, 맛있는 횟감으로 널리 알려져 있습니다. 평평한 몸체와 양쪽 눈이 한쪽에 몰려있는 특징을 가지고 있습니다.')
+</script>

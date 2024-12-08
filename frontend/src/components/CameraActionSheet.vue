@@ -1,6 +1,7 @@
 <template>
-    <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
-        <div class="bg-white w-full max-w-md rounded-t-xl">
+    <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+        @click="$emit('close')">
+        <div class="bg-white w-full max-w-sm rounded-t-xl" @click.stop>
             <div class="p-4">
                 <h2 class="text-lg font-semibold text-center mb-4">사진 업로드</h2>
                 <div class="space-y-2">
@@ -20,12 +21,14 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineProps({
     isOpen: Boolean
 })
 
 const emit = defineEmits(['close', 'select'])
+const router = useRouter()
 
 const options = [
     { text: '사진 촬영', action: 'camera' },
@@ -34,7 +37,15 @@ const options = [
 ]
 
 const handleOption = (action) => {
-    emit('select', action)
-    emit('close')
+    if (action === 'gallery') {
+        router.push('/fish-warning')
+        emit('close')
+    } else if (action === 'camera') {
+        router.push('/fish-detection-result')
+        emit('close')
+    } else {
+        emit('select', action)
+        emit('close')
+    }
 }
 </script>

@@ -49,7 +49,11 @@
                 <!-- Community -->
                 <section>
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-lg font-medium">커뮤니티</h2>
+                        <h2 class="text-lg font-medium">
+                            <router-link to="/community" class="flex flex-col items-center p-2">
+                                커뮤니티
+                            </router-link>
+                        </h2>
                         <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <div class="space-y-3">

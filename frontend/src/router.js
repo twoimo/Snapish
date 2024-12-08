@@ -3,6 +3,7 @@ import Home from "./views/Home.vue";
 import Community from "./views/Community.vue";
 import Profile from "./views/Profile.vue";
 import FishWarning from "./views/FishWarning.vue";
+import FishDetectionResult from "./views/FishDetectionResult.vue";
 
 const routes = [
   {
@@ -19,6 +20,11 @@ const routes = [
     path: "/profile",
     name: "Profile",
     component: Profile,
+  },
+  {
+    path: "/fish-detection-result",
+    name: "FishDetectionResult",
+    component: FishDetectionResult,
   },
   {
     path: "/fish-warning",
