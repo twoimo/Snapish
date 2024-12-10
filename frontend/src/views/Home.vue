@@ -8,14 +8,17 @@
                 <!-- 날씨 섹션 -->
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-lg font-medium">오늘의 날씨</h2>
+                        <router-link to="/weather-specific" class="flex flex-col items-center p-2">
+                            <h2 class="text-lg font-medium">오늘의 날씨</h2> 
+                        </router-link>
                         <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <!-- 날씨 표시 카드 -->
                     <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
-                        <div class="flex items-center justify-center h-32 bg-gray-200 rounded">
+                        <WeatherService></WeatherService>
+                        <!-- <div class="flex items-center justify-center h-32 bg-gray-200 rounded">
                             <CloudIcon class="w-12 h-12 text-gray-400" />
-                        </div>
+                        </div> -->
                     </div>
                 </section>
 
@@ -82,9 +85,10 @@
 /* eslint-disable */
 import {
     ChevronRightIcon,// 오른쪽 화살표 아이콘
-    CloudIcon,       // 구름 아이콘
+    // CloudIcon,       // 구름 아이콘
     FishIcon,        // 물고기 아이콘
     ImageIcon,       // 이미지 아이콘
     ClockIcon,       // 시계 아이콘
 } from 'lucide-vue-next'
+import WeatherService from '../components/WeatherService.vue';
 </script>

@@ -82,14 +82,11 @@
         </div>
       </main>
 
-      <!-- 하단 네비게이션 바 -->
-      <BottomNavigation @toggleCameraActions="showCameraActions = true" />
     </div>
   </div>
 </template>
 
 <script setup>
-import BottomNavigation from '../components/layout/BottomNavigation.vue';
 
 // Lucide 아이콘 컴포넌트 불러오기
 import {
