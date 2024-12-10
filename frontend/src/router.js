@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "./views/Home.vue";
 import Community from "./views/Community.vue";
 import Profile from "./views/Profile.vue";
-import FishWarning from "./views/FishWarning.vue";
-import FishDetectionResult from "./views/FishDetectionResult.vue";
+import FishResultWarning from "./views/FishResultWarning.vue";
+import FishResultNormal from "./views/FishResultNormal.vue";
 
 // 라우트 설정
 const routes = [
@@ -23,14 +23,14 @@ const routes = [
     component: Profile, // 프로필 컴포넌트
   },
   {
-    path: "/fish-detection-result",
-    name: "FishDetectionResult",
-    component: FishDetectionResult, // 물고기 감지 결과 컴포넌트
+    path: "/fish-result-normal",
+    name: "FishResultNormal",
+    component: FishResultNormal, // 물고기 감지 결과 컴포넌트
   },
   {
-    path: "/fish-warning",
-    name: "FishWarning",
-    component: FishWarning, // 물고기 경고 컴포넌트
+    path: "/fish-result-warning",
+    name: "FishResultWarning",
+    component: FishResultWarning, // 물고기 경고 컴포넌트
   },
 ];
 

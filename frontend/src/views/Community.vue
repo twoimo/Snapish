@@ -1,21 +1,6 @@
 <template>
     <div class="min-h-screen bg-gray-100 flex justify-center">
         <div class="w-full max-w-md bg-white shadow-lg">
-            <!-- 헤더 섹션 -->
-            <header class="sticky top-0 bg-white z-50 px-4 py-3 flex justify-between items-center border-b">
-                <h1 class="text-xl font-bold">SNAPish</h1>
-                <div class="flex items-center gap-4">
-                    <!-- 알림 버튼 -->
-                    <button class="p-2">
-                        <BellIcon class="w-6 h-6" />
-                    </button>
-                    <!-- 설정 버튼 -->
-                    <button class="p-2">
-                        <Settings2Icon class="w-6 h-6" />
-                    </button>
-                </div>
-            </header>
-
             <!-- 메인 콘텐츠 섹션 -->
             <main class="p-4">
                 <div class="space-y-4">
@@ -52,17 +37,13 @@
                     </article>
                 </div>
             </main>
-            <BottomNavigation @toggleCameraActions="showCameraActions = true" />
         </div>
     </div>
 </template>
 
 <script setup>
-import BottomNavigation from '../components/layout/BottomNavigation.vue';
 
 import {
-    BellIcon,
-    Settings2Icon,
     HeartIcon,
     MessageCircleIcon
 } from 'lucide-vue-next'

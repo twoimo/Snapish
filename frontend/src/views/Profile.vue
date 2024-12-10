@@ -1,7 +1,5 @@
 <template>
     <div class="min-h-screen bg-gray-100">
-        <!-- 헤더 -->
-        <Header />
         <div class="bg-white pb-6">
             <!-- 프로필 헤더 -->
             <div class="p-4 flex flex-col items-center">
@@ -51,12 +49,9 @@
             </div>
         </div>
     </div>
-    <BottomNavigation @toggleCameraActions="showCameraActions = true" />
 </template>
 
 <script setup>
-import BottomNavigation from '../components/layout/BottomNavigation.vue';
-import Header from '../components/layout/Header.vue';
 
 // 최근 활동 데이터
 const recentActivities = [
