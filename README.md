@@ -4,7 +4,7 @@
 # 백엔드
 먼저 백엔드 폴더로 이동하세요. `cd backend`. 제공된 `environment.yml`을 사용하여 필요한 패키지가 있는 새로운 conda 환경을 생성하고, 그 다음에 새로 생성된 환경을 활성화하는 것을 권장합니다.
 ```bash
-conda env create -n pic2prof --file environment.yml
+conda env create -n snapish --file environment.yml
 conda activate snapish
 ```
 예측 모델의 가중치를 [여기](https://owncloud.tuwien.ac.at/index.php/s/kotvEsald31Pw51)에서 다운로드하세요. 백엔드에 `models` 폴더를 생성하고 (`mkdir models`), 다운로드한 `*.pth` 파일을 이 디렉토리에 복사하세요.
