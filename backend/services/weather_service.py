@@ -11,8 +11,13 @@ def get_weather_by_coordinates(lat, lon):
     """
     try:
         # 날씨 API 호출
-        weather_url = f"{API_BASE_URL}?key={WEATHER_API_KEY}&q={lat},{lon}"
-        response = requests.get(weather_url)
+        weather_url = f"{API_BASE_URL}"
+        params = {
+            "key": WEATHER_API_KEY,
+            "q": f"{lat},{lon}",
+            "lang": "ko"
+        }
+        response = requests.get(weather_url, params=params)
         data = response.json()
 
         if 'error' in data:
