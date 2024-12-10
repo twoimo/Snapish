@@ -4,7 +4,7 @@
     <!-- 메인 카드 컨테이너 -->
     <div class="w-full max-w-md bg-white shadow-lg">
       <!-- 상단 헤더 영역 -->
-      <header class="sticky top-0 bg-white z-50 px-4 py-3 flex items-center justify-between border-b">
+      <header class="sticky top-0 bg-white px-4 py-3 flex items-center justify-between border-b">
         <!-- 좌측 헤더: 뒤로가기 버튼과 제목 -->
         <div class="flex items-center">
           <button class="mr-2">
