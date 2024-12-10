@@ -1,16 +1,20 @@
-import torch
-from torchvision import transforms as trn
-import numpy as np
-from PIL import Image
-from flask import Flask, jsonify, request
+import os
 import io
 import logging
+import random
+import pandas as pd
+import numpy as np
+
+from PIL import Image
+from scipy import spatial
+from flask import Flask, jsonify, request
+import torch
+from torchvision import transforms as trn
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import os
-import random
-from scipy import spatial
-import pandas as pd
+from dotenv import load_dotenv
+
+from services.weather_service import get_weather_by_coordinates
 
 # INIT
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -540,6 +544,22 @@ def display():
             "uuid": user.id,
             "persisted": True
         })
+
+@app.route('/backend/weather', methods=['GET'])
+def get_weather():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    
+    if not lat or not lon:
+        return jsonify({"error": "Latitude and longitude are required"}), 400
+
+    try:
+        # 날씨 서비스 호출
+        weather_data = get_weather_by_coordinates(lat, lon)
+        return jsonify(weather_data)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/backend/rank', methods=['POST'])

@@ -1,0 +1,26 @@
+import requests
+import os
+
+# 환경변수에서 WEATHER_API_KEY를 가져옵니다.
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+API_BASE_URL = 'http://api.weatherapi.com/v1/current.json'
+
+def get_weather_by_coordinates(lat, lon):
+    """
+    Get Weather info by using latitude & longitude
+    """
+    try:
+        # 날씨 API 호출
+        weather_url = f"{API_BASE_URL}?key={WEATHER_API_KEY}&q={lat},{lon}"
+        response = requests.get(weather_url)
+        data = response.json()
+
+        if 'error' in data:
+            raise ValueError(data['error']['message'])
+        
+        # 날씨 데이터 가공
+        weather_data = data
+        return weather_data
+
+    except Exception as e:
+        raise Exception(f"Error fetching weather data: {str(e)}")
