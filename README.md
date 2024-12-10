@@ -25,7 +25,7 @@ pip install -r requirements.txt
 ```bash
 $env:FLASK_APP="main.py"
 sudo nohup flask run --host=0.0.0.0 > /dev/null 2>&1 &
-ps -A
+ps a
 ```
 
 # 프론트엔드
@@ -40,5 +40,5 @@ npm install
 프론트엔드를 다음과 같이 컴파일하고 실행하세요. (백그라운드 작동)
 ```bash
 sudo nohup npm run serve > /dev/null 2>&1 &
-ps -A
+ps a
 ```
