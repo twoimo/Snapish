@@ -1,17 +1,7 @@
 <template>
-    <!-- 헤더 -->
-    <header class="sticky top-0 bg-white z-50 px-4 py-3 flex justify-between items-center border-b">
-        <h1 class="text-xl font-bold">SNAPish</h1>
-        <div class="flex items-center gap-4">
-            <button class="p-2">
-                <BellIcon class="w-6 h-6" />
-            </button>
-            <button class="p-2">
-                <Settings2Icon class="w-6 h-6" />
-            </button>
-        </div>
-    </header>
     <div class="min-h-screen bg-gray-100">
+        <!-- 헤더 -->
+        <Header />
         <div class="bg-white pb-6">
             <!-- 프로필 헤더 -->
             <div class="p-4 flex flex-col items-center">
@@ -61,10 +51,12 @@
             </div>
         </div>
     </div>
+    <BottomNavigation @toggleCameraActions="showCameraActions = true" />
 </template>
 
 <script setup>
-import { FishIcon, BellIcon, Settings2Icon } from 'lucide-vue-next'
+import BottomNavigation from '../components/layout/BottomNavigation.vue';
+import Header from '../components/layout/Header.vue';
 
 // 최근 활동 데이터
 const recentActivities = [

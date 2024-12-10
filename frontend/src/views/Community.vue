@@ -52,11 +52,14 @@
                     </article>
                 </div>
             </main>
+            <BottomNavigation @toggleCameraActions="showCameraActions = true" />
         </div>
     </div>
 </template>
 
 <script setup>
+import BottomNavigation from '../components/layout/BottomNavigation.vue';
+
 import {
     BellIcon,
     Settings2Icon,
