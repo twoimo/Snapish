@@ -3,20 +3,6 @@
     <div class="min-h-screen bg-gray-100 flex justify-center">
         <!-- 메인 콘텐츠 영역 - 최대 너비 제한 및 그림자 효과 적용 -->
         <div class="w-full max-w-md bg-white shadow-lg">
-            <!-- 상단 헤더 섹션 - 고정 위치 설정 -->
-            <header class="sticky top-0 bg-white z-50 px-4 py-3 flex justify-between items-center border-b">
-                <h1 class="text-xl font-bold">SNAPish</h1>
-                <!-- 알림 및 설정 버튼 그룹 -->
-                <div class="flex items-center gap-4">
-                    <button class="p-2">
-                        <BellIcon class="w-6 h-6" />
-                    </button>
-                    <button class="p-2">
-                        <Settings2Icon class="w-6 h-6" />
-                    </button>
-                </div>
-            </header>
-
             <!-- 메인 콘텐츠 영역 - 하단 네비게이션바 공간 확보를 위한 패딩 설정 -->
             <main class="pb-20 px-4">
                 <!-- 날씨 섹션 -->
@@ -87,43 +73,18 @@
                     </div>
                 </section>
             </main>
-
-            <!-- 하단 네비게이션 바 - 고정 위치 설정 -->
-            <nav class="fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-2 max-w-md mx-auto">
-                <div class="flex justify-between items-center">
-                    <!-- 홈/커뮤니티 버튼 -->
-                    <button class="flex flex-col items-center p-2">
-                        <HomeIcon class="w-6 h-6" />
-                        <span class="text-xs mt-1">커뮤니티</span>
-                    </button>
-                    <!-- 사진 촬영 버튼 -->
-                    <button class="flex flex-col items-center p-2">
-                        <PlusCircleIcon class="w-6 h-6" />
-                        <span class="text-xs mt-1">사진 찍기</span>
-                    </button>
-                    <!-- 프로필 버튼 -->
-                    <button class="flex flex-col items-center p-2">
-                        <UserIcon class="w-6 h-6" />
-                        <span class="text-xs mt-1">프로필</span>
-                    </button>
-                </div>
-            </nav>
         </div>
     </div>
 </template>
 
 <script setup>
 // Lucide 아이콘 컴포넌트 임포트
+/* eslint-disable */
 import {
-    BellIcon,        // 알림 아이콘
-    Settings2Icon,   // 설정 아이콘
     ChevronRightIcon,// 오른쪽 화살표 아이콘
     CloudIcon,       // 구름 아이콘
     FishIcon,        // 물고기 아이콘
     ImageIcon,       // 이미지 아이콘
     ClockIcon,       // 시계 아이콘
-    HomeIcon,        // 홈 아이콘
-    PlusCircleIcon,  // 플러스 아이콘
-    UserIcon         // 사용자 아이콘
 } from 'lucide-vue-next'
 </script>

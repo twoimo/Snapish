@@ -20,241 +20,11 @@ from services.weather_service import get_weather_by_coordinates
 project_dir = os.path.dirname(os.path.abspath(__file__))
 database_file = "sqlite:///{}".format(os.path.join(project_dir, "test.db"))
 
-
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_file
 db = SQLAlchemy(app)
 logging.basicConfig(level=logging.INFO)
-
-
-# DB MODEL
-class User(db.Model):
-    id = db.Column(db.String(36), primary_key=True)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    profiles = db.relationship('Profile', backref='User', lazy=True)
-    images = db.relationship('ImageProfile', backref='User', lazy=True)
-
-    def __repr__(self):
-        return "<User {}>".format(self.id)
-
-
-class Profile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    method_id = db.Column(db.Integer, nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    show = db.Column(db.Integer)
-    adjusted = db.Column(db.Integer)
-    f1 = db.Column(db.Float, nullable=False)
-    f2 = db.Column(db.Float, nullable=False)
-    f3 = db.Column(db.Float, nullable=False)
-    f4 = db.Column(db.Float, nullable=False)
-    f5 = db.Column(db.Float, nullable=False)
-    f6 = db.Column(db.Float, nullable=False)
-    f7 = db.Column(db.Float, nullable=False)
-
-    def __repr__(self):
-        return "<Profile of {} - {}> [{}, {}, {}, {}, {}, {}, {}]".format(
-            self.user_id,
-            self.method_id,
-            self.f1,
-            self.f2,
-            self.f3,
-            self.f4,
-            self.f5,
-            self.f6,
-            self.f7)
-
-
-class Questions(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-    db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    q1 = db.Column(db.Integer, nullable=False)
-    q2 = db.Column(db.Integer, nullable=False)
-    q3 = db.Column(db.Integer, nullable=False)
-    q4 = db.Column(db.Integer, nullable=False)
-    q5 = db.Column(db.Integer, nullable=False)
-    q6_1 = db.Column(db.Integer)
-    q6_2 = db.Column(db.Integer)
-    q6_3 = db.Column(db.Integer)
-    q6_4 = db.Column(db.Integer)
-    q6_5 = db.Column(db.Integer)
-    q6_6 = db.Column(db.Integer)
-    q6_7 = db.Column(db.Integer)
-    age = db.Column(db.Integer, nullable=False)
-    gender = db.Column(db.Integer, nullable=False)
-    education = db.Column(db.Integer, nullable=False)
-    travel_frequency = db.Column(db.Integer, nullable=False)
-    message = db.Column(db.String)
-
-    def __repr__(self):
-        return "<Question answers of {}> [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]".format(
-            self.user_id,
-            self.q1,
-            self.q2,
-            self.q3,
-            self.q4,
-            self.q5,
-            self.q6_1,
-            self.q6_2,
-            self.q6_3,
-            self.q6_4,
-            self.q6_5,
-            self.q6_6,
-            self.q6_7,
-            self.age,
-            self.gender,
-            self.education,
-            self.travel_frequency,
-            self.message
-            )
-
-
-class ImageProfile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    order = db.Column(db.Integer, nullable=False)
-    f1 = db.Column(db.Float, nullable=False)
-    f2 = db.Column(db.Float, nullable=False)
-    f3 = db.Column(db.Float, nullable=False)
-    f4 = db.Column(db.Float, nullable=False)
-    f5 = db.Column(db.Float, nullable=False)
-    f6 = db.Column(db.Float, nullable=False)
-    f7 = db.Column(db.Float, nullable=False)
-
-    def __repr__(self):
-        return "<Image {} of {}> [{}, {}, {}, {}, {}, {}, {}]".format(
-            self.order,
-            self.user_id,
-            self.f1,
-            self.f2,
-            self.f3,
-            self.f4,
-            self.f5,
-            self.f6,
-            self.f7)
-
-
-class Recommendation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    method = db.Column(db.Integer, nullable=False)
-    position = db.Column(db.Integer, nullable=False)
-    gid = db.Column(db.Integer, nullable=False)
-    distance = db.Column(db.Integer, nullable=False)
-    conflict = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<Recommendation for {}> method = {}pos = {}, gid = {}, distance = {}, conflict = {}".format(
-            self.user_id,
-            self.method,
-            self.position,
-            self.gid,
-            self.distance,
-            self.conflict)
-
-
-class User_Selection(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    updated_on = db.Column(
-        db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
-    position = db.Column(db.Integer, nullable=False)
-    gid = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<Rec Selection of User {}> pos = {}, gid = {}".format(
-            self.user_id,
-            self.position,
-            self.gid)
-
-
-class Time(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    step = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<User {}> time = {}, step = {}".format(
-            self.user_id,
-            self.created_on,
-            self.step)
-
-
-class Display(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    display = db.Column(db.String, nullable=False)
-
-    def __repr__(self):
-        return "<User {}>  display = {}".format(
-            self.user_id,
-            self.display)
-
-
-class Rank(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    oldIndex = db.Column(db.Integer, nullable=False)
-    newIndex = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<User {} rank> old-index = {}, new-index = {}".format(
-            self.user_id,
-            self.oldIndex,
-            self.newIndex)
-
-
-class PictureInteraction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    position = db.Column(db.Integer, nullable=False)
-    count = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<User {} PictureInteractions> position = {}, count = {}".format(
-            self.user_id,
-            self.position,
-            self.count)
-
-
-class InformationInteraction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_on = db.Column(db.DateTime, server_default=db.func.now())
-    position = db.Column(db.Integer, nullable=False)
-    wiki = db.Column(db.Integer, nullable=False)
-    gtravel = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self):
-        return "<User {} InformationInteractions> position = {}, wikipedia = {}, google-travel = {}".format(
-            self.user_id,
-            self.position,
-            self.wiki,
-            self.gtravel)
-
-with app.app_context():
-    db.create_all()
-
 
 # METHODS
 SELF_ASSESSMENT = 1
@@ -268,7 +38,6 @@ STEP_IMAGE_SELECTION = 2
 STEP_PROFILE_QUESTIONS = 3
 STEP_RECOMMENDATION = 4
 STEP_THX = 5
-
 
 # LOAD MODELS
 model_sun = torch.load('models/sun_chillout.pth',
@@ -296,7 +65,6 @@ model_nature.eval()
 # LOAD RECOMMENDATION BASE
 df = pd.read_csv("data/recbase.csv")
 df.iloc[:, 1:8] = df.iloc[:, 1:8]/100
-
 
 # HELPERS FOR PREDICT
 def transform_image(image_bytes):
