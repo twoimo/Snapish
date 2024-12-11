@@ -48,11 +48,11 @@ const options = [
 const handleOption = (action) => {
     if (action === 'gallery') {
         // 갤러리 선택 시 경로 이동 및 창 닫기
-        router.push('/fish-warning')
+        router.push('/fish-result-warning')
         emit('close')
     } else if (action === 'camera') {
         // 카메라 선택 시 경로 이동 및 창 닫기
-        router.push('/fish-detection-result')
+        router.push('/fish-result-normal')
         emit('close')
     } else {
         // 기타 파일 선택 시 select 이벤트 발생 및 창 닫기
