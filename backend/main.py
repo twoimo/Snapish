@@ -345,13 +345,6 @@ def get_weather():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": str(e)}), 500
 
-    
-    
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/backend/rank', methods=['POST'])
 def rank():
     if request.method == 'POST':
