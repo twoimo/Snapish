@@ -27,216 +27,216 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_file
 db = SQLAlchemy(app)
 logging.basicConfig(level=logging.INFO)
 
-# METHODS
-SELF_ASSESSMENT = 1
-SIMPLE_AVERAGE = 2
-ORDERED_WEIGHTED_AVERAGE = 3
-RANDOM = 4
+# # METHODS
+# SELF_ASSESSMENT = 1
+# SIMPLE_AVERAGE = 2
+# ORDERED_WEIGHTED_AVERAGE = 3
+# RANDOM = 4
 
-# STEPS
-STEP_ABOUT = 1
-STEP_IMAGE_SELECTION = 2
-STEP_PROFILE_QUESTIONS = 3
-STEP_RECOMMENDATION = 4
-STEP_THX = 5
+# # STEPS
+# STEP_ABOUT = 1
+# STEP_IMAGE_SELECTION = 2
+# STEP_PROFILE_QUESTIONS = 3
+# STEP_RECOMMENDATION = 4
+# STEP_THX = 5
 
-# LOAD MODELS
-model_sun = torch.load('models/sun_chillout.pth',
-                       map_location=lambda storage, loc: storage)
-model_sun.eval()
-model_ind = torch.load('models/independence_history.pth',
-                       map_location=lambda storage, loc: storage)
-model_ind.eval()
-model_know = torch.load('models/knowledge_travel.pth',
-                        map_location=lambda storage, loc: storage)
-model_know.eval()
-model_cult = torch.load('models/culture_indulgence.pth',
-                        map_location=lambda storage, loc: storage)
-model_cult.eval()
-model_social = torch.load('models/social_sports.pth',
-                          map_location=lambda storage, loc: storage)
-model_social.eval()
-model_action = torch.load('models/action_fun.pth',
-                          map_location=lambda storage, loc: storage)
-model_action.eval()
-model_nature = torch.load('models/nature_recreation.pth',
-                          map_location=lambda storage, loc: storage)
-model_nature.eval()
+# # LOAD MODELS
+# model_sun = torch.load('models/sun_chillout.pth',
+#                        map_location=lambda storage, loc: storage)
+# model_sun.eval()
+# model_ind = torch.load('models/independence_history.pth',
+#                        map_location=lambda storage, loc: storage)
+# model_ind.eval()
+# model_know = torch.load('models/knowledge_travel.pth',
+#                         map_location=lambda storage, loc: storage)
+# model_know.eval()
+# model_cult = torch.load('models/culture_indulgence.pth',
+#                         map_location=lambda storage, loc: storage)
+# model_cult.eval()
+# model_social = torch.load('models/social_sports.pth',
+#                           map_location=lambda storage, loc: storage)
+# model_social.eval()
+# model_action = torch.load('models/action_fun.pth',
+#                           map_location=lambda storage, loc: storage)
+# model_action.eval()
+# model_nature = torch.load('models/nature_recreation.pth',
+#                           map_location=lambda storage, loc: storage)
+# model_nature.eval()
 
-# LOAD RECOMMENDATION BASE
-df = pd.read_csv("data/recbase.csv")
-df.iloc[:, 1:8] = df.iloc[:, 1:8]/100
+# # LOAD RECOMMENDATION BASE
+# df = pd.read_csv("data/recbase.csv")
+# df.iloc[:, 1:8] = df.iloc[:, 1:8]/100
 
-# HELPERS FOR PREDICT
-def transform_image(image_bytes):
-    transform = trn.Compose([
-        trn.Resize(256),
-        trn.CenterCrop(224),
-        trn.ToTensor(),
-        trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    image = Image.open(io.BytesIO(image_bytes))
-    return transform(image).unsqueeze(0)
-
-
-def predict_factor(model, img):
-    out = model(img)
-    percentage = torch.nn.functional.softmax(out, dim=1)[0]
-    percentage = percentage.cpu().detach().numpy()[1]
-    return percentage
+# # HELPERS FOR PREDICT
+# def transform_image(image_bytes):
+#     transform = trn.Compose([
+#         trn.Resize(256),
+#         trn.CenterCrop(224),
+#         trn.ToTensor(),
+#         trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+#     ])
+#     image = Image.open(io.BytesIO(image_bytes))
+#     return transform(image).unsqueeze(0)
 
 
-def profile_aggregation(img_profiles=[], owa=False, debug=False):
-    profile = np.mean(img_profiles, axis=0)
-    if owa:
-        weights = []
-        num_profiles = len(img_profiles)
-        for i in range(1, (num_profiles+1)):
-            weight = 7*((-i) + num_profiles + 1) / \
-                (np.sum(range(1, (num_profiles + 1))))
-            weights.append(weight)
-        if debug:
-            logging.info(weights)
-        profile = np.average(img_profiles, axis=0, weights=weights)
-    return profile
+# def predict_factor(model, img):
+#     out = model(img)
+#     percentage = torch.nn.functional.softmax(out, dim=1)[0]
+#     percentage = percentage.cpu().detach().numpy()[1]
+#     return percentage
 
 
-# PREDICT
-def predict_seven_factors(files, debug=True, user=0):
-    img_profiles = []
-    i = 0
-    for file in files:
-        # load img
-        try:
-            i += 1
-            img_bytes = file.read()
-            img = transform_image(img_bytes)
-            # predict factors
-            sun_score = predict_factor(model_sun, img)
-            know_score = predict_factor(model_know, img)
-            ind_score = predict_factor(model_ind, img)
-            cult_score = predict_factor(model_cult, img)
-            social_score = predict_factor(model_social, img)
-            action_score = predict_factor(model_action, img)
-            nature_score = predict_factor(model_nature, img)
-            # persist individual image scores
-            image = ImageProfile(
-                user_id=user.id,
-                order=i,
-                f1=float(sun_score),
-                f2=float(know_score),
-                f3=float(ind_score),
-                f4=float(cult_score),
-                f5=float(social_score),
-                f6=float(action_score),
-                f7=float(nature_score),
-            )
-            db.session.add(image)
-            # update individual img profiles list
-            img_profiles.append([
-                sun_score,
-                know_score,
-                ind_score,
-                cult_score,
-                social_score,
-                action_score,
-                nature_score])
-            if debug:
-                logging.info("{} - image {}\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(
-                    user, i, sun_score, know_score, ind_score, cult_score, social_score, action_score, nature_score))
-        except Exception as e:
-            logging.info("{} - Error at image {} - {}".format(user, i, e))
-            continue
-
-    profile_avg = profile_aggregation(img_profiles)
-    profile_owa = profile_aggregation(img_profiles, owa=True)
-    if debug:
-        logging.info("{} - Profile AVG\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(user, *profile_avg))
-        logging.info("{} - Profile OWA\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(user, *profile_owa))
-
-    return i, profile_avg, profile_owa
+# def profile_aggregation(img_profiles=[], owa=False, debug=False):
+#     profile = np.mean(img_profiles, axis=0)
+#     if owa:
+#         weights = []
+#         num_profiles = len(img_profiles)
+#         for i in range(1, (num_profiles+1)):
+#             weight = 7*((-i) + num_profiles + 1) / \
+#                 (np.sum(range(1, (num_profiles + 1))))
+#             weights.append(weight)
+#         if debug:
+#             logging.info(weights)
+#         profile = np.average(img_profiles, axis=0, weights=weights)
+#     return profile
 
 
-# RECOMMEND AND HELPERS
-def vectorProfile(p):
-    return [p.f1, p.f2, p.f3, p.f4, p.f5, p.f6, p.f7]
+# # PREDICT
+# def predict_seven_factors(files, debug=True, user=0):
+#     img_profiles = []
+#     i = 0
+#     for file in files:
+#         # load img
+#         try:
+#             i += 1
+#             img_bytes = file.read()
+#             img = transform_image(img_bytes)
+#             # predict factors
+#             sun_score = predict_factor(model_sun, img)
+#             know_score = predict_factor(model_know, img)
+#             ind_score = predict_factor(model_ind, img)
+#             cult_score = predict_factor(model_cult, img)
+#             social_score = predict_factor(model_social, img)
+#             action_score = predict_factor(model_action, img)
+#             nature_score = predict_factor(model_nature, img)
+#             # persist individual image scores
+#             image = ImageProfile(
+#                 user_id=user.id,
+#                 order=i,
+#                 f1=float(sun_score),
+#                 f2=float(know_score),
+#                 f3=float(ind_score),
+#                 f4=float(cult_score),
+#                 f5=float(social_score),
+#                 f6=float(action_score),
+#                 f7=float(nature_score),
+#             )
+#             db.session.add(image)
+#             # update individual img profiles list
+#             img_profiles.append([
+#                 sun_score,
+#                 know_score,
+#                 ind_score,
+#                 cult_score,
+#                 social_score,
+#                 action_score,
+#                 nature_score])
+#             if debug:
+#                 logging.info("{} - image {}\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(
+#                     user, i, sun_score, know_score, ind_score, cult_score, social_score, action_score, nature_score))
+#         except Exception as e:
+#             logging.info("{} - Error at image {} - {}".format(user, i, e))
+#             continue
+
+#     profile_avg = profile_aggregation(img_profiles)
+#     profile_owa = profile_aggregation(img_profiles, owa=True)
+#     if debug:
+#         logging.info("{} - Profile AVG\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(user, *profile_avg))
+#         logging.info("{} - Profile OWA\nsun chillout:\t\t{}\nknowledge travel:\t{}\nindependence history:\t{}\nculture indulgence:\t{}\nsocial sports:\t\t{}\naction fun:\t\t{}\nnature recration\t{}".format(user, *profile_owa))
+
+#     return i, profile_avg, profile_owa
 
 
-def recommend_for_profile(method, p):
-    rec_base = df.sample(frac=1).reset_index(drop=True)
-    sf = rec_base.iloc[:, 1:8]
-    tree = spatial.KDTree(sf.values)
-    nn = tree.query(p)
-    dist = nn[0]
-    rec_idx = nn[1]
-    rec = to_recommendation_dict(rec_base.iloc[rec_idx], method=method)
-    return rec, dist
+# # RECOMMEND AND HELPERS
+# def vectorProfile(p):
+#     return [p.f1, p.f2, p.f3, p.f4, p.f5, p.f6, p.f7]
 
 
-def all_recommendations(p_avg, p_owa, p_self):
-    rec_avg, rec_avg_dist = recommend_for_profile(
-        SIMPLE_AVERAGE, vectorProfile(p_avg))
-    rec_owa, rec_owa_dist = recommend_for_profile(
-        ORDERED_WEIGHTED_AVERAGE, vectorProfile(p_owa))
-    rec_self, rec_self_dist = recommend_for_profile(
-        SELF_ASSESSMENT, vectorProfile(p_self))
-    rec_random = rec_self
-    while rec_random["gid"] in [rec_avg["gid"], rec_owa["gid"], rec_self["gid"]]:
-        rec_random, rec_random_dist = recommend_for_profile(
-            RANDOM, list(np.random.rand(1, 7)[0]))
-    return [
-        {"rec": rec_avg, "dist": rec_avg_dist},
-        {"rec": rec_owa, "dist": rec_owa_dist},
-        {"rec": rec_self, "dist": rec_self_dist},
-        {"rec": rec_random, "dist": rec_random_dist}
-    ]
+# def recommend_for_profile(method, p):
+#     rec_base = df.sample(frac=1).reset_index(drop=True)
+#     sf = rec_base.iloc[:, 1:8]
+#     tree = spatial.KDTree(sf.values)
+#     nn = tree.query(p)
+#     dist = nn[0]
+#     rec_idx = nn[1]
+#     rec = to_recommendation_dict(rec_base.iloc[rec_idx], method=method)
+#     return rec, dist
 
 
-def to_recommendation_dict(row, method):
-    return {
-        "method": method,
-        "gid": int(row.giatacityid),
-        "title": row.title,
-        "subtitle": row.subtitle,
-        "wiki_url": row.wiki_url,
-        "gtravel_url": row.gtravel_url,
-        "pic_num": int(row.pic_num)
-    }
+# def all_recommendations(p_avg, p_owa, p_self):
+#     rec_avg, rec_avg_dist = recommend_for_profile(
+#         SIMPLE_AVERAGE, vectorProfile(p_avg))
+#     rec_owa, rec_owa_dist = recommend_for_profile(
+#         ORDERED_WEIGHTED_AVERAGE, vectorProfile(p_owa))
+#     rec_self, rec_self_dist = recommend_for_profile(
+#         SELF_ASSESSMENT, vectorProfile(p_self))
+#     rec_random = rec_self
+#     while rec_random["gid"] in [rec_avg["gid"], rec_owa["gid"], rec_self["gid"]]:
+#         rec_random, rec_random_dist = recommend_for_profile(
+#             RANDOM, list(np.random.rand(1, 7)[0]))
+#     return [
+#         {"rec": rec_avg, "dist": rec_avg_dist},
+#         {"rec": rec_owa, "dist": rec_owa_dist},
+#         {"rec": rec_self, "dist": rec_self_dist},
+#         {"rec": rec_random, "dist": rec_random_dist}
+#     ]
 
 
-def build_recommendation(user_id, p_avg, p_owa, p_self):
-    all_rec = all_recommendations(p_avg, p_owa, p_self)
-    random.shuffle(all_rec)
-    recommendation = []
-    recommendation_gids = []
-    for m in all_rec:
-        r = m["rec"]
-        try:
-            position = 1 + recommendation_gids.index(r["gid"])
-            rec = Recommendation(
-                user_id=user_id,
-                method=r["method"],
-                position=position,
-                gid=r["gid"],
-                distance=m["dist"],
-                conflict=True
-            )
-            db.session.add(rec)
-            db.session.commit()
-        except:
-            recommendation_gids.append(r["gid"])
-            recommendation.append(r)
-            rec = Recommendation(
-                user_id=user_id,
-                method=r["method"],
-                position=len(recommendation_gids),
-                gid=r["gid"],
-                distance=m["dist"],
-                conflict=False
-            )
-            db.session.add(rec)
-    db.session.commit()
-    return recommendation
+# def to_recommendation_dict(row, method):
+#     return {
+#         "method": method,
+#         "gid": int(row.giatacityid),
+#         "title": row.title,
+#         "subtitle": row.subtitle,
+#         "wiki_url": row.wiki_url,
+#         "gtravel_url": row.gtravel_url,
+#         "pic_num": int(row.pic_num)
+#     }
+
+
+# def build_recommendation(user_id, p_avg, p_owa, p_self):
+#     all_rec = all_recommendations(p_avg, p_owa, p_self)
+#     random.shuffle(all_rec)
+#     recommendation = []
+#     recommendation_gids = []
+#     for m in all_rec:
+#         r = m["rec"]
+#         try:
+#             position = 1 + recommendation_gids.index(r["gid"])
+#             rec = Recommendation(
+#                 user_id=user_id,
+#                 method=r["method"],
+#                 position=position,
+#                 gid=r["gid"],
+#                 distance=m["dist"],
+#                 conflict=True
+#             )
+#             db.session.add(rec)
+#             db.session.commit()
+#         except:
+#             recommendation_gids.append(r["gid"])
+#             recommendation.append(r)
+#             rec = Recommendation(
+#                 user_id=user_id,
+#                 method=r["method"],
+#                 position=len(recommendation_gids),
+#                 gid=r["gid"],
+#                 distance=m["dist"],
+#                 conflict=False
+#             )
+#             db.session.add(rec)
+#     db.session.commit()
+#     return recommendation
 
 
 # REST API
