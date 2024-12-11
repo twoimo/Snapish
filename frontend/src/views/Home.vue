@@ -90,5 +90,16 @@ import {
     ImageIcon,       // 이미지 아이콘
     ClockIcon,       // 시계 아이콘
 } from 'lucide-vue-next'
-import WeatherService from '../components/WeatherService.vue';
+import { onMounted } from "vue";
+import { useStore } from "vuex";
+import WeatherService from "../components/WeatherService.vue";
+
+const store = useStore();
+
+onMounted(() => {
+  if (!store.state.weather) {
+    store.dispatch("fetchWeather");
+  }
+});
+
 </script>

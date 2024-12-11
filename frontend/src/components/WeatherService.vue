@@ -11,20 +11,20 @@
   </template>
   
   <script>
+  import { mapState } from "vuex";
   import { getCurrentLocation } from "../services/locationService";
   import { fetchWeatherByCoordinates } from "../services/weatherService";
   
   export default {
-    data() {
-      return {
-        weather: null,
-        error: null,
-        loading: false,
-      };
+    computed: {
+    ...mapState(["weather", "loading", "error"]),
     },
     mounted() {
-      this.loadWeatherData();
+    if (!this.weather) {
+      this.$store.dispatch("fetchWeather");
+      }
     },
+
     methods: {
       async loadWeatherData() {
         this.loading = true;
