@@ -15,6 +15,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 from services.weather_service import get_weather_by_coordinates
+from services.location_service import get_location_by_coordinates
 
 # INIT
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -322,9 +323,30 @@ def get_weather():
         return jsonify({"error": "Latitude and longitude are required"}), 400
 
     try:
-        # 날씨 서비스 호출
-        weather_data = get_weather_by_coordinates(lat, lon)
-        return jsonify(weather_data)
+        # get_location 호출
+        try:
+            location_name = get_location_by_coordinates(lat, lon)
+            logging.info(f"Location fetched successfully: {location_name}")
+        except Exception as e:
+            logging.error(f"Failed to fetch location: {e}")
+            location_name = None
+
+        # get_weather 호출
+        try:
+            weather_data = get_weather_by_coordinates(lat, lon)
+            if location_name:  # location_name이 성공적으로 가져온 경우, 한글명으로 업데이트
+                weather_data['location']['name'] = location_name
+            logging.info("Weather data fetched successfully.")
+            return jsonify(weather_data)
+        except Exception as e:
+            logging.error(f"Failed to fetch weather data: {e}")
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+    
+    
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
