@@ -1,10 +1,11 @@
 <template>
     <div>
       <div v-if="loading">정보를 가져오는 중...</div>
-      <div v-if="weather">
+      <div v-if="weather && weather.location">
         <h2>{{ weather.location.name }}</h2>
-        <p>Temperature: {{ weather.current.temp_c }}°C</p>
-        <p>Condition: {{ weather.current.condition.text }}</p>
+        <p>기온 : {{ weather.current.temp_c }}°C</p>
+        <p>지금은 {{ weather.current.condition.text }}</p>
+        <p>업데이트 시각 : {{ weather.current.last_updated}}</p>
       </div>
       <div v-if="error">{{ error }}</div>
     </div>
@@ -20,16 +21,17 @@
     ...mapState(["weather", "loading", "error"]),
     },
     mounted() {
-    if (!this.weather) {
-      this.$store.dispatch("fetchWeather");
-      }
+      this.updateWeatherIfNeeded();
+      this.startAutoRefresh();
     },
-
+    beforeUnmount() {
+      clearInterval(this.autoRefreshInterval);
+    },
     methods: {
       async loadWeatherData() {
         this.loading = true;
         this.error = null;
-  
+
         try {
           const { latitude, longitude } = await getCurrentLocation();
           const weatherData = await fetchWeatherByCoordinates(latitude, longitude);
@@ -60,11 +62,29 @@
           this.error = "Failed to fetch fallback weather data.";
         }
       },
-    },
+      updateWeatherIfNeeded() {
+        if (!this.weather || this.isWeatherDataStale()) {
+          this.$store.dispatch("fetchWeather");
+        }
+      },
+      isWeatherDataStale() {
+        if (!this.weather || !this.weather.current.last_updated) return true;
+        const lastUpdate = new Date(this.weather.current.last_updated);
+        console.log(`stated datetime : ${ lastUpdate }`)
+        const now = new Date();
+        console.log(`stated datetime : ${ now }`)
+        const diffMinutes = (now - lastUpdate) / 1000 / 60; // 분 단위 차이 계산
+        return diffMinutes > 10; // 10분 이상 지난 경우 갱신
+      },
+      startAutoRefresh() {
+        this.autoRefreshInterval = setInterval(() => {
+          this.updateWeatherIfNeeded();
+        }, 600000); // 10분 주기로 갱신
+      },
+    }
   };
-  </script>
-  
-  <style scoped>
-  /* 스타일은 선택 사항 */
-  </style>
-  
+</script>
+
+<style scoped>
+/* 스타일은 선택 사항 */
+</style>
