@@ -1,7 +1,7 @@
 <!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/components/CameraActionSheet.vue -->
 <template>
     <!-- 액션 시트 모달 -->
-    <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
+    <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center"
         @click="closeActionSheet">
         <!-- 모달 콘텐츠 -->
         <div class="bg-white w-full max-w-sm rounded-t-xl" @click.stop>
@@ -95,10 +95,7 @@ const handleOption = (action) => {
 
 // 파일 선택 시 실행되는 함수
 const onFileChange = async (event) => {
-    console.log('onFileChange called');
     const file = event.target.files[0];
-
-    // 파일이 선택되었을 경우 처리
     if (file) {
         const imageUrl = URL.createObjectURL(file);
         const formData = new FormData();
@@ -106,18 +103,15 @@ const onFileChange = async (event) => {
 
         try {
             const response = await axios.post('http://localhost:5000/predict', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
-            console.log('Response received:', response.data);
-            const labels = response.data.labels;
+            const detections = response.data.detections;
 
-            // 라벨을 JSON 문자열로 변환하여 쿼리 매개변수로 전달
+            // detections을 JSON 문자열로 변환 후 URL 인코딩
             router.push({
                 name: 'FishResultNormal',
                 query: {
-                    labels: JSON.stringify(labels),
+                    detections: encodeURIComponent(JSON.stringify(detections)),
                     imageUrl,
                 },
             });

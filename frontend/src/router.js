@@ -27,8 +27,8 @@ const routes = [
     name: "FishResultNormal",
     component: FishResultNormal,
     props: (route) => ({
-      labels: route.query.labels ? JSON.parse(route.query.labels) : [],
-      imageUrl: route.query.imageUrl || "",
+      detections: route.query.detections,
+      imageUrl: route.query.imageUrl,
     }),
   },
   {

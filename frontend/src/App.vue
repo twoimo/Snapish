@@ -1,13 +1,9 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex justify-center">
     <div class="w-full max-w-md bg-white shadow-lg relative">
-
       <!-- 상단 헤더 -->
       <Header v-if="!hideHeader" />
-
       <router-view></router-view>
-
-
       <!-- 하단 네비게이션 -->
       <BottomNavigation @toggleCameraActions="showCameraActions = true" />
     </div>
