@@ -314,36 +314,36 @@ def display():
             "persisted": True
         })
 
-@app.route('/backend/weather', methods=['GET'])
-def get_weather():
-    lat = request.args.get('lat')
-    lon = request.args.get('lon')
+# @app.route('/backend/weather', methods=['GET'])
+# def get_weather():
+#     lat = request.args.get('lat')
+#     lon = request.args.get('lon')
     
-    if not lat or not lon:
-        return jsonify({"error": "Latitude and longitude are required"}), 400
+#     if not lat or not lon:
+#         return jsonify({"error": "Latitude and longitude are required"}), 400
 
-    try:
-        # get_location 호출
-        try:
-            location_name = get_location_by_coordinates(lat, lon)
-            logging.info(f"Location fetched successfully: {location_name}")
-        except Exception as e:
-            logging.error(f"Failed to fetch location: {e}")
-            location_name = None
+#     try:
+#         # get_location 호출
+#         try:
+#             location_name = get_location_by_coordinates(lat, lon)
+#             logging.info(f"Location fetched successfully: {location_name}")
+#         except Exception as e:
+#             logging.error(f"Failed to fetch location: {e}")
+#             location_name = None
 
-        # get_weather 호출
-        try:
-            weather_data = get_weather_by_coordinates(lat, lon)
-            if location_name:  # location_name이 성공적으로 가져온 경우, 한글명으로 업데이트
-                weather_data['location']['name'] = location_name
-            logging.info("Weather data fetched successfully.")
-            return jsonify(weather_data)
-        except Exception as e:
-            logging.error(f"Failed to fetch weather data: {e}")
+#         # get_weather 호출
+#         try:
+#             weather_data = get_weather_by_coordinates(lat, lon)
+#             if location_name:  # location_name이 성공적으로 가져온 경우, 한글명으로 업데이트
+#                 weather_data['location']['name'] = location_name
+#             logging.info("Weather data fetched successfully.")
+#             return jsonify(weather_data)
+#         except Exception as e:
+#             logging.error(f"Failed to fetch weather data: {e}")
 
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        return jsonify({"error": str(e)}), 500
+#     except Exception as e:
+#         logging.error(f"Unexpected error: {e}")
+#         return jsonify({"error": str(e)}), 500
 
 @app.route('/backend/rank', methods=['POST'])
 def rank():
