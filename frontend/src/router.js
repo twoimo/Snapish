@@ -25,7 +25,11 @@ const routes = [
   {
     path: "/fish-result-normal",
     name: "FishResultNormal",
-    component: FishResultNormal, // 물고기 감지 결과 컴포넌트
+    component: FishResultNormal,
+    props: (route) => ({
+      detections: route.query.detections,
+      imageUrl: route.query.imageUrl,
+    }),
   },
   {
     path: "/fish-result-warning",
@@ -40,4 +44,4 @@ const router = createRouter({
   routes, // 설정한 라우트들
 });
 
-export default router; // 라우터 내보내기
+export default router;

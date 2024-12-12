@@ -3,9 +3,14 @@ pandas
 scipy
 torchvision
 torch
+ultralytics
 flask
 flask-sqlalchemy
 flask-cors
 waitress
 gdrive
+<<<<<<< HEAD
+pillow
+=======
 ultralytics
+>>>>>>> c81763a6b48515c8bed3a6264a3dc797ca119db9
