@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
+from services.lunar_mulddae import get_mulddae_cycle
 
 # INIT
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -313,7 +314,34 @@ def display():
             "uuid": user.id,
             "persisted": True
         })
+        
+@app.route('/backend/mulddae', methods=['POST'])
+def get_mulddae():
+    if request.method == 'POST':
+        now_date = request.form.get('nowdate')
+        if not now_date:
+            return jsonify({"error": "The 'nowdate' parameter is required"}), 400
 
+        try:
+            # 날짜 형식 확인
+            from datetime import datetime
+            try:
+                parsed_date = datetime.strptime(now_date, "%Y-%m-%d")
+            except ValueError:
+                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+            # 물때 정보 계산
+            seohae, other = get_mulddae_cycle(parsed_date)
+            json_result = {
+                "seohae": seohae,
+                "other": other
+            }
+            return jsonify(json_result)
+
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+            
 # @app.route('/backend/weather', methods=['GET'])
 # def get_weather():
 #     lat = request.args.get('lat')
