@@ -13,10 +13,11 @@ from torchvision import transforms as trn
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import datetime
 
 from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
-from services.lunar_mulddae import get_mulddae_cycle
+from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 
 # INIT
 project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -319,22 +320,26 @@ def display():
 def get_mulddae():
     if request.method == 'POST':
         now_date = request.form.get('nowdate')
+        print(f"HERE! {now_date}")
         if not now_date:
             return jsonify({"error": "The 'nowdate' parameter is required"}), 400
 
         try:
             # 날짜 형식 확인
-            from datetime import datetime
             try:
                 parsed_date = datetime.strptime(now_date, "%Y-%m-%d")
             except ValueError:
                 return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
             # 물때 정보 계산
-            seohae, other = get_mulddae_cycle(parsed_date)
+            lunar_date, seohae, other = get_mulddae_cycle(parsed_date)
+            moon_phase = calculate_moon_phase(parsed_date)
+            
             json_result = {
+                "lunar_date": lunar_date,
                 "seohae": seohae,
-                "other": other
+                "other": other,
+                "moon_phase": moon_phase,
             }
             return jsonify(json_result)
 
