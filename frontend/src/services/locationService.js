@@ -8,6 +8,7 @@ export function getCurrentLocation() {
         (position) => {
           const { latitude, longitude } = position.coords;
           resolve({ latitude, longitude });
+          console.log("locationservice : GetLocation")
         },
         (error) => {
           switch (error.code) {
