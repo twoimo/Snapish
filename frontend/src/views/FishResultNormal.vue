@@ -2,7 +2,7 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex flex-col">
     <!-- 헤더 -->
-    <header class="sticky top-0 bg-white px-4 py-3 flex items-center justify-between border-b z-10">
+    <header class="sticky top-0 bg-white px-4 py-3 flex items-center justify-between border-b">
       <div class="flex items-center">
         <button class="mr-2" @click="goBack">
           <ChevronLeftIcon class="w-6 h-6" />
