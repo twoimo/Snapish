@@ -15,10 +15,10 @@
                     </div>
                     <!-- 날씨 표시 카드 -->
                     <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
-                        <WeatherService></WeatherService>
-                        <!-- <div class="flex items-center justify-center h-32 bg-gray-200 rounded">
+                        <!-- <WeatherService></WeatherService> -->
+                        <div class="flex items-center justify-center h-32 bg-gray-200 rounded">
                             <CloudIcon class="w-12 h-12 text-gray-400" />
-                        </div> -->
+                        </div>
                     </div>
                 </section>
 
@@ -92,7 +92,7 @@ import {
 } from 'lucide-vue-next'
 import { onMounted } from "vue";
 import { useStore } from "vuex";
-import WeatherService from "../components/WeatherService.vue";
+// import WeatherService from "../components/WeatherService.vue";
 
 const store = useStore();
 
