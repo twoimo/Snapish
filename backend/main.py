@@ -12,7 +12,6 @@ from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ultralytics import YOLO
