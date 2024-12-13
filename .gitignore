@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Package_lock
-frontend/src/package-lock.json
+frontend/package-lock.json
 
 #custom
 .DS_Store
