@@ -102,7 +102,7 @@ const onFileChange = async (event) => {
         formData.append('image', file);
 
         try {
-            const response = await axios.post('http://13.239.27.88:5000/predict', formData, {
+            const response = await axios.post('http://localhost:5000/backend/predict', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             const detections = response.data.detections;
