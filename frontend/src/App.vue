@@ -8,7 +8,7 @@
       </div>
       <!-- 하단 네비게이션 -->
       <BottomNavigation @toggleCameraActions="showCameraActions = true"
-        class="fixed bottom-0 left-0 right-0 z-10 max-w-md mx-auto" />
+        class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-10" />
     </div>
   </div>
 </template>
