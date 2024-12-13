@@ -15,4 +15,5 @@ dependencies:
   - gdrive
   - ultralytics
   - pillow
+  - dotenv
 prefix: /opt/anaconda3/envs/snapish
