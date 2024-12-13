@@ -78,7 +78,7 @@ def get_mulddae():
             logging.error(f"Unexpected error: {e}")
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
             
-@app.route('/predict', methods=['POST'])
+@app.route('/backend/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
         return jsonify({'error': '이미지가 업로드되지 않았습니다.'}), 400
