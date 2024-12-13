@@ -2,13 +2,14 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image
+import torch
 import io
 
 app = Flask(__name__)
 CORS(app)  # 모든 도메인에서의 요청을 허용
 
 # 모델 로드
-model = YOLO('./models/yolo11m_ep50_confi91_predict.pt')  # 모델 경로 지정
+model = YOLO('./models/weights/yolov11-custom/yani/yolo11m_ep50_confi91_predict.pt')  # 모델 경로 지정
 
 # 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
@@ -33,7 +34,7 @@ def predict():
         return jsonify({'error': '이미지 파일을 열 수 없습니다.'}), 400
 
     # 모델 예측
-    results = model(img, exist_ok=True, device='cpu')  # 필요에 따라 device 설정
+    results = model(img, exist_ok=True, device='cuda' if torch.cuda.is_available() else 'cpu')  # GPU 사용 가능 시 GPU로 설정
 
     # 예측 결과에서 라벨 및 신뢰도 추출 및 한국어로 치환
     detections = []

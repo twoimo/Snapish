@@ -102,7 +102,7 @@ const onFileChange = async (event) => {
         formData.append('image', file);
 
         try {
-            const response = await axios.post('http://localhost:5000/predict', formData, {
+            const response = await axios.post('http://13.239.27.88:5000/predict', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             const detections = response.data.detections;
@@ -111,7 +111,7 @@ const onFileChange = async (event) => {
             router.push({
                 name: 'FishResultNormal',
                 query: {
-                    detections: encodeURIComponent(JSON.stringify(detections)),
+                    detections: JSON.stringify(detections),
                     imageUrl,
                 },
             });
