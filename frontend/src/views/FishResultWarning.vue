@@ -81,7 +81,6 @@
           </button>
         </div>
       </main>
-
     </div>
   </div>
 </template>

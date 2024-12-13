@@ -3,9 +3,10 @@ pandas
 scipy
 torchvision
 torch
+ultralytics
 flask
 flask-sqlalchemy
 flask-cors
 waitress
 gdrive
-ultralytics
+pillow
