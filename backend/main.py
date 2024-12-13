@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)  # 모든 도메인에서의 요청을 허용
 
 # 모델 로드
-model = YOLO('./models/weights/yolov11-custom/yani/yolo11m_ep50_confi91_predict.pt')  # 모델 경로 지정
+model = YOLO('./models/yolo11m_ep50_confi91_predict.pt')  # 모델 경로 지정
 
 # 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
