@@ -1,11 +1,33 @@
+import os
+import logging
+import random
+import pandas as pd
+import numpy as np
+
+from scipy import spatial
+from dotenv import load_dotenv
+from datetime import datetime
+
+from services.weather_service import get_weather_by_coordinates
+from services.location_service import get_location_by_coordinates
+from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
+
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image
 import io
 
+# INIT
+# project_dir = os.path.dirname(os.path.abspath(__file__))
+# database_file = "sqlite:///{}".format(os.path.join(project_dir, "test.db"))
+
 app = Flask(__name__)
 CORS(app)  # 모든 도메인에서의 요청을 허용
+# app.config['SQLALCHEMY_DATABASE_URI'] = database_file
+# db = SQLAlchemy(app)
+# logging.basicConfig(level=logging.INFO)
 
 # 모델 로드
 model = YOLO('./models/yolo11m_ep50_confi91_predict.pt')  # 모델 경로 지정
@@ -19,6 +41,43 @@ labels_korean = {
     4: '돌돔'
 }
 
+# REST API
+@app.route('/')
+def hello():
+    """Return a friendly HTTP greeting."""
+    return 'Welcome to Pic2Prof'
+        
+@app.route('/backend/mulddae', methods=['POST'])
+def get_mulddae():
+    if request.method == 'POST':
+        now_date = request.form.get('nowdate')
+        print(f"HERE! {now_date}")
+        if not now_date:
+            return jsonify({"error": "The 'nowdate' parameter is required"}), 400
+
+        try:
+            # 날짜 형식 확인
+            try:
+                parsed_date = datetime.strptime(now_date, "%Y-%m-%d")
+            except ValueError:
+                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+            # 물때 정보 계산
+            lunar_date, seohae, other = get_mulddae_cycle(parsed_date)
+            moon_phase = calculate_moon_phase(parsed_date)
+            
+            json_result = {
+                "lunar_date": lunar_date,
+                "seohae": seohae,
+                "other": other,
+                "moon_phase": moon_phase,
+            }
+            return jsonify(json_result)
+
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+            
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
