@@ -10,4 +10,4 @@ flask-cors
 waitress
 gdrive
 pillow
-dotenv
+python-dotenv
