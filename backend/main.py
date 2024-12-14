@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import datetime, timedelta  # timedelta 추가 임포트
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
@@ -36,7 +36,7 @@ load_dotenv()
 
 # 데이터베이스 설정
 DATABASE_URL = os.getenv('DATABASE_URL', 'mysql+pymysql://root:test1234@localhost:3306/snapish')
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 Session = scoped_session(sessionmaker(bind=engine))
 
 # 베이스 모델 선언
@@ -337,7 +337,7 @@ def signup():
 
     return jsonify({'message': '회원가입이 성공적으로 완료되었습니다.'}), 201
 
-SECRET_KEY = 'your-secret-key'  # 실제 서비스에서는 안전한 키로 변경하세요.
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -414,7 +414,9 @@ def profile(current_user):
 @token_required
 def recent_activities(current_user):
     # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
-    activities = Session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
+    session = Session()
+    activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
+    session.close()
     
     recent_activities = [
         {
