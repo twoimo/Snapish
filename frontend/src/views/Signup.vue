@@ -1,17 +1,17 @@
 <!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/views/Signup.vue -->
 <template>
     <div class="signup-container">
-        <h1>회원가입</h1>
+        <h1 class="text-3xl font-bold text-center mb-6">회원가입</h1>
         <form @submit.prevent="handleSignup">
             <input v-model="username" type="text" placeholder="아이디" required />
             <input v-model="email" type="email" placeholder="이메일" required />
             <input v-model="password" type="password" placeholder="비밀번호" required />
             <input v-model="confirmPassword" type="password" placeholder="비밀번호 확인" required />
             <button type="submit">회원가입</button>
-        </form>
+        </form><br>
         <p>
             이미 계정이 있으신가요?
-            <router-link to="/login">로그인</router-link>
+            <router-link to="/login" class="text-blue-500 hover:underline">로그인</router-link>
         </p>
     </div>
 </template>

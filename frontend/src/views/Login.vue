@@ -1,14 +1,14 @@
 <template>
     <div class="login-container">
-        <h1>로그인</h1>
+        <h1 class="text-3xl font-bold text-center mb-6">로그인</h1>
         <form @submit.prevent="handleLogin">
             <input v-model="username" type="text" placeholder="아이디" required />
             <input v-model="password" type="password" placeholder="비밀번호" required />
             <button type="submit">로그인</button>
-        </form>
+        </form><br>
         <p>
             아직 계정이 없으신가요?
-            <router-link to="/signup">회원가입</router-link>
+            <router-link to="/signup" class="text-blue-500 hover:underline">회원가입</router-link>
         </p>
     </div>
 </template>
@@ -17,7 +17,6 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex'; // Vuex 스토어 사용
-// import axios from '../axios'; // 사용되지 않으므로 제거
 
 const username = ref('');
 const password = ref('');
