@@ -1,12 +1,14 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta  # timedelta 추가 임포트
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image
+from functools import wraps
+import jwt
 import torch
 import io
 
@@ -24,7 +26,7 @@ from sqlalchemy import (
     JSON,
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
-
+from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
@@ -301,6 +303,130 @@ def predict():
         })
 
     return jsonify({'detections': detections})
+
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not username or not email or not password:
+        return jsonify({'message': '모든 필드를 채워주세요.'}), 400
+
+    session = Session()
+    existing_user = session.query(User).filter(
+        (User.username == username) | (User.email == email)
+    ).first()
+
+    if existing_user:
+        session.close()
+        return jsonify({'message': '이미 사용 중인 아이디나 이메일입니다.'}), 400
+
+    hashed_password = generate_password_hash(password)
+    new_user = User(
+        username=username,
+        email=email,
+        password_hash=hashed_password,
+        created_at=datetime.utcnow()
+    )
+
+    session.add(new_user)
+    session.commit()
+    session.close()
+
+    return jsonify({'message': '회원가입이 성공적으로 완료되었습니다.'}), 201
+
+SECRET_KEY = 'your-secret-key'  # 실제 서비스에서는 안전한 키로 변경하세요.
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    session = Session()
+    user = session.query(User).filter_by(username=username).first()
+    session.close()
+
+    if user and check_password_hash(user.password_hash, password):
+        # 토큰 생성
+        payload = {
+            'user_id': user.user_id,
+            'exp': datetime.utcnow() + timedelta(hours=24)  # 수정된 부분
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+        return jsonify({
+            'message': '로그인 성공',
+            'token': token,
+            'user': {
+                'user_id': user.user_id,
+                'username': user.username,
+                'email': user.email,
+                # 필요한 사용자 정보 추가
+            }
+        })
+    else:
+        return jsonify({'message': '로그인 실패'}), 401
+    
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        # 헤더에서 토큰 가져오기
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(' ')[1]
+
+        if not token:
+            return jsonify({'message': '토큰이 필요합니다.'}), 401
+
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            user_id = data['user_id']
+
+            session = Session()
+            current_user = session.query(User).filter_by(user_id=user_id).first()
+            session.close()
+
+            if not current_user:
+                return jsonify({'message': '유효하지 않은 토큰입니다.'}), 401
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': '토큰이 만료되었습니다.'}), 401
+        except Exception:
+            return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
+
+        return f(current_user, *args, **kwargs)
+    return decorated
+
+@app.route('/api/profile', methods=['GET'])
+@token_required
+def profile(current_user):
+    return jsonify({
+        'user_id': current_user.user_id,
+        'username': current_user.username,
+        'email': current_user.email,
+        # 필요한 정보 추가
+    })
+
+@app.route('/api/recent-activities', methods=['GET'])
+@token_required
+def recent_activities(current_user):
+    # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
+    activities = Session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
+    
+    recent_activities = [
+        {
+            'fish': catch.species.name if catch.species else '알 수 없음',
+            'location': catch.location.address if catch.location else '알 수 없음',
+            'date': catch.catch_date.strftime('%Y-%m-%d'),
+            'image': catch.photo_url or '/placeholder.svg?height=80&width=80',
+        }
+        for catch in activities
+    ]
+    
+    return jsonify({'activities': recent_activities})
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext

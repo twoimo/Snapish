@@ -32,7 +32,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits } from 'vue';
-import axios from 'axios';
+import axios from '../axios'; // Axios 인스턴스 임포트
 import { useRouter } from 'vue-router';
 
 // Props 정의
