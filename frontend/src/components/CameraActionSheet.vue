@@ -1,4 +1,3 @@
-<!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/components/CameraActionSheet.vue -->
 <template>
     <!-- 액션 시트 모달 -->
     <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-20"
