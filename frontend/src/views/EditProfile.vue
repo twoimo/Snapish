@@ -5,8 +5,8 @@
             <form @submit.prevent="handleEditProfile" class="space-y-6">
                 <!-- 기본 정보 섹션 -->
                 <div>
-                    <label for="fullName" class="block text-gray-700">이름</label>
-                    <input v-model="fullName" id="fullName" type="text" placeholder="이름" required
+                    <label for="username" class="block text-gray-700">아이디</label>
+                    <input v-model="username" id="username" type="text" placeholder="아이디" required
                         class="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                 </div>
                 <div>
@@ -65,7 +65,7 @@ import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 
 // 반응형 변수 선언
-const fullName = ref('');
+const username = ref('');
 const email = ref('');
 const currentPassword = ref('');
 const newPassword = ref('');
@@ -148,7 +148,7 @@ const handleEditProfile = async () => {
 
     try {
         const payload = {
-            full_name: fullName.value,
+            user_name: username.value,
             email: email.value,
         };
 
