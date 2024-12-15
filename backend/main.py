@@ -52,7 +52,7 @@ class User(Base):
     email = Column(String(100), unique=True)
     full_name = Column(String(100))
     age = Column(Integer)
-    preferred_font_size = Column(Enum('작은', '중간', '큰'), default='중간')
+    preferred_font_size = Column(Enum('small', 'medium', 'large'), default='medium')
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sessions = relationship('UserSession', back_populates='user', cascade='all, delete')
