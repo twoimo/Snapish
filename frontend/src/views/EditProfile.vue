@@ -1,6 +1,7 @@
 <template>
-    <div class="min-h-screen bg-white items-center justify-center px-4">
-        <div class="bg-white w-full max-w-lg p-8 rounded-lg shadow-md">
+    <div class="min-h-screen bg-gray-100 flex items-center justify-center px-4"
+        style="min-height: calc(100vh - 112px);">
+        <div class="bg-white w-full max-w-lg p-8 rounded-lg shadow-lg">
             <h1 class="text-3xl font-bold text-center mb-6">프로필 수정</h1>
             <form @submit.prevent="handleEditProfile" class="space-y-6">
                 <!-- 기본 정보 섹션 -->
@@ -39,6 +40,17 @@
                         {{ passwordError }}
                     </div>
                 </div>
+                <!-- 비밀번호 강도 표시 -->
+                <div v-if="newPassword" class="mt-4">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm font-medium">비밀번호 강도: {{ passwordStrengthText }}</span>
+                        <span class="text-sm font-medium">{{ passwordStrengthPercentage }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div :class="passwordStrengthClass" :style="{ width: passwordStrengthPercentage }"
+                            class="h-2 rounded-full"></div>
+                    </div>
+                </div>
                 <!-- 저장 버튼 및 에러 메시지 -->
                 <button type="submit" :disabled="isLoading"
                     class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
@@ -46,8 +58,7 @@
                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
                         </circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z">
-                        </path>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                     </svg>
                     <span v-else>저장</span>
                 </button>
@@ -63,8 +74,8 @@
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import axios from '@/axios';
 
-// 반응형 변수 선언
 const username = ref('');
 const email = ref('');
 const currentPassword = ref('');
@@ -74,17 +85,14 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const passwordError = ref('');
 
-// 비밀번호 강도 관련 변수
 const passwordStrength = ref(0);
 const passwordStrengthText = ref('');
 const passwordStrengthClass = ref('');
 const passwordStrengthPercentage = ref('0%');
-const passwordStrengthTextClass = ref('');
 
 const router = useRouter();
 const store = useStore();
 
-// 비밀번호 강도 계산 함수
 const calculatePasswordStrength = (password) => {
     let strength = 0;
     if (password.length >= 8) strength += 1;
@@ -95,7 +103,6 @@ const calculatePasswordStrength = (password) => {
     return strength;
 };
 
-// 비밀번호 강도 모니터링
 watch(newPassword, (val) => {
     passwordStrength.value = calculatePasswordStrength(val);
     switch (passwordStrength.value) {
@@ -104,38 +111,31 @@ watch(newPassword, (val) => {
             passwordStrengthText.value = '매우 약함';
             passwordStrengthClass.value = 'bg-red-500';
             passwordStrengthPercentage.value = '20%';
-            passwordStrengthTextClass.value = 'text-red-500';
             break;
         case 2:
             passwordStrengthText.value = '약함';
             passwordStrengthClass.value = 'bg-orange-500';
             passwordStrengthPercentage.value = '40%';
-            passwordStrengthTextClass.value = 'text-orange-500';
             break;
         case 3:
             passwordStrengthText.value = '보통';
             passwordStrengthClass.value = 'bg-yellow-500';
             passwordStrengthPercentage.value = '60%';
-            passwordStrengthTextClass.value = 'text-yellow-500';
             break;
         case 4:
             passwordStrengthText.value = '강함';
             passwordStrengthClass.value = 'bg-blue-500';
             passwordStrengthPercentage.value = '80%';
-            passwordStrengthTextClass.value = 'text-blue-500';
             break;
         case 5:
             passwordStrengthText.value = '매우 강함';
             passwordStrengthClass.value = 'bg-green-500';
             passwordStrengthPercentage.value = '100%';
-            passwordStrengthTextClass.value = 'text-green-500';
             break;
     }
 });
 
-// 프로필 수정 핸들러
 const handleEditProfile = async () => {
-    // 비밀번호 변경 조건 확인
     if ((newPassword.value || confirmPassword.value) && newPassword.value !== confirmPassword.value) {
         passwordError.value = '새 비밀번호가 일치하지 않습니다.';
         return;
@@ -148,20 +148,24 @@ const handleEditProfile = async () => {
 
     try {
         const payload = {
-            user_name: username.value,
+            username: username.value,
             email: email.value,
         };
 
-        // 비밀번호 변경 필드가 채워져 있는 경우 추가
         if (currentPassword.value && newPassword.value) {
             payload.current_password = currentPassword.value;
             payload.new_password = newPassword.value;
         }
 
-        await store.dispatch('updateProfile', payload);
+        await axios.put('/profile', payload, {  // Changed from '/api/profile' to '/profile'
+            headers: {
+                Authorization: `Bearer ${store.state.token}`,
+            },
+        });
+
         router.push('/profile');
     } catch (error) {
-        errorMessage.value = '프로필 수정에 실패했습니다.';
+        errorMessage.value = error.response?.data?.message || '프로필 수정에 실패했습니다.';
         console.error('프로필 수정 오류:', error);
     } finally {
         isLoading.value = false;

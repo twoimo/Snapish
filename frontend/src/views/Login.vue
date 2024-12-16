@@ -1,22 +1,29 @@
 <template>
-    <div class="login-container">
-        <h1 class="text-3xl font-bold text-center mb-6">로그인</h1>
-        <form @submit.prevent="handleLogin">
-            <input v-model="username" type="text" placeholder="아이디" required />
-            <input v-model="password" type="password" placeholder="비밀번호" required />
-            <button type="submit">로그인</button>
-        </form><br>
-        <p>
-            아직 계정이 없으신가요?
-            <router-link to="/signup" class="text-blue-500 hover:underline">회원가입</router-link>
-        </p>
+    <div class="flex items-center justify-center bg-gray-100" style="min-height: calc(100vh - 112px);">
+        <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+            <h1 class="text-4xl font-semibold text-center text-gray-800 mb-6">로그인</h1>
+            <form @submit.prevent="handleLogin" class="space-y-4">
+                <input v-model="username" type="text" placeholder="아이디" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input v-model="password" type="password" placeholder="비밀번호" required
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <button type="submit"
+                    class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    로그인
+                </button>
+            </form>
+            <p class="mt-6 text-center text-gray-600">
+                아직 계정이 없으신가요?
+                <router-link to="/signup" class="text-blue-500 hover:underline">회원가입</router-link>
+            </p>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex'; // Vuex 스토어 사용
+import { useStore } from 'vuex';
 
 const username = ref('');
 const password = ref('');
@@ -30,7 +37,6 @@ const handleLogin = async () => {
             password: password.value,
         });
 
-        // 프로필 페이지로 이동
         router.push('/profile');
     } catch (error) {
         alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
@@ -38,44 +44,3 @@ const handleLogin = async () => {
     }
 };
 </script>
-
-<style scoped>
-.login-container {
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 2rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.login-container h1 {
-    margin-bottom: 1.5rem;
-}
-
-.login-container form {
-    display: flex;
-    flex-direction: column;
-}
-
-.login-container input {
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.login-container button {
-    padding: 0.75rem;
-    background-color: #3490dc;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.login-container button:hover {
-    background-color: #2779bd;
-}
-</style>

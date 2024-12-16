@@ -3,7 +3,7 @@
     <div class="w-full max-w-md bg-white shadow-lg relative">
       <!-- 상단 헤더 -->
       <Header v-if="!hideHeader" class="fixed top-0 left-0 right-0 z-10 max-w-md mx-auto" />
-      <div class="pt-16 pb-16">
+      <div class="pt-14 pb-14">
         <router-view></router-view>
       </div>
       <!-- 하단 네비게이션 -->
