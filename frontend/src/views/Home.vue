@@ -8,22 +8,13 @@
                 <!-- 물때/날씨 섹션 -->
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <router-link to="/weather-specific" class="flex flex-col items-center p-2">
-                            <h2 class="text-lg font-medium">오늘의 물때</h2> 
+                        <router-link to="/map-location-service" class="flex justify-between items-center p-2 w-full">
+                            <h2 class="text-lg font-medium mr-2">오늘의 물때</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
-                        <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <!-- 물때 표시 카드 -->
-                    <div class="relative bg-gray-50 rounded-lg p-6 shadow-sm fixed-size-card" style="height: 125px; overflow: hidden; position: relative;">
-                        <!-- 새로고침 버튼 -->
-                        <button 
-                            class="absolute top-2 right-2 bg-gray-200 text-gray-600 rounded-full p-1 shadow hover:bg-gray-300"
-                            @click="refreshCard"
-                            title="새로고침"
-                        >새로고침
-                        </button>
-                        <MulddaeWidget></MulddaeWidget>
-                    </div>
+                    <MulddaeWidget></MulddaeWidget>
                 </section>
 
                 <!-- 물고기 캐치 기록 섹션 -->
@@ -97,16 +88,26 @@ import {
 import { onMounted } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
-// import WeatherService from "../components/WeatherService.vue";
 
 const store = useStore();
 
 onMounted(() => {
     store.dispatch("fetchMulddae");
     
-    if (!store.state.currentlocation) {
-        store.dispatch("fetchLocation");
-    }
+    // Disable Auto update
+    // if (!store.state.currentlocation) {
+    //     store.dispatch("fetchLocation");
+    // }
 });
 
 </script>
+
+<style>
+* {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera*/
+}
+</style>
