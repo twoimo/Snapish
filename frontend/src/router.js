@@ -4,7 +4,7 @@ import store from "./store"; // 스토어 임포트
 // 컴포넌트 임포트
 import Home from "./views/Home.vue";
 import Community from "./views/Community.vue";
-import WeatherSpecific from "./views/WeatherSpecific.vue";
+import MapLocationService from "./views/MapLocationService.vue";
 import Profile from "./views/Profile.vue";
 import FishResultNormal from "./views/FishResultNormal.vue";
 import FishResultWarning from "./views/FishResultWarning.vue";
@@ -24,9 +24,9 @@ const routes = [
     component: Community, // 커뮤니티 컴포넌트
   },
   {
-    path: "/weather-specific",
-    name: "WeatherSpecific",
-    component: WeatherSpecific, // 날씨 상세 정보 컴포넌트
+    path: "/map-location-service",
+    name: "MapLocationService",
+    component: MapLocationService, // 날씨 상세 정보 컴포넌트
   },
   {
     path: "/profile",

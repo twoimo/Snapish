@@ -3,7 +3,7 @@ import axios from "@/axios"; // Axios 인스턴스 임포트
 const apiBaseUrl = process.env.VUE_APP_MULDDAE_URL;
 
 export async function fetchMulddae(date) {
-  console.log(`js : ${date}`);
+  console.log(`Call_fetchMulddae : ${date}`);
   try {
     const response = await axios.post(
       apiBaseUrl,

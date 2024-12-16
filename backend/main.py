@@ -402,15 +402,34 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-@app.route('/api/profile', methods=['GET'])
+@app.route('/api/profile', methods=['GET', 'PUT'])
 @token_required
 def profile(current_user):
-    return jsonify({
-        'user_id': current_user.user_id,
-        'username': current_user.username,
-        'email': current_user.email,
-        # 필요한 정보 추가
-    })
+    if request.method == 'GET':
+        return jsonify({
+            'user_id': current_user.user_id,
+            'username': current_user.username,
+            'email': current_user.email,
+            # 필요한 정보 추가
+        })
+    elif request.method == 'PUT':
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'Invalid input'}), 400
+        # 사용자 정보 업데이트
+        current_user.username = data.get('username', current_user.username)
+        current_user.email = data.get('email', current_user.email)
+        # 비밀번호 변경 처리
+        if data.get('current_password') and data.get('new_password'):
+            if check_password_hash(current_user.password_hash, data['current_password']):
+                current_user.password_hash = generate_password_hash(data['new_password'])
+            else:
+                return jsonify({'message': '현재 비밀번호가 일치하지 않습니다.'}), 400
+        session = Session()
+        session.add(current_user)
+        session.commit()
+        session.close()
+        return jsonify({'message': '프로필이 성공적으로 업데이트되었습니다.'}), 200
 
 @app.route('/api/recent-activities', methods=['GET'])
 @token_required
