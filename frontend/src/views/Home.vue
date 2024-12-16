@@ -92,17 +92,15 @@ import MulddaeWidget from '../components/MulddaeWidget.vue';
 const store = useStore();
 
 onMounted(() => {
-    store.dispatch("fetchMulddae");
-    
-    // Disable Auto update
-    // if (!store.state.currentlocation) {
-    //     store.dispatch("fetchLocation");
-    // }
-});
+    if (!store.state.mulddae) {
+        store.dispatch("fetchMulddae");
+    }
+    }
+);
 
 </script>
 
-<style>
+<style  lang="css">
 * {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
