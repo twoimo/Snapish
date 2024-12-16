@@ -32,10 +32,12 @@ from services.location_service import get_location_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 
 # 환경 변수 로드
-load_dotenv()
+load_dotenv("./.env")
+
+SQL_KEY = os.getenv("SQL_KEY")
 
 # 데이터베이스 설정
-DATABASE_URL = os.getenv('DATABASE_URL', 'mysql+pymysql://root:test1234@localhost:3306/snapish')
+DATABASE_URL = os.getenv('DATABASE_URL', f'mysql+pymysql://root:{SQL_KEY}@localhost:3306/snapish')
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 Session = scoped_session(sessionmaker(bind=engine))
 
