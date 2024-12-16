@@ -8,10 +8,10 @@
                 <!-- 물때/날씨 섹션 -->
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <router-link to="/weather-specific" class="flex flex-col items-center p-2">
-                            <h2 class="text-lg font-medium">오늘의 물때</h2> 
+                        <router-link to="/map-location-service" class="flex justify-between items-center p-2 w-full">
+                            <h2 class="text-lg font-medium mr-2">오늘의 물때</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
-                        <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <!-- 물때 표시 카드 -->
                     <MulddaeWidget></MulddaeWidget>
@@ -88,7 +88,6 @@ import {
 import { onMounted } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
-// import WeatherService from "../components/WeatherService.vue";
 
 const store = useStore();
 
