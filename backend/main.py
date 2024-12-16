@@ -306,7 +306,7 @@ def predict():
 
     return jsonify({'detections': detections})
 
-@app.route('/api/signup', methods=['POST'])
+@app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
     username = data.get('username')
@@ -341,7 +341,7 @@ def signup():
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
@@ -402,7 +402,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-@app.route('/api/profile', methods=['GET', 'PUT'])
+@app.route('/profile', methods=['GET', 'PUT'])
 @token_required
 def profile(current_user):
     if request.method == 'GET':
@@ -431,7 +431,7 @@ def profile(current_user):
         session.close()
         return jsonify({'message': '프로필이 성공적으로 업데이트되었습니다.'}), 200
 
-@app.route('/api/recent-activities', methods=['GET'])
+@app.route('/recent-activities', methods=['GET'])
 @token_required
 def recent_activities(current_user):
     # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)

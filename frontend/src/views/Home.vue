@@ -25,7 +25,7 @@
                         </router-link>
                         <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
-                    <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x scroll-smooth">
+                    <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
                         <div class="flex space-x-4">
                             <div v-for="(catchItem, index) in catches" :key="index"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48">
@@ -116,9 +116,5 @@ const catches = computed(() => store.getters.catches);
 .touch-pan-x {
     -webkit-overflow-scrolling: touch;
     overflow-scrolling: touch;
-}
-
-.scroll-smooth {
-    scroll-behavior: smooth;
 }
 </style>
