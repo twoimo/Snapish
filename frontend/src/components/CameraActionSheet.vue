@@ -31,11 +31,11 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue';
+import { ref } from 'vue';
 import axios from '../axios'; // Axios 인스턴스 임포트
 import { useRouter } from 'vue-router';
 
-// Props 정의
+// eslint-disable-next-line no-undef
 const props = defineProps({
     isOpen: {
         type: Boolean,
@@ -43,7 +43,7 @@ const props = defineProps({
     },
 });
 
-// Emits 정의
+// eslint-disable-next-line no-undef
 const emit = defineEmits(['close']);
 
 // Router 인스턴스

@@ -7,7 +7,7 @@
         <router-view></router-view>
       </div>
       <!-- 하단 네비게이션 -->
-      <BottomNavigation @toggleCameraActions="showCameraActions = true"
+      <BottomNavigation @toggleCameraActions="handleToggleCameraActions"
         class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-10" />
     </div>
   </div>
@@ -24,6 +24,10 @@ const route = useRoute();
 
 // 특정 경로에서만 헤더 숨기기
 const hideHeader = computed(() => /^\/(fish-result)/.test(route.path));
+
+const handleToggleCameraActions = () => {
+  // ...existing code...
+};
 </script>
 
 <style>

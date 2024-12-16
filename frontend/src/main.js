@@ -14,7 +14,12 @@ import store from "./store";
 import "./assets/tailwind.css";
 
 // Vue 애플리케이션을 생성하고, 스토어와 라우터를 사용하도록 설정한 후, #app 엘리먼트에 마운트합니다.
-createApp(App)
+const app = createApp(App);
+
+// 컴파일러 플래그 설정
+app.config.globalProperties.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ = true;
+
+app
   .use(store) // Vuex 스토어를 사용하도록 설정합니다.
   .use(router) // 라우터를 사용하도록 설정합니다.
   .mount("#app"); // #app 엘리먼트에 애플리케이션을 마운트합니다.
