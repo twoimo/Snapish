@@ -2,6 +2,7 @@ module.exports = {
   root: true, // 이 설정 파일을 루트로 사용
   env: {
     node: true, // Node.js 환경을 사용
+    "vue/setup-compiler-macros": true,
   },
   extends: ["plugin:vue/vue3-essential", "eslint:recommended"], // Vue3와 ESLint 권장 설정을 확장
   parserOptions: {
@@ -13,6 +14,8 @@ module.exports = {
     "vue/multi-word-component-names": "off", // Vue 컴포넌트 이름이 여러 단어로 구성되지 않아도 허용
   },
   globals: {
-    kakao: 'readonly'
-  }
+    kakao: "readonly",
+    defineProps: "readonly",
+    defineEmits: "readonly",
+  },
 };
