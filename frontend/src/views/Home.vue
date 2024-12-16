@@ -18,21 +18,24 @@
                 </section>
 
                 <!-- 물고기 캐치 기록 섹션 -->
-                <section class="mb-6">
+                <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-lg font-medium">내가 잡은 물고기</h2>
+                        <router-link to="/catches" class="flex flex-col items-center p-2">
+                            <h2 class="text-lg font-medium mr-2">내가 잡은 물고기</h2>
+                        </router-link>
                         <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
-                    <!-- 물고기 그리드 레이아웃 - 3열 구성 -->
-                    <div class="grid grid-cols-3 gap-3">
-                        <div v-for="i in 3" :key="i" class="bg-gray-50 rounded-lg p-3 shadow-sm">
-                            <div class="flex items-center justify-center h-24 bg-gray-200 rounded mb-2">
-                                <FishIcon class="w-8 h-8 text-gray-400" />
+                    <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x scroll-smooth">
+                        <div class="flex space-x-4">
+                            <div v-for="(catchItem, index) in catches" :key="index"
+                                class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48">
+                                <img :src="catchItem.imageUrl" alt="Catch Image"
+                                    class="w-full h-32 object-cover rounded-lg mb-2" />
+                                <p class="text-gray-800 text-sm">{{ catchItem.detections }}</p>
                             </div>
-                            <p class="text-sm text-gray-600">물고기</p>
-                            <p class="text-sm">종류</p>
                         </div>
                     </div>
+                    <div v-else class="text-gray-500 flex flex-col items-center p-2">아직 잡은 물고기가 없습니다.</div>
                 </section>
 
                 <!-- 커뮤니티 게시물 섹션 -->
@@ -83,7 +86,7 @@ import {
     ImageIcon,       // 이미지 아이콘
     ClockIcon,       // 시계 아이콘
 } from 'lucide-vue-next'
-import { onMounted } from "vue";
+import { onMounted, computed } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
 
@@ -91,13 +94,10 @@ const store = useStore();
 
 onMounted(() => {
     store.dispatch("fetchMulddae");
-
-    // Disable Auto update
-    // if (!store.state.currentlocation) {
-    //     store.dispatch("fetchLocation");
-    // }
+    store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
 });
 
+const catches = computed(() => store.getters.catches);
 </script>
 
 <style>
@@ -111,5 +111,14 @@ onMounted(() => {
 *::-webkit-scrollbar {
     display: none;
     /* Chrome, Safari, Opera*/
+}
+
+.touch-pan-x {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+}
+
+.scroll-smooth {
+    scroll-behavior: smooth;
 }
 </style>

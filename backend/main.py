@@ -220,7 +220,7 @@ Base.metadata.create_all(engine)
 
 # Flask 앱 초기화
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)  # Update CORS configuration to allow credentials
 logging.basicConfig(level=logging.INFO)
 
 # 세션 설정
@@ -450,6 +450,42 @@ def recent_activities(current_user):
     ]
     
     return jsonify({'activities': recent_activities})
+
+@app.route('/catches', methods=['POST'])
+@token_required
+def add_catch(current_user):
+    data = request.get_json()
+    imageUrl = data.get('imageUrl')
+    detections = data.get('detections')
+
+    if not imageUrl or not detections:
+        return jsonify({'message': '이미지 URL과 감지 결과가 필요합니다.'}), 400
+
+    session = Session()
+    new_catch = Catch(
+        user_id=current_user.user_id,
+        photo_url=imageUrl,
+        exif_data=detections,
+        catch_date=datetime.utcnow()
+    )
+    session.add(new_catch)
+    session.commit()
+    session.close()
+
+    return jsonify({'message': '캐치가 성공적으로 추가되었습니다.'}), 201
+
+@app.route('/catches', methods=['GET'])
+@token_required
+def get_catches(current_user):
+    session = Session()
+    catches = session.query(Catch).filter_by(user_id=current_user.user_id).all()
+    session.close()
+
+    return jsonify([{
+        'imageUrl': catch.photo_url,
+        'detections': catch.exif_data,
+        'catch_date': catch.catch_date.strftime('%Y-%m-%d')
+    } for catch in catches])
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext

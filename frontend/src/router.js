@@ -11,6 +11,7 @@ import FishResultWarning from "./views/FishResultWarning.vue";
 import Login from "./views/Login.vue";
 import EditProfile from "./views/EditProfile.vue"; // 프로필 수정 컴포넌트 임포트
 import Signup from "./views/Signup.vue"; // Signup 컴포넌트 임포트
+import Catches from "./views/Catches.vue"; // Catches 컴포넌트 임포트
 
 const routes = [
   {
@@ -75,6 +76,11 @@ const routes = [
     name: "EditProfile",
     component: EditProfile, // 프로필 수정 컴포넌트 추가
     meta: { requiresAuth: true },
+  },
+  {
+    path: "/catches",
+    name: "Catches",
+    component: Catches, // Catches 컴포넌트 추가
   },
 ];
 
