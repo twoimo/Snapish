@@ -73,10 +73,9 @@ export default createStore({
             );
           }
 
-          const location = await getCurrentLocation();
+          // const location = await getCurrentLocation();
           const mulddaeData = await fetchMulddae(
-            location.latitude,
-            location.longitude
+            today
           );
           commit("setMulddae", mulddaeData);
 
@@ -91,7 +90,27 @@ export default createStore({
         commit("setLoading", false);
       }
     },
+    async fetchLocation({ commit }) {
+      console.log("vuex : fetchLocation action triggered.");
+      commit("setLoading", true);
+      commit("setError", null);
 
+      try {
+        const { latitude, longitude } = await getCurrentLocation();
+
+        if (latitude && longitude) {
+          const currentloc = [latitude, longitude];
+          console.log(`success : Fetch Location action ${currentloc}`);
+          commit("setCurrentLocation", currentloc);
+        } else {
+          commit("setError", "No Location data found.");
+        }
+      } catch (error) {
+        commit("setError", error);
+      } finally {
+        commit("setLoading", false);
+      }
+    },
     // Authentication actions
     async login({ commit }, { username, password }) {
       try {
