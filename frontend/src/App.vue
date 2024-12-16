@@ -32,8 +32,17 @@ const handleToggleCameraActions = () => {
 
 <style>
 body {
+
   /* eslint-disable-next-line */
-  @apply antialiased text-gray-900 bg-gray-100;
+  /* Ensure Tailwind CSS is properly configured */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #1a202c;
+    /* text-gray-900 */
+    background-color: #f7fafc;
+    /* bg-gray-100 */
+  }
 }
 
 .active-link {
