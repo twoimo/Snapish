@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col">
+  <div class="min-h-screen bg-white flex flex-col">
     <!-- 헤더 -->
     <header
-      class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b shadow-md z-50 max-w-md mx-auto">
+      class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-15 max-w-md mx-auto">
       <div class="flex items-center">
         <button class="mr-2" @click="goBack">
           <ChevronLeftIcon class="w-6 h-6" />
@@ -20,7 +20,7 @@
     </header>
 
     <!-- 메인 콘텐츠 -->
-    <main class="flex-1 pb-20 px-4 overflow-auto mt-[60px] max-w-md mx-auto">
+    <main class="flex-1 pb-20 px-4 overflow-auto max-w-md mx-auto">
       <!-- 로딩 상태 -->
       <div v-if="isLoading" class="flex justify-center items-center h-64">
         <span class="text-gray-500">로딩 중...</span>
@@ -88,16 +88,16 @@
 
     <!-- 포토카드 모달 -->
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-4 w-10/12 max-w-sm">
-        <h2 class="text-lg font-bold mb-2 text-center">나만의 포토카드</h2>
-        <div ref="photocard" class="bg-gray-100 p-2 rounded-lg overflow-hidden">
-          <img :src="imageUrl" alt="물고기 사진" class="w-full h-48 object-cover rounded-lg" />
-          <h3 class="text-md font-semibold mt-2 text-center">{{ parsedDetections[0].label }}</h3>
+      <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
+        <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
+        <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
+          <img :src="imageUrl" alt="물고기 사진" class="w-full h-64 object-contain rounded-lg" />
+          <h3 class="text-md font-semibold mt-4 text-center">{{ parsedDetections[0].label }}</h3>
           <p class="text-center text-sm">신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%</p>
         </div>
-        <div class="mt-4 flex justify-end gap-2">
-          <button @click="closeModal" class="px-3 py-1 bg-gray-300 rounded">닫기</button>
-          <button @click="downloadPhotocard" class="px-3 py-1 bg-blue-500 text-white rounded">저장하기</button>
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded">닫기</button>
+          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded">저장하기</button>
         </div>
       </div>
     </div>
@@ -189,10 +189,10 @@ const closeModal = () => {
 // 포토카드 다운로드
 const downloadPhotocard = () => {
   if (photocard.value) {
-    html2canvas(photocard.value).then((canvas) => {
+    html2canvas(photocard.value, { useCORS: true, scale: 2 }).then((canvas) => {
       const link = document.createElement('a');
       link.download = 'photocard.png';
-      link.href = canvas.toDataURL();
+      link.href = canvas.toDataURL('image/png');
       link.click();
     });
   }

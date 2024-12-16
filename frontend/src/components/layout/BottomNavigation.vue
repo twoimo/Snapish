@@ -1,4 +1,3 @@
-<!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/components/layout/BottomNavigation.vue -->
 <template>
   <!-- 하단 네비게이션 바 -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-2 max-w-md mx-auto">

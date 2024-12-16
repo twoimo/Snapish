@@ -12,4 +12,7 @@ module.exports = {
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off", // 프로덕션 환경에서는 debugger 사용을 경고
     "vue/multi-word-component-names": "off", // Vue 컴포넌트 이름이 여러 단어로 구성되지 않아도 허용
   },
+  globals: {
+    kakao: 'readonly'
+  }
 };

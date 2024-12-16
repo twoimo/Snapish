@@ -1,4 +1,3 @@
-<!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/components/CameraActionSheet.vue -->
 <template>
     <!-- 액션 시트 모달 -->
     <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-20"
@@ -33,7 +32,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits } from 'vue';
-import axios from 'axios';
+import axios from '../axios'; // Axios 인스턴스 임포트
 import { useRouter } from 'vue-router';
 
 // Props 정의
