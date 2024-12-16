@@ -32,8 +32,9 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from '../axios'; // Axios 인스턴스 임포트
+import axios from '../axios'; // Ensure this is the correct path to your Axios instance
 import { useRouter } from 'vue-router';
+import store from '../store'; // Vuex store 임포트
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -101,19 +102,34 @@ const onFileChange = async (event) => {
         formData.append('image', file);
 
         try {
-            const response = await axios.post('http://localhost:5000/backend/predict', formData, {
+            const response = await axios.post('/backend/predict', formData, {  // Update endpoint
                 headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true, // Include credentials in the request
             });
             const detections = response.data.detections;
 
-            // detections을 JSON 문자열로 변환 후 URL 인코딩
-            router.push({
-                name: 'FishResultNormal',
-                query: {
-                    detections: encodeURIComponent(JSON.stringify(detections)),
-                    imageUrl,
-                },
-            });
+            if (detections && detections.length > 0) {
+                // Save the catch to the database
+                const token = localStorage.getItem('token'); // Get the token from localStorage
+                await axios.post('/catches', { imageUrl, detections }, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Include the token in the headers
+                    },
+                    withCredentials: true,
+                });
+                await store.dispatch('fetchCatches'); // Refresh catches in the store
+
+                // Navigate to the result page
+                router.push({
+                    name: 'FishResultNormal',
+                    query: {
+                        detections: encodeURIComponent(JSON.stringify(detections)),
+                        imageUrl,
+                    },
+                });
+            } else {
+                alert('알 수 없는 물고기입니다. 데이터베이스에 저장되지 않습니다.');
+            }
         } catch (error) {
             console.error('Error during Axios POST:', error);
             alert('이미지 업로드 중 오류가 발생했습니다.');

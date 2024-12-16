@@ -16,6 +16,8 @@ export default createStore({
     isAuthenticated: !!localStorage.getItem("token"),
     user: JSON.parse(localStorage.getItem("user")) || null,
     token: localStorage.getItem("token") || null,
+
+    catches: [], // Add catches state
   },
   mutations: {
     // Existing mutations
@@ -43,20 +45,27 @@ export default createStore({
     setCurrentLocation(state, currentlocation) {
       state.currentlocation = currentlocation;
     },
+
+    setCatches(state, catches) {
+      state.catches = catches;
+    },
+    addCatch(state, newCatch) {
+      state.catches.push(newCatch);
+    },
   },
   actions: {
     // Existing actions
     async fetchMulddae({ commit }) {
       console.log("vuex : fetchMulddae action triggered.");
       commit("setLoading", true);
-    
+
       try {
         // localStorage에서 데이터 확인
         const cachedMulddae = localStorage.getItem("mulddae");
         const cachedDate = localStorage.getItem("mulddaeDate"); // 이전에 저장된 날짜
         const now = new Date();
         const today = now.toISOString().split("T")[0]; // 오늘 날짜 (yyyy-mm-dd 형식)
-    
+
         // 캐시된 데이터와 날짜 확인
         if (cachedMulddae && cachedDate === today) {
           console.log("success : Loaded mulddae from localStorage.");
@@ -64,20 +73,24 @@ export default createStore({
         } else {
           // 날짜가 다르거나 데이터가 없는 경우
           if (!cachedDate) {
-            console.log("info : mulddaeDate is not found in localStorage, fetching new data.");
+            console.log(
+              "info : mulddaeDate is not found in localStorage, fetching new data."
+            );
           } else if (cachedDate !== today) {
-            console.log("info : Cached date is different from today, fetching new data.");
+            console.log(
+              "info : Cached date is different from today, fetching new data."
+            );
           }
-    
+
           // 물때 정보 API 호출
           const mulddaeData = await fetchMulddae(today);
           commit("setMulddae", mulddaeData);
-    
+
           // 캐시에 저장 (오늘 날짜와 데이터)
           localStorage.setItem("mulddae", JSON.stringify(mulddaeData));
           localStorage.setItem("mulddaeDate", today);
         }
-    
+
         // **유효성 검증 로직 추가**
         // 캐시된 날짜가 하루를 초과하면 자동 삭제
         const previousDate = cachedDate ? new Date(cachedDate) : null;
@@ -178,6 +191,29 @@ export default createStore({
         throw error;
       }
     },
+
+    async fetchCatches({ commit }) {
+      try {
+        const token = localStorage.getItem("token"); // Get the token from localStorage
+        const response = await axios.get("/catches", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+          withCredentials: true,
+        });
+        commit("setCatches", response.data);
+      } catch (error) {
+        console.error("Error fetching catches:", error);
+      }
+    },
+    async addCatch({ commit }, newCatch) {
+      try {
+        const response = await axios.post("/catches", newCatch);
+        commit("addCatch", response.data);
+      } catch (error) {
+        console.error("Error adding catch:", error);
+      }
+    },
   },
   getters: {
     // Existing getters
@@ -186,6 +222,10 @@ export default createStore({
     },
     user(state) {
       return state.user;
+    },
+
+    catches(state) {
+      return state.catches;
     },
   },
 });

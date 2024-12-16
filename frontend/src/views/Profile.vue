@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { Edit, LogOut, Settings } from 'lucide-vue-next';
@@ -87,7 +87,7 @@ const user = computed(() => store.getters.user);
 const stats = computed(() => {
     const originalStats = store.getters.stats;
     return {
-        catches: originalStats?.catches || 0,
+        catches: store.getters.catches.length || 0, // Fetch catches from the store
         followers: originalStats?.followers || 0,
         following: originalStats?.following || 0,
     };
@@ -110,6 +110,10 @@ const services = computed(() => [
     { icon: '/icons/service12.png', name: '서비스 15' },
     { icon: '/icons/service12.png', name: '서비스 16' },
 ]);
+
+onMounted(() => {
+    store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
+});
 
 const logout = () => {
     localStorage.removeItem('token');
