@@ -110,7 +110,7 @@ const onFileChange = async (event) => {
             router.push({
                 name: 'FishResultNormal',
                 query: {
-                    detections: JSON.stringify(detections),
+                    detections: encodeURIComponent(JSON.stringify(detections)),
                     imageUrl,
                 },
             });

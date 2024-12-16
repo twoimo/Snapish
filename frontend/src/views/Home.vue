@@ -38,11 +38,9 @@
                 <!-- 커뮤니티 게시물 섹션 -->
                 <section>
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-lg font-medium">
-                            <router-link to="/community" class="flex flex-col items-center p-2">
-                                커뮤니티
-                            </router-link>
-                        </h2>
+                        <router-link to="/community" class="flex flex-col items-center p-2">
+                            <h2 class="text-lg font-medium">커뮤니티</h2>
+                        </router-link>
                         <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <!-- 게시물 목록 -->
@@ -93,7 +91,7 @@ const store = useStore();
 
 onMounted(() => {
     store.dispatch("fetchMulddae");
-    
+
     // Disable Auto update
     // if (!store.state.currentlocation) {
     //     store.dispatch("fetchLocation");
@@ -104,10 +102,14 @@ onMounted(() => {
 
 <style>
 * {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
+
 *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera*/
+    display: none;
+    /* Chrome, Safari, Opera*/
 }
 </style>
