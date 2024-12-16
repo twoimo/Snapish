@@ -1,16 +1,41 @@
 <template>
   <div id="container">
-    <MapComponent></MapComponent>
+    <MapComponent v-if="locations.length > 0" :locations="locations"></MapComponent>
   </div>
 </template>
 
 <script>
-import MapComponent from '../components/MapComponent.vue';
+import axios from "@/axios";
+import MapComponent from '@/components/MapComponent.vue'
+
 export default {
   components: {
     // MapComponent 등록
     MapComponent,
   },
+  data() {
+    return {
+      locations: [] // 위치 데이터를 저장할 배열
+    };
+  },
+  mounted() {
+    // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
+    this.fetchLocations();
+  },
+  methods: {
+    // DB에서 위치 정보 가져오기, 주소 고정값 추후 해결
+    async fetchLocations() {
+      try {
+        const response = await axios.post('http://127.0.0.1:5000/api/map_fishing_spot');
+        if (response.data.location) {
+          this.locations = response.data.location;
+          console.log(this.locations)
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    },
+  }
 };
 </script>
 
