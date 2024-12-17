@@ -18,10 +18,10 @@
                 <section v-if="isAuthenticated" class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/catches"
-                            class="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition">
+                            class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
                             <h2 class="text-lg font-medium mr-2">내가 잡은 물고기</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
-                        <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
                         <div class="flex space-x-4">
@@ -40,10 +40,10 @@
                 <section>
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/community"
-                            class="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition">
+                            class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
                             <h2 class="text-lg font-medium">커뮤니티</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
-                        <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                     </div>
                     <div class="space-y-3">
                         <article v-for="i in 4" :key="i"
@@ -89,7 +89,9 @@ onMounted(() => {
     if (!store.state.mulddae) {
         store.dispatch("fetchMulddae");
     }
-    store.dispatch("fetchCatches");
+    if (store.getters.isAuthenticated) {
+        store.dispatch("fetchCatches");
+    }
 });
 
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
