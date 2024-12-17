@@ -54,13 +54,7 @@
             :class="{ visible: isDetailsVisible }"
             @click.self="hideDetails"
           >
-            <div v-if="selectedLocation" class="details-content">
-              <h2>낚시터 상세 정보</h2>
-              <p><strong>이름:</strong> {{ selectedLocation.location_id }}</p>
-              <p><strong>주소:</strong> {{ selectedLocation.address_ko }}</p>
-              <p><strong>설명:</strong> {{ selectedLocation.details }}</p>
-              <button class="close-btn" @click="hideDetails">닫기</button>
-            </div>
+            <MapLocationDetail v-if="isDetailsVisible" :location="selectedLocation" @close="hideDetails"/>
           </div>
         </section>
       </main>
@@ -71,11 +65,12 @@
 <script>
 import axios from "@/axios";
 import MapComponent from '@/components/MapComponent.vue'
+import MapLocationDetail from '@/components/MapLocationDetail.vue'
 
 export default {
   components: {
-    // MapComponent 등록
     MapComponent,
+    MapLocationDetail,
   },
   data() {
     return {
@@ -128,7 +123,7 @@ export default {
         const response = await axios.post('http://127.0.0.1:5000/api/map_fishing_spot');
         if (response.data.location) {
           this.locations = response.data.location;
-          console.log(this.locations)
+          console.log(`Get location DB : ${this.locations.length}`)
         }
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -194,42 +189,28 @@ export default {
 
 /* 슬라이드 패널 */
 .slide-up-panel {
-  position: absolute; /* 부모 컨테이너 기준으로 배치 */
+  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 85%;
+  height: 90%;
   background: white;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
-  transform: translateY(100%);
-  transition: transform 0.3s ease-in-out;
+  transform: translateY(100%); /* 기본 상태 */
+  transition: transform 0.3s ease-in-out; /* 애니메이션 추가 */
   z-index: 10;
 }
 
 .slide-up-panel.visible {
-  transform: translateY(0);
+  transform: translateY(0); /* 보이는 상태 */
 }
 
 .details-content {
   padding: 20px;
   overflow-y: auto;
   max-height: 100%;
-}
-
-.close-btn {
-  margin-top: 10px;
-  padding: 5px 10px;
-  background-color: #ff5a5a;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.close-btn:hover {
-  background-color: #e04e4e;
 }
 
 /* 검색바 */
