@@ -1,6 +1,6 @@
 <template>
     <div class="min-h-screen bg-gray-100 flex justify-center">
-        <div class="w-full max-w-4xl bg-white shadow-lg overflow-hidden">
+        <div class="w-full max-w-4xl bg-white shadow-lg overflow-hidden rounded-lg">
             <main class="pb-20 px-4">
                 <!-- 오늘의 물때 섹션 -->
                 <section class="mb-6 pt-4">
@@ -23,17 +23,19 @@
                             <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
                     </div>
-                    <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
+                    <div v-if="displayedCatches.length > 0" class="overflow-x-auto touch-pan-x"
+                        @scroll="loadMoreCatches">
                         <div class="flex space-x-4">
-                            <div v-for="catchItem in catches.slice().reverse().slice(0, 5)" :key="catchItem.id"
+                            <div v-for="catchItem in displayedCatches" :key="catchItem.id"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48 h-48">
                                 <img :src="catchItem.imageUrl" alt="Catch Image"
-                                    class="w-full h-32 object-cover rounded-lg mb-2" />
+                                    class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer"
+                                    @click="openImagePopup(catchItem.imageUrl)" />
                                 <p class="text-gray-800 text-sm text-center">{{ catchItem.detections[0].label }}
                                 </p>
                                 <p class="text-gray-600 text-xs text-center mb-2">신뢰도: {{
                                     catchItem.detections[0].confidence.toFixed(2)
-                                }}%</p>
+                                    }}%</p>
                             </div>
                         </div>
                     </div>
@@ -73,6 +75,17 @@
             </main>
         </div>
     </div>
+    <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+        @click="isImagePopupVisible = false">
+        <div class="relative max-w-full max-h-full" @click.stop>
+            <img :src="popupImageUrl" alt="Popup Image"
+                class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+            <button @click="isImagePopupVisible = false"
+                class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
+                &times;
+            </button>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -81,7 +94,7 @@ import {
     ImageIcon,
     ClockIcon,
 } from 'lucide-vue-next'
-import { onMounted, computed } from "vue";
+import { onMounted, computed, ref } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
 
@@ -94,13 +107,39 @@ onMounted(() => {
         store.dispatch("fetchMulddae");
     }
     if (isAuthenticated.value) {
-        store.dispatch("fetchCatches");
+        store.dispatch("fetchCatches").then(() => {
+            const sortedCatches = catches.value.slice().reverse();
+            displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
+        });
     }
 });
 
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
+
+// 이미지 팝업 관련 상태
+const isImagePopupVisible = ref(false);
+const popupImageUrl = ref('');
+
+// 잡은 물고기 섹션 관련 상태
+const displayedCatches = ref([]);
+const itemsToLoad = 2;
+
+function openImagePopup(imageUrl) {
+    popupImageUrl.value = imageUrl;
+    isImagePopupVisible.value = true;
+}
+
+function loadMoreCatches(event) {
+    const element = event.target;
+    if (element.scrollWidth - element.scrollLeft === element.clientWidth) {
+        const currentLength = displayedCatches.value.length;
+        const sortedCatches = catches.value.slice().reverse();
+        const moreCatches = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
+        displayedCatches.value = [...displayedCatches.value, ...moreCatches];
+    }
+}
 </script>
 
 <style lang="css">

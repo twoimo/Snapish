@@ -33,7 +33,8 @@
 
       <!-- 업로드된 물고기 이미지 표시 -->
       <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-        <img :src="imageUrl" alt="물고기 사진" class="w-full h-full object-cover" />
+        <img :src="imageUrl" alt="물고기 사진" class="w-full h-full object-cover cursor-pointer"
+          @click="openImagePopup(imageUrl)" />
       </div>
 
       <!-- AI 판별 결과 -->
@@ -84,6 +85,14 @@
           <span>공유하기</span>
         </button>
       </div>
+
+      <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
+      <div v-if="!isLoading && !errorMessage" class="mt-4">
+        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="navigateToCatches">
+          <span>내가 잡은 물고기</span>
+        </button>
+      </div>
     </main>
 
     <!-- 포토카드 모달 -->
@@ -101,20 +110,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 이미지 팝업 -->
+    <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+      @click="isImagePopupVisible = false">
+      <div class="relative max-w-full max-h-full" @click.stop>
+        <img :src="popupImageUrl" alt="Popup Image"
+          class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+        <button @click="isImagePopupVisible = false"
+          class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
+          &times;
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from '../axios'; // Ensure Axios is correctly imported
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import {
   BellIcon,
   Settings2Icon,
   ChevronLeftIcon,
   Share2Icon,
 } from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
 import html2canvas from 'html2canvas';
 
 // 라우터 인스턴스
@@ -137,6 +158,10 @@ const showModal = ref(false);
 
 // 포토카드 엘리먼트 참조
 const photocard = ref(null);
+
+// 이미지 팝업 관련 상태
+const isImagePopupVisible = ref(false);
+const popupImageUrl = ref('');
 
 // Add route to get query parameters
 const route = useRoute();
@@ -199,6 +224,17 @@ const downloadPhotocard = () => {
   }
 };
 
+// 이미지 팝업 열기
+function openImagePopup(imageUrl) {
+  popupImageUrl.value = imageUrl;
+  isImagePopupVisible.value = true;
+}
+
+// 내가 잡은 물고기 페이지로 이동
+function navigateToCatches() {
+  router.push('/catches');
+}
+
 // 뒤로 가기 기능 구현
 const goBack = () => {
   router.back();
@@ -209,6 +245,7 @@ const goBack = () => {
 .uploaded-image img {
   max-width: 100%;
   height: auto;
+
   object-fit: cover;
 }
 
