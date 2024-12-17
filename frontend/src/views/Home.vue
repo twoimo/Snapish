@@ -27,9 +27,9 @@
                         @scroll="loadMoreCatches">
                         <div class="flex space-x-4">
                             <div v-for="catchItem in displayedCatches" :key="catchItem.id"
-                                class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48 h-48">
+                                class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-80 h-64">
                                 <img :src="catchItem.imageUrl" alt="Catch Image"
-                                    class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer"
+                                    class="w-full h-48 object-cover rounded-lg mb-2 cursor-pointer"
                                     @click="openImagePopup(catchItem.imageUrl)" />
                                 <p class="text-gray-800 text-sm text-center">{{ catchItem.detections[0].label }}
                                 </p>
@@ -47,12 +47,12 @@
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/community"
                             class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
-                            <h2 class="text-lg font-medium">커뮤니티</h2>
+                            <h2 class="text-lg font-medium">오늘의 핫이슈</h2>
                             <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                         </router-link>
                     </div>
                     <div class="space-y-3">
-                        <article v-for="i in 4" :key="i"
+                        <article v-for="i in 5" :key="i"
                             class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition">
                             <div class="flex gap-3">
                                 <div
@@ -154,7 +154,7 @@ function loadMoreCatches(event) {
 
 .touch-pan-x {
     -webkit-overflow-scrolling: touch;
-    overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
 }
 
 .scroll-smooth {

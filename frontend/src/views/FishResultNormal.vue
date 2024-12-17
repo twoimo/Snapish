@@ -90,7 +90,7 @@
       <div v-if="!isLoading && !errorMessage" class="mt-4">
         <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
           @click="navigateToCatches">
-          <span>내가 잡은 물고기</span>
+          <span>내가 잡은 물고기 리스트 보기</span>
         </button>
       </div>
     </main>
