@@ -41,7 +41,7 @@
 
             <!-- 낚시 잡기, 팔로워, 팔로잉 -->
             <div v-if="stats" class="flex justify-around py-6 border-t border-gray-200">
-                <div class="text-center">
+                <div class="text-center cursor-pointer" @click="goToCatches">
                     <div class="text-2xl font-bold text-gray-800">{{ stats.catches || 0 }}</div>
                     <div class="text-gray-500 text-sm">Catches</div>
                 </div>
@@ -59,7 +59,8 @@
             <div class="p-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">전체 서비스</h2>
                 <div class="grid grid-cols-4 gap-4">
-                    <div v-for="(service, index) in services" :key="index" class="flex flex-col items-center">
+                    <div v-for="service in services" :key="service.id" class="flex flex-col items-center">
+                        <!-- Changed from service._id -->
                         <template v-if="service.name.includes('서비스')">
                             <Settings class="w-8 h-8 mb-2" />
                         </template>
@@ -93,22 +94,22 @@ const stats = computed(() => {
     };
 });
 const services = computed(() => [
-    { icon: '/icons/service1.png', name: '서비스 1' },
-    { icon: '/icons/service2.png', name: '서비스 2' },
-    { icon: '/icons/service3.png', name: '서비스 3' },
-    { icon: '/icons/service4.png', name: '서비스 4' },
-    { icon: '/icons/service5.png', name: '서비스 5' },
-    { icon: '/icons/service6.png', name: '서비스 6' },
-    { icon: '/icons/service7.png', name: '서비스 7' },
-    { icon: '/icons/service8.png', name: '서비스 8' },
-    { icon: '/icons/service9.png', name: '서비스 9' },
-    { icon: '/icons/service10.png', name: '서비스 10' },
-    { icon: '/icons/service11.png', name: '서비스 11' },
-    { icon: '/icons/service12.png', name: '서비스 12' },
-    { icon: '/icons/service12.png', name: '서비스 13' },
-    { icon: '/icons/service12.png', name: '서비스 14' },
-    { icon: '/icons/service12.png', name: '서비스 15' },
-    { icon: '/icons/service12.png', name: '서비스 16' },
+    { id: 1, icon: '/icons/service1.png', name: '서비스 1' },
+    { id: 2, icon: '/icons/service2.png', name: '서비스 2' },
+    { id: 3, icon: '/icons/service3.png', name: '서비스 3' },
+    { id: 4, icon: '/icons/service4.png', name: '서비스 4' },
+    { id: 5, icon: '/icons/service5.png', name: '서비스 5' },
+    { id: 6, icon: '/icons/service6.png', name: '서비스 6' },
+    { id: 7, icon: '/icons/service7.png', name: '서비스 7' },
+    { id: 8, icon: '/icons/service8.png', name: '서비스 8' },
+    { id: 9, icon: '/icons/service9.png', name: '서비스 9' },
+    { id: 10, icon: '/icons/service10.png', name: '서비스 10' },
+    { id: 11, icon: '/icons/service11.png', name: '서비스 11' },
+    { id: 12, icon: '/icons/service12.png', name: '서비스 12' },
+    { id: 13, icon: '/icons/service12.png', name: '서비스 13' },
+    { id: 14, icon: '/icons/service12.png', name: '서비스 14' },
+    { id: 15, icon: '/icons/service12.png', name: '서비스 15' },
+    { id: 16, icon: '/icons/service12.png', name: '서비스 16' },
 ]);
 
 onMounted(() => {
@@ -123,6 +124,10 @@ const logout = () => {
 
 const editProfile = () => {
     router.push('/edit-profile');
+};
+
+const goToCatches = () => {
+    router.push('/catches');
 };
 </script>
 

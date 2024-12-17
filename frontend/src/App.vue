@@ -28,35 +28,26 @@ const hideHeader = computed(() => /^\/(fish-result)/.test(route.path));
 const handleToggleCameraActions = () => {
   // ...existing code...
 };
+
 </script>
 
 <style>
 body {
-
-  /* eslint-disable-next-line */
-  /* Ensure Tailwind CSS is properly configured */
-  body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: #1a202c;
-    /* text-gray-900 */
-    background-color: #f7fafc;
-    /* bg-gray-100 */
-  }
+  /* ...existing styles... */
 }
 
 .active-link {
   color: #1d4ed8;
-  /* 선호하는 활성화 색상으로 변경 */
+  /* ...existing styles... */
 }
 
 .pt-16 {
   padding-top: 4rem;
-  /* Adjust according to the height of your header */
+  /* ...existing styles... */
 }
 
 .pb-16 {
   padding-bottom: 4rem;
-  /* Adjust according to the height of your bottom navigation */
+  /* ...existing styles... */
 }
 </style>

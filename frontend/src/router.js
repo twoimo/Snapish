@@ -39,22 +39,6 @@ const routes = [
     path: "/fish-result-normal",
     name: "FishResultNormal",
     component: FishResultNormal,
-    props: (route) => {
-      try {
-        const detections = decodeURIComponent(route.query.detections);
-        console.log("Decoded detections in router:", detections); // 추가된 로그
-        return {
-          detections,
-          imageUrl: route.query.imageUrl,
-        };
-      } catch (error) {
-        console.error("Error decoding detections:", error);
-        return {
-          detections: "[]",
-          imageUrl: route.query.imageUrl,
-        };
-      }
-    },
   },
   {
     path: "/fish-result-warning",
@@ -81,6 +65,7 @@ const routes = [
     path: "/catches",
     name: "Catches",
     component: Catches, // Catches 컴포넌트 추가
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -116,20 +101,6 @@ router.beforeEach(async (to, from, next) => {
 // 전역 에러 핸들러 추가
 router.onError((error) => {
   console.error("Router error:", error);
-});
-
-// 추가된 비동기 응답 처리
-router.afterEach((to, from) => {
-  console.log(`Navigation to ${to.fullPath} from ${from.fullPath} completed.`);
-});
-
-// 추가된 비동기 응답 처리
-router.afterEach((to, from) => {
-  setTimeout(() => {
-    console.log(
-      `Navigation to ${to.fullPath} from ${from.fullPath} completed.`
-    );
-  }, 0);
 });
 
 export default router;
