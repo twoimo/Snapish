@@ -487,6 +487,30 @@ def get_catches(current_user):
         'catch_date': catch.catch_date.strftime('%Y-%m-%d')
     } for catch in catches])
 
+
+@app.route('/api/map_fishing_spot', methods=['POST'])
+# 추후 Token 관련 데코레이터 추가할 것
+def map_fishing_spot():
+    session = Session()
+    fishing_spots = session.query(Location).all()
+    session.close()
+
+    try:
+        locations = [{
+            'location_id': spot.location_id,
+            'latitude': spot.latitude,
+            'longitude': spot.longitude,
+            'address_ko': spot.address
+        } for spot in fishing_spots]
+        
+        
+        return jsonify({
+            'message': 'DB호출 완료',
+            'location': locations
+        })
+    except Exception as e:
+        return jsonify({f'message : 호출 실패, {e}'}), 401
+
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
 def remove_session(exception=None):
