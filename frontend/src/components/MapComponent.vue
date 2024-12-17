@@ -33,7 +33,7 @@
                         var container = document.getElementById('kakaoMap'); // 지도를 담을 영역의 DOM 레퍼런스
                         var options = { // 지도를 생성할 때 필요한 기본 옵션
                             center: new kakao.maps.LatLng(36.0, 128.0), // 지도의 중심좌표
-                            level: 3 // 지도의 레벨(확대, 축소 정도)
+                            level: 15// 지도의 레벨(확대, 축소 정도)
                         };
                         // eslint-disable-next-line no-unused-vars
                         var map = new kakao.maps.Map(container, options); // 지도 생성 및 객체 리턴
