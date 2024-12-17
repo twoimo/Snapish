@@ -14,39 +14,42 @@
           </div>
 
           <div id="searchbar">
-            <input
-              type="text"
-              placeholder="원하는 낚시터 이름을 넣어주세요"
-              key="search-input"
-              class="form-control search-input"
-            />
-            <button @click="filteredList" class="search-btn">검색</button>
-          </div>
-        </section>
-        
-        <br>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="원하는 낚시터 이름을 넣어주세요"
+            key="search-input"
+            class="form-control search-input"
+            @input="filterLocations"
+          />
+          <button @click="filterLocations" class="search-btn">검색</button>
+        </div>
+      </section>
+        <br />
+
         <section class="mb-3">
-          <div id="middle-list"
-              :style="{ 
-                maxHeight: `${dynamicMaxHeight}px`, 
-                overflowY: 'scroll', 
-                paddingRight: '10px' 
-              }"
-            >
-              <div>
-                <ul class="location-list">
-                  <li
-                    v-for="(location, index) in locations"
-                    :key="index"
-                    class="location-item"
-                    @click="showDetails(location)"
-                  >
-                    <h3><strong>낚시터 이름 {{ location.location_id }}</strong></h3>
-                    <p>{{ location.address_ko }}</p>
-                    <p><strong>설명:</strong> {{ location.details }}</p>
-                  </li>
-                </ul>
-              </div>
+          <div
+            id="middle-list"
+            :style="{
+              maxHeight: `${dynamicMaxHeight}px`,
+              overflowY: 'scroll',
+              paddingRight: '10px'
+            }"
+          >
+            <div>
+              <ul class="location-list">
+                <li
+                  v-for="(location, index) in filteredLocations"
+                  :key="index"
+                  class="location-item"
+                  @click="showDetails(location)"
+                >
+                  <h3><strong>낚시터 이름 {{ location.location_id }}</strong></h3>
+                  <p>{{ location.address_ko }}</p>
+                  <p><strong>설명:</strong> {{ location.details }}</p>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div
@@ -74,6 +77,8 @@ export default {
   },
   data() {
     return {
+      searchQuery: "", // 검색 입력값
+      filteredLocations: [],
       locations: [], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
       isMapVisible: false, // 지도 표시 여부
       selectedLocation: null, // 선택된 낚시터 데이터
@@ -83,11 +88,10 @@ export default {
     };
   },
   mounted() {
-    // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
-    this.fetchLocations();
-    // 페이지 드래그 방지 및 스크롤 숨김 설정
-    this.updateMaxHeight(); // 초기 설정
-    this.toggleBodyScroll(false);
+    this.fetchLocations();     // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
+    this.filteredLocations = this.locations; // 초기에는 모든 locations를 표시
+    this.updateMaxHeight();     // 페이지 드래그 방지 및 스크롤 숨김 설정
+    this.toggleBodyScroll(false);     // 페이지 드래그 방지 및 스크롤 숨김 설정
     window.addEventListener("resize", this.updateMaxHeight); // 화면 크기 변화 감지
   },
   beforeUnmount() {
@@ -96,6 +100,16 @@ export default {
     window.removeEventListener("resize", this.updateMaxHeight); // 이벤트 제거
   },
   methods: {
+    filterLocations() {
+      const query = this.searchQuery.trim();
+      if (query === "") {
+        this.filteredLocations = [...this.locations]; // 모든 데이터 표시
+      } else {
+        this.filteredLocations = this.locations.filter((location) =>
+          String(location.location_id || "").includes(query)
+        );
+      }
+    },
     updateMaxHeight() {
       const headerHeight = 240;
       const footerHeight = 100;
@@ -122,7 +136,9 @@ export default {
       try {
         const response = await axios.post('http://127.0.0.1:5000/api/map_fishing_spot');
         if (response.data.location) {
-          this.locations = response.data.location;
+          const locationDict = response.data.location; // 딕셔너리
+          this.locations = Object.values(locationDict); // 딕셔너리 값을 배열로 변환
+          this.filteredLocations = [...this.locations]; // 초기 필터링 배열 설정
           console.log(`Get location DB : ${this.locations.length}`)
         }
       } catch (error) {
