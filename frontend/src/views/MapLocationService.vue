@@ -79,128 +79,7 @@ export default {
   },
   data() {
     return {
-      locations: [
-          {
-            address_ko: "부산광역시 강서구 낙동북로73번가길 200-5 (강동동)",
-            latitude: "35.22365536",
-            location_id: 1,
-            longitude: "128.94041200"
-          },
-          {
-            address_ko: "부산광역시 강서구 거가대로 2571 (천성동)",
-            latitude: "35.02301425",
-            location_id: 2,
-            longitude: "128.80958840"
-          },
-          {
-            address_ko: "부산광역시 해운대구 센텀중앙로 92 (우동)",
-            latitude: "35.17469312",
-            location_id: 3,
-            longitude: "129.12848456"
-          },
-          {
-            address_ko: "부산광역시 동래구 명륜로 36 (명륜동)",
-            latitude: "35.23254261",
-            location_id: 4,
-            longitude: "129.07848452"
-          },
-          {
-            address_ko: "부산광역시 부산진구 부전로 18 (부전동)",
-            latitude: "35.15803907",
-            location_id: 5,
-            longitude: "129.05867288"
-          },
-          {
-            address_ko: "부산광역시 남구 대연로 70 (대연동)",
-            latitude: "35.13327401",
-            location_id: 6,
-            longitude: "129.10343523"
-          },
-          {
-            address_ko: "부산광역시 수영구 민락로 29 (민락동)",
-            latitude: "35.15482722",
-            location_id: 7,
-            longitude: "129.11678967"
-          },
-          {
-            address_ko: "부산광역시 북구 화명동 1412-1",
-            latitude: "35.25348399",
-            location_id: 8,
-            longitude: "128.99768325"
-          },
-          {
-            address_ko: "부산광역시 기장군 기장읍 기장해안로 224",
-            latitude: "35.23614581",
-            location_id: 9,
-            longitude: "129.21540468"
-          },
-          {
-            address_ko: "부산광역시 영도구 동삼동 33-2",
-            latitude: "35.07891852",
-            location_id: 10,
-            longitude: "129.07143514"
-          },
-          {
-            address_ko: "부산광역시 사상구 괘법로 11 (괘법동)",
-            latitude: "35.14562821",
-            location_id: 11,
-            longitude: "128.98267549"
-          },
-          {
-            address_ko: "부산광역시 서구 충무대로 45 (충무동)",
-            latitude: "35.09840523",
-            location_id: 12,
-            longitude: "129.02048471"
-          },
-          {
-            address_ko: "부산광역시 동구 자갈치로 52 (초량동)",
-            latitude: "35.10274374",
-            location_id: 13,
-            longitude: "129.03446256"
-          },
-          {
-            address_ko: "부산광역시 강서구 유통단지로 105",
-            latitude: "35.22249151",
-            location_id: 14,
-            longitude: "128.95124636"
-          },
-          {
-            address_ko: "부산광역시 금정구 장전로 29 (장전동)",
-            latitude: "35.23621192",
-            location_id: 15,
-            longitude: "129.10084519"
-          },
-          {
-            address_ko: "부산광역시 해운대구 해운대해변로 32 (우동)",
-            latitude: "35.16340188",
-            location_id: 16,
-            longitude: "129.16005009"
-          },
-          {
-            address_ko: "부산광역시 사하구 하단로 220 (하단동)",
-            latitude: "35.09821242",
-            location_id: 17,
-            longitude: "128.98687233"
-          },
-          {
-            address_ko: "부산광역시 연제구 거제천로 11 (거제동)",
-            latitude: "35.16848537",
-            location_id: 18,
-            longitude: "129.10638741"
-          },
-          {
-            address_ko: "부산광역시 부산진구 중앙대로 788 (초읍동)",
-            latitude: "35.15637522",
-            location_id: 19,
-            longitude: "129.05531704"
-          },
-          {
-            address_ko: "부산광역시 남구 수영로 266 (수영동)",
-            latitude: "35.14967222",
-            location_id: 20,
-            longitude: "129.12003458"
-          }
-        ], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
+      locations: [], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
       isMapVisible: false, // 지도 표시 여부
       selectedLocation: null, // 선택된 낚시터 데이터
       isDetailsVisible: false, // 상세 정보 슬라이드 표시 여부
@@ -210,7 +89,7 @@ export default {
   },
   mounted() {
     // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
-    // this.fetchLocations();
+    this.fetchLocations();
     // 페이지 드래그 방지 및 스크롤 숨김 설정
     this.updateMaxHeight(); // 초기 설정
     this.toggleBodyScroll(false);
