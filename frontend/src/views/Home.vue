@@ -86,15 +86,18 @@ const store = useStore();
 
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(() => {
-    store.dispatch("fetchMulddae");
+    if (!store.state.mulddae) {
+        store.dispatch("fetchMulddae");
+    }
     store.dispatch("fetchCatches");
+    
 });
 
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 </script>
 
-<style>
+<style  lang="css">
 * {
     -ms-overflow-style: none;
     scrollbar-width: none;
