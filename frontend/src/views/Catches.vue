@@ -3,7 +3,7 @@
         <div class="w-full max-w-4xl bg-white shadow-lg">
             <main class="p-4">
                 <div v-if="displayedCatches.length > 0" class="grid grid-cols-2 gap-4">
-                    <div v-for="(catchItem, index) in displayedCatches" :key="index"
+                    <div v-for="(catchItem) in displayedCatches" :key="catchItem.id"
                         class="bg-gray-50 p-4 rounded-lg shadow-sm">
                         <img :src="catchItem.imageUrl" alt="Catch Image"
                             class="w-full h-32 object-cover rounded-lg mb-2" />
@@ -11,7 +11,6 @@
                             {{ catchItem.detections[0].label }}
                             <span v-if="catchItem.detections[0].label === '알 수 없음'" class="ml-2 cursor-pointer"
                                 @click="openEditPopup(catchItem)">
-                                <!-- Edit Icon -->
                                 <Edit class="h-4 w-4 text-blue-500" />
                             </span>
                         </p>
@@ -25,7 +24,7 @@
                 <div ref="loadMoreTrigger" class="text-center text-gray-500 mt-4"></div>
                 <div v-if="isEditPopupVisible"
                     class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                    <div class="bg-white p-4 rounded-lg">
+                    <div class="bg-white p-4 rounded-lg z-15">
                         <h2 class="text-lg mb-2 text-center">데이터 수정</h2>
                         <div class="mb-2">
                             <label class="block text-sm">라벨</label>
@@ -67,7 +66,8 @@ const loadMoreTrigger = ref(null);
 onMounted(() => {
     if (store.getters.isAuthenticated) {
         store.dispatch('fetchCatches').then(() => {
-            displayedCatches.value = catches.value.slice(0, itemsToLoad);
+            const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+            displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
         });
     }
 
@@ -90,31 +90,50 @@ function loadMoreCatches() {
     loading.value = true;
     setTimeout(() => {
         const currentLength = displayedCatches.value.length;
-        const moreCatches = catches.value.slice(currentLength, currentLength + itemsToLoad);
+        const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+        const moreCatches = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
         displayedCatches.value = [...displayedCatches.value, ...moreCatches];
         loading.value = false;
     }, 1000); // Simulate loading delay
 }
 
 function openEditPopup(catchItem) {
+    console.log("Opening edit popup for:", catchItem); // Inspect the catch item
+    if (!catchItem.id) { // Changed from '_id' to 'id'
+        console.error("Cannot open edit popup: 'id' is undefined.");
+        alert("수정할 수 없는 항목입니다: 식별자가 없습니다.");
+        return;
+    }
     selectedCatch.value = { ...catchItem };
     isEditPopupVisible.value = true;
 }
 
 function saveEdit() {
-    store.dispatch('updateCatch', selectedCatch.value).then(() => {
+    const updatedCatch = { ...selectedCatch.value };
+    if (!updatedCatch.id) { // Changed from '_id' to 'id'
+        console.error("Save failed: 'id' is undefined.");
+        alert("데이터 저장에 실패했습니다: 식별자가 없습니다.");
+        return;
+    }
+    // Ensure catch_date is correctly formatted
+    if (updatedCatch.catch_date) {
+        updatedCatch.catch_date = new Date(updatedCatch.catch_date).toISOString().split('T')[0];
+    }
+    store.dispatch('updateCatch', updatedCatch).then((response) => {
+        console.log("Update response:", response); // Log the response from the server
         // Update displayedCatches after successful update
-        const index = displayedCatches.value.findIndex(catchItem => catchItem.id === selectedCatch.value.id);
+        const index = displayedCatches.value.findIndex(catchItem => catchItem.id === updatedCatch.id); // Changed from '_id' to 'id'
         if (index !== -1) {
-            displayedCatches.value[index] = { ...selectedCatch.value };
+            displayedCatches.value[index] = { ...updatedCatch };
         }
         isEditPopupVisible.value = false;
-    }).catch(() => {
-        // Handle error (optional)
+    }).catch((error) => {
+        console.error("Update error:", error.response ? error.response.data : error.message); // Detailed error logging
         alert('데이터 업데이트에 실패했습니다.');
     });
 }
 </script>
+
 
 <style scoped>
 .grid {

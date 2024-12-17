@@ -25,7 +25,7 @@
                     </div>
                     <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
                         <div class="flex space-x-4">
-                            <div v-for="(catchItem, index) in catches.slice().reverse().slice(0, 5)" :key="index"
+                            <div v-for="catchItem in catches.slice().reverse().slice(0, 5)" :key="catchItem.id"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48 h-48">
                                 <img :src="catchItem.imageUrl" alt="Catch Image"
                                     class="w-full h-32 object-cover rounded-lg mb-2" />

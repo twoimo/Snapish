@@ -419,9 +419,16 @@ def predict(current_user):
         )
         session.add(new_catch)
         session.commit()
+
+        response_data = {
+            'id': new_catch.catch_id,  # Included 'id' in the response
+            'detections': detections,
+            'imageUrl': photo_url
+        }
+
         session.close()
 
-        return jsonify({'detections': detections, 'imageUrl': photo_url})
+        return jsonify(response_data)
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         return jsonify({'error': '이미지 처리 중 오류가 발생했습니다.'}), 500
@@ -506,10 +513,48 @@ def get_catches(current_user):
     session.close()
 
     return jsonify([{
+        'id': catch.catch_id,  # Added 'id' field
         'imageUrl': catch.photo_url,
         'detections': catch.exif_data,
         'catch_date': catch.catch_date.strftime('%Y-%m-%d')
     } for catch in catches])
+
+@app.route('/catches/<int:catch_id>', methods=['PUT'])
+@token_required
+def update_catch(current_user, catch_id):
+    data = request.get_json()
+    if not data:
+        logging.error("Invalid input: No data provided")
+        return jsonify({"error": "Invalid input"}), 400
+
+    session = Session()
+    catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
+    if not catch:
+        logging.error(f"Catch not found: catch_id={catch_id}, user_id={current_user.user_id}")
+        session.close()
+        return jsonify({"error": "Catch not found"}), 404
+
+    try:
+        logging.info(f"Updating catch: {catch_id} for user: {current_user.user_id}")
+        catch.photo_url = data.get('imageUrl', catch.photo_url)
+        catch.exif_data = data.get('detections', catch.exif_data)
+        if 'catch_date' in data:
+            catch.catch_date = datetime.strptime(data['catch_date'], '%Y-%m-%d')
+        session.commit()
+        updated_catch = {
+            'id': catch.catch_id,
+            'imageUrl': catch.photo_url,
+            'detections': catch.exif_data,
+            'catch_date': catch.catch_date.strftime('%Y-%m-%d')
+        }
+        logging.info(f"Catch updated successfully: {updated_catch}")
+        session.close()
+        return jsonify(updated_catch), 200
+    except Exception as e:
+        logging.error(f"Error updating catch: {e}")
+        session.rollback()
+        session.close()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>', methods=['GET'])
 def uploaded_file(filename):
@@ -565,4 +610,5 @@ def remove_session(exception=None):
     Session.remove()
 
 if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=False)
     app.run(host='0.0.0.0', port=5000, debug=False)

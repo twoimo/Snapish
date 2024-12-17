@@ -20,3 +20,11 @@ export async function fetchMulddae(date) {
     return { error: error.message };
   }
 }
+
+// Example: If making API calls that include identifiers, ensure 'id' is used
+
+// export async function getMulddaeData() {
+//     const response = await axios.get('/backend/mulddae');
+//     // Ensure response data uses 'id' if applicable
+//     return response.data;
+// }
