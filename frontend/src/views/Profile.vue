@@ -41,7 +41,7 @@
 
             <!-- 낚시 잡기, 팔로워, 팔로잉 -->
             <div v-if="stats" class="flex justify-around py-6 border-t border-gray-200">
-                <div class="text-center">
+                <div class="text-center cursor-pointer" @click="goToCatches">
                     <div class="text-2xl font-bold text-gray-800">{{ stats.catches || 0 }}</div>
                     <div class="text-gray-500 text-sm">Catches</div>
                 </div>
@@ -123,6 +123,10 @@ const logout = () => {
 
 const editProfile = () => {
     router.push('/edit-profile');
+};
+
+const goToCatches = () => {
+    router.push('/catches');
 };
 </script>
 

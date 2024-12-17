@@ -109,15 +109,17 @@ const onFileChange = async (event) => {
             const detections = response.data.detections;
 
             if (detections && detections.length > 0) {
-                // Save the catch to the database
                 const token = localStorage.getItem('token'); // Get the token from localStorage
-                await axios.post('/catches', { imageUrl, detections }, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`, // Include the token in the headers
-                    },
-                    withCredentials: true,
-                });
-                await store.dispatch('fetchCatches'); // Refresh catches in the store
+                if (token) {
+                    // Save the catch to the database for authenticated users
+                    await axios.post('/catches', { imageUrl, detections }, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`, // Include the token in the headers
+                        },
+                        withCredentials: true,
+                    });
+                    await store.dispatch('fetchCatches'); // Refresh catches in the store
+                }
 
                 // Navigate to the result page
                 router.push({

@@ -118,18 +118,4 @@ router.onError((error) => {
   console.error("Router error:", error);
 });
 
-// 추가된 비동기 응답 처리
-router.afterEach((to, from) => {
-  console.log(`Navigation to ${to.fullPath} from ${from.fullPath} completed.`);
-});
-
-// 추가된 비동기 응답 처리
-router.afterEach((to, from) => {
-  setTimeout(() => {
-    console.log(
-      `Navigation to ${to.fullPath} from ${from.fullPath} completed.`
-    );
-  }, 0);
-});
-
 export default router;

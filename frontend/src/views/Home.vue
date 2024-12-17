@@ -15,7 +15,7 @@
                 </section>
 
                 <!-- 내가 잡은 물고기 섹션 -->
-                <section class="mb-6 pt-4">
+                <section v-if="isAuthenticated" class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/catches"
                             class="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition">
@@ -90,14 +90,14 @@ onMounted(() => {
         store.dispatch("fetchMulddae");
     }
     store.dispatch("fetchCatches");
-    
 });
 
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
 </script>
 
-<style  lang="css">
+<style lang="css">
 * {
     -ms-overflow-style: none;
     scrollbar-width: none;
