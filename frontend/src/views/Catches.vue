@@ -27,7 +27,19 @@
                     class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div class="bg-white p-4 rounded-lg">
                         <h2 class="text-lg mb-2 text-center">데이터 수정</h2>
-                        <input v-model="selectedCatch.detections[0].label" class="border p-2 w-full" />
+                        <div class="mb-2">
+                            <label class="block text-sm">라벨</label>
+                            <input v-model="selectedCatch.detections[0].label" class="border p-2 w-full" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm">날짜</label>
+                            <input type="date" v-model="selectedCatch.catch_date" class="border p-2 w-full" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-sm">신뢰도</label>
+                            <input type="number" step="0.01" v-model.number="selectedCatch.detections[0].confidence"
+                                class="border p-2 w-full" />
+                        </div>
                         <button @click="saveEdit" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">저장</button>
                         <button @click="isEditPopupVisible = false"
                             class="mt-2 bg-gray-300 text-black px-4 py-2 rounded">취소</button>
@@ -90,8 +102,17 @@ function openEditPopup(catchItem) {
 }
 
 function saveEdit() {
-    store.dispatch('updateCatch', selectedCatch.value);
-    isEditPopupVisible.value = false;
+    store.dispatch('updateCatch', selectedCatch.value).then(() => {
+        // Update displayedCatches after successful update
+        const index = displayedCatches.value.findIndex(catchItem => catchItem.id === selectedCatch.value.id);
+        if (index !== -1) {
+            displayedCatches.value[index] = { ...selectedCatch.value };
+        }
+        isEditPopupVisible.value = false;
+    }).catch(() => {
+        // Handle error (optional)
+        alert('데이터 업데이트에 실패했습니다.');
+    });
 }
 </script>
 
