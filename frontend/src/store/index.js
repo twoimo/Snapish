@@ -52,6 +52,12 @@ export default createStore({
     addCatch(state, newCatch) {
       state.catches.push(newCatch);
     },
+    UPDATE_CATCH(state, updatedCatch) {
+      const index = state.catches.findIndex((c) => c.id === updatedCatch.id); // Changed from '_id' to 'id'
+      if (index !== -1) {
+        state.catches.splice(index, 1, updatedCatch);
+      }
+    },
   },
   actions: {
     // Existing actions
@@ -194,16 +200,18 @@ export default createStore({
 
     async fetchCatches({ commit }) {
       try {
-        const token = localStorage.getItem("token"); // Get the token from localStorage
+        const token = localStorage.getItem("token");
         const response = await axios.get("/catches", {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
+            Authorization: `Bearer ${token}`,
           },
           withCredentials: true,
         });
-        commit("setCatches", response.data);
+        const catches = response.data;
+        commit("setCatches", catches);
       } catch (error) {
         console.error("Error fetching catches:", error);
+        commit("setError", error);
       }
     },
     async addCatch({ commit }, newCatch) {
@@ -212,6 +220,28 @@ export default createStore({
         commit("addCatch", response.data);
       } catch (error) {
         console.error("Error adding catch:", error);
+      }
+    },
+    async updateCatch({ commit }, updatedCatch) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.put(
+          `http://localhost:5000/catches/${updatedCatch.id}`,
+          updatedCatch,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        commit("UPDATE_CATCH", response.data);
+        return response.data;
+      } catch (error) {
+        console.error(
+          "Update catch error:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
       }
     },
   },
