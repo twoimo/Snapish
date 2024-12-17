@@ -39,22 +39,6 @@ const routes = [
     path: "/fish-result-normal",
     name: "FishResultNormal",
     component: FishResultNormal,
-    props: (route) => {
-      try {
-        const detections = decodeURIComponent(route.query.detections);
-        console.log("Decoded detections in router:", detections); // 추가된 로그
-        return {
-          detections,
-          imageUrl: route.query.imageUrl,
-        };
-      } catch (error) {
-        console.error("Error decoding detections:", error);
-        return {
-          detections: "[]",
-          imageUrl: route.query.imageUrl,
-        };
-      }
-    },
   },
   {
     path: "/fish-result-warning",
@@ -81,6 +65,7 @@ const routes = [
     path: "/catches",
     name: "Catches",
     component: Catches, // Catches 컴포넌트 추가
+    meta: { requiresAuth: true },
   },
 ];
 

@@ -28,6 +28,7 @@ const hideHeader = computed(() => /^\/(fish-result)/.test(route.path));
 const handleToggleCameraActions = () => {
   // ...existing code...
 };
+
 </script>
 
 <style>

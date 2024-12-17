@@ -194,16 +194,18 @@ export default createStore({
 
     async fetchCatches({ commit }) {
       try {
-        const token = localStorage.getItem("token"); // Get the token from localStorage
+        const token = localStorage.getItem("token");
         const response = await axios.get("/catches", {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
+            'Authorization': `Bearer ${token}`,
           },
           withCredentials: true,
         });
-        commit("setCatches", response.data);
+        const catches = response.data;
+        commit("setCatches", catches);
       } catch (error) {
         console.error("Error fetching catches:", error);
+        commit("setError", error);
       }
     },
     async addCatch({ commit }, newCatch) {

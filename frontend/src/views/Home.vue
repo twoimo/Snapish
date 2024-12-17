@@ -25,11 +25,11 @@
                     </div>
                     <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
                         <div class="flex space-x-4">
-                            <div v-for="(catchItem, index) in [...catches].reverse()" :key="index"
+                            <div v-for="(catchItem, index) in catches.slice().reverse()" :key="index"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48 h-48">
                                 <img :src="catchItem.imageUrl" alt="Catch Image"
                                     class="w-full h-32 object-cover rounded-lg mb-2" />
-                                <p class="text-gray-800 text-sm">{{ catchItem.detections }}</p>
+                                <p class="text-gray-800 text-sm">{{ catchItem.detections[0].label }}</p>
                             </div>
                         </div>
                     </div>
@@ -89,7 +89,7 @@ onMounted(() => {
     if (!store.state.mulddae) {
         store.dispatch("fetchMulddae");
     }
-    if (store.getters.isAuthenticated) {
+    if (isAuthenticated.value) {
         store.dispatch("fetchCatches");
     }
 });

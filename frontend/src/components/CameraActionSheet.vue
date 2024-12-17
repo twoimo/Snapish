@@ -97,35 +97,29 @@ const handleOption = (action) => {
 const onFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-        const imageUrl = URL.createObjectURL(file);
         const formData = new FormData();
         formData.append('image', file);
 
         try {
-            const response = await axios.post('/backend/predict', formData, {  // Update endpoint
-                headers: { 'Content-Type': 'multipart/form-data' },
-                withCredentials: true, // Include credentials in the request
+            const token = localStorage.getItem('token'); // Get the token from localStorage
+            const response = await axios.post('/backend/predict', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`, // Include the token in the headers
+                },
+                withCredentials: true,
             });
             const detections = response.data.detections;
+            const imageUrl = response.data.imageUrl;
 
             if (detections && detections.length > 0) {
-                const token = localStorage.getItem('token'); // Get the token from localStorage
-                if (token) {
-                    // Save the catch to the database for authenticated users
-                    await axios.post('/catches', { imageUrl, detections }, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`, // Include the token in the headers
-                        },
-                        withCredentials: true,
-                    });
-                    await store.dispatch('fetchCatches'); // Refresh catches in the store
-                }
+                // Refresh catches in the store
+                await store.dispatch('fetchCatches');
 
-                // Navigate to the result page
+                // Navigate to the result page without passing props
                 router.push({
                     name: 'FishResultNormal',
                     query: {
-                        detections: encodeURIComponent(JSON.stringify(detections)),
                         imageUrl,
                     },
                 });

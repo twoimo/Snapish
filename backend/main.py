@@ -1,11 +1,11 @@
 import os
 import logging
 from datetime import datetime, timedelta
+import uuid
+from werkzeug.utils import secure_filename
 
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from ultralytics import YOLO
+from flask import Flask, request, jsonify, send_from_directory
 from PIL import Image
 from functools import wraps
 import jwt
@@ -30,6 +30,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
+from ultralytics import YOLO
+from flask_cors import CORS
+
+# Ensure the 'uploads' directory exists
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Define allowed extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    """
+    Check if the file has one of the allowed extensions.
+    """
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # 환경 변수 로드
 load_dotenv("./.env")
@@ -123,21 +139,10 @@ class Catch(Base):
     exif_data = Column(JSON)
 
     user = relationship('User', back_populates='catches')
-    location = relationship('Location', back_populates='catches')
-    species = relationship('FishSpecies', back_populates='catches')
-    tournament_participants = relationship('TournamentParticipant', back_populates='catch', cascade='all, delete')
-
-
-class Ranking(Base):
-    __tablename__ = 'Rankings'
-
-    ranking_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
-    total_catches = Column(Integer, default=0)
-    tier = Column(Enum('입문자', '초급자', '중급자', '낚시왕'), default='입문자')
+    location = relationship('Location', back_populates='catches')  # Existing line
+    species = relationship('FishSpecies', back_populates='catches')  # Existing line
+    tournament_participants = relationship('TournamentParticipant', back_populates='catch')  # Add this line
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = relationship('User', back_populates='rankings')
 
 
 class AIConsent(Base):
@@ -147,6 +152,7 @@ class AIConsent(Base):
     user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'), unique=True)
     consent_given = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship('User', back_populates='ai_consent')
 
@@ -215,18 +221,23 @@ class TournamentParticipant(Base):
     user = relationship('User', back_populates='tournament_participants')
     catch = relationship('Catch', back_populates='tournament_participants')
 
+# Add the Ranking class
+class Ranking(Base):
+    __tablename__ = 'Rankings'
+
+    ranking_id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
+    score = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship('User', back_populates='rankings')
+
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(engine)
 
 # Flask 앱 초기화
 app = Flask(__name__)
-CORS(app, supports_credentials=True)  # Update CORS configuration to allow credentials
-logging.basicConfig(level=logging.INFO)
-
-# 세션 설정
-app.session = Session
-
-# 모델 로드
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_ep50_confi91_predict.pt').to(device)
 
@@ -269,42 +280,37 @@ def get_mulddae():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-@app.route('/backend/predict', methods=['POST'])
-def predict():
-    file = request.files.get('image')
-    if not file:
-        return jsonify({'error': '이미지가 업로드되지 않았습니다.'}), 400
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
 
-    try:
-        img = Image.open(io.BytesIO(file.read())).convert('RGB')
-    except Exception:
-        return jsonify({'error': '이미지 파일을 열 수 없습니다.'}), 400
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
 
-    try:
-        results = model(img, exist_ok=True, device=device)
-    except Exception as e:
-        logging.error(f"Model prediction error: {e}")
-        return jsonify({'error': '예측 중 오류가 발생했습니다.'}), 500
+        # 헤더에서 토큰 가져오기
+        if 'Authorization' in request.headers:
+            token = request.headers['Authorization'].split(' ')[1]
 
-    detections = [
-        {
-            'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
-            'confidence': float(conf)
-        }
-        for result in results
-        for cls, conf in zip(result.boxes.cls, result.boxes.conf)
-    ]
+        if not token:
+            return jsonify({'message': '토큰이 필요합니다.'}), 401
 
-    detections.sort(key=lambda x: x['confidence'], reverse=True)
-    print("detections after sorting:", detections)
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            user_id = data['user_id']
 
-    if not detections:
-        detections.append({
-            'label': '알 수 없음',
-            'confidence': 0.0
-        })
+            session = Session()
+            current_user = session.query(User).filter_by(user_id=user_id).first()
+            session.close()
 
-    return jsonify({'detections': detections})
+            if not current_user:
+                return jsonify({'message': '유효하지 않은 토큰입니다.'}), 401
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': '토큰이 만료되었습니다.'}), 401
+        except Exception:
+            return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
+
+        return f(current_user, *args, **kwargs)
+    return decorated
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -339,8 +345,6 @@ def signup():
 
     return jsonify({'message': '회원가입이 성공적으로 완료되었습니다.'}), 201
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -371,36 +375,56 @@ def login():
         })
     else:
         return jsonify({'message': '로그인 실패'}), 401
-    
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
 
-        # 헤더에서 토큰 가져오기
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(' ')[1]
+@app.route('/backend/predict', methods=['POST'])
+@token_required
+def predict(current_user):
+    file = request.files.get('image')
+    if not file or not allowed_file(file.filename):
+        return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
 
-        if not token:
-            return jsonify({'message': '토큰이 필요합니다.'}), 401
+    filename = secure_filename(file.filename)
+    unique_filename = str(uuid.uuid4()) + '_' + filename
+    save_path = os.path.join('uploads', unique_filename)
+    file.save(save_path)
 
-        try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-            user_id = data['user_id']
+    try:
+        img = Image.open(save_path).convert('RGB')
+        results = model(img, exist_ok=True, device=device)
+        detections = [
+            {
+                'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
+                'confidence': float(conf)
+            }
+            for result in results
+            for cls, conf in zip(result.boxes.cls, result.boxes.conf)
+        ]
+        detections.sort(key=lambda x: x['confidence'], reverse=True)
+        if not detections:
+            detections.append({
+                'label': '알 수 없음',
+                'confidence': 0.0
+            })
 
-            session = Session()
-            current_user = session.query(User).filter_by(user_id=user_id).first()
-            session.close()
+        # Build the image URL accessible by the frontend
+        photo_url = request.host_url + 'uploads/' + unique_filename
 
-            if not current_user:
-                return jsonify({'message': '유효하지 않은 토큰입니다.'}), 401
-        except jwt.ExpiredSignatureError:
-            return jsonify({'message': '토큰이 만료되었습니다.'}), 401
-        except Exception:
-            return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
+        # Save detections and image info to the database
+        session = Session()
+        new_catch = Catch(
+            user_id=current_user.user_id,
+            photo_url=photo_url,
+            exif_data=detections,
+            catch_date=datetime.utcnow()
+        )
+        session.add(new_catch)
+        session.commit()
+        session.close()
 
-        return f(current_user, *args, **kwargs)
-    return decorated
+        return jsonify({'detections': detections, 'imageUrl': photo_url})
+    except Exception as e:
+        logging.error(f"Error processing image: {e}")
+        return jsonify({'error': '이미지 처리 중 오류가 발생했습니다.'}), 500
 
 @app.route('/profile', methods=['GET', 'PUT'])
 @token_required
@@ -487,6 +511,29 @@ def get_catches(current_user):
         'catch_date': catch.catch_date.strftime('%Y-%m-%d')
     } for catch in catches])
 
+@app.route('/uploads/<filename>', methods=['GET'])
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
+
+@app.route('/backend/get-detections', methods=['GET'])
+@token_required
+def get_detections(current_user):
+    imageUrl = request.args.get('imageUrl')
+    if not imageUrl:
+        return jsonify({'error': 'imageUrl is required'}), 400
+
+    try:
+        session = Session()
+        catch = session.query(Catch).filter_by(photo_url=imageUrl).first()
+        session.close()
+
+        if not catch:
+            return jsonify({'error': 'No catch found for the provided imageUrl'}), 404
+
+        return jsonify({'detections': catch.exif_data, 'imageUrl': catch.photo_url})
+    except Exception as e:
+        logging.error(f"Error in get_detections: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/map_fishing_spot', methods=['POST'])
 # 추후 Token 관련 데코레이터 추가할 것
@@ -498,6 +545,7 @@ def map_fishing_spot():
     try:
         locations = [{
             'location_id': spot.location_id,
+
             'latitude': spot.latitude,
             'longitude': spot.longitude,
             'address_ko': spot.address

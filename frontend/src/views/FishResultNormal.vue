@@ -105,7 +105,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from '../axios'; // Ensure Axios is correctly imported
+import { useRoute } from 'vue-router';
 import {
   BellIcon,
   Settings2Icon,
@@ -114,18 +116,6 @@ import {
 } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import html2canvas from 'html2canvas';
-
-// props 정의
-const props = defineProps({
-  detections: {
-    type: String, // JSON 문자열로 전달됨
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-    required: true,
-  },
-});
 
 // 라우터 인스턴스
 const router = useRouter();
@@ -139,35 +129,46 @@ const errorMessage = ref('');
 // parsedDetections을 ref로 선언
 const parsedDetections = ref([]);
 
+// imageUrl을 ref로 선언
+const imageUrl = ref('');
+
 // 포토카드 모달 제어
 const showModal = ref(false);
 
 // 포토카드 엘리먼트 참조
 const photocard = ref(null);
 
-// watch를 통해 props.detections을 파싱하고 에러 처리
-watch(
-  () => props.detections,
-  (newVal) => {
-    console.log('Received detections:', newVal); // 추가된 로그
-    try {
-      // detections을 디코딩하여 파싱
-      const decodedVal = decodeURIComponent(newVal);
-      console.log('Decoded detections:', decodedVal); // 디코딩된 값 확인
-      const detections = JSON.parse(decodedVal);
-      console.log('Parsed detections:', detections); // 파싱된 값 확인
-      parsedDetections.value = detections;
-      errorMessage.value = '';
-    } catch (e) {
-      console.error('Failed to parse detections:', e);
-      errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
-      parsedDetections.value = [];
-    } finally {
-      isLoading.value = false;
-    }
-  },
-  { immediate: true }
-);
+// Add route to get query parameters
+const route = useRoute();
+
+// Fetch detections from the server
+const fetchDetections = async () => {
+  isLoading.value = true;
+  try {
+    const token = localStorage.getItem('token'); // Retrieve the token
+    const response = await axios.get('/backend/get-detections', {
+      params: {
+        imageUrl: route.query.imageUrl,
+      },
+      headers: {
+        'Authorization': `Bearer ${token}`, // Include the token in headers
+      },
+    });
+    parsedDetections.value = response.data.detections;
+    imageUrl.value = response.data.imageUrl;
+    errorMessage.value = '';
+  } catch (e) {
+    console.error('Failed to fetch detections:', e);
+    errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
+    parsedDetections.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchDetections();
+});
 
 // 신뢰도에 따른 색상 클래스 반환
 const getConfidenceColor = (confidence) => {
