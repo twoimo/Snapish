@@ -25,11 +25,15 @@
                     </div>
                     <div v-if="catches.length > 0" class="overflow-x-auto touch-pan-x">
                         <div class="flex space-x-4">
-                            <div v-for="(catchItem, index) in catches.slice().reverse()" :key="index"
+                            <div v-for="(catchItem, index) in catches.slice().reverse().slice(0, 5)" :key="index"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-48 h-48">
                                 <img :src="catchItem.imageUrl" alt="Catch Image"
                                     class="w-full h-32 object-cover rounded-lg mb-2" />
-                                <p class="text-gray-800 text-sm">{{ catchItem.detections[0].label }}</p>
+                                <p class="text-gray-800 text-sm text-center">{{ catchItem.detections[0].label }}
+                                </p>
+                                <p class="text-gray-600 text-xs text-center mb-2">신뢰도: {{
+                                    catchItem.detections[0].confidence.toFixed(2)
+                                }}%</p>
                             </div>
                         </div>
                     </div>
