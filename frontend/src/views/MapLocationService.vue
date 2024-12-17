@@ -22,7 +22,6 @@
             class="form-control search-input"
             @input="filterLocations"
           />
-          <button @click="filterLocations" class="search-btn">검색</button>
         </div>
       </section>
         <br />
@@ -139,7 +138,7 @@ export default {
           const locationDict = response.data.location; // 딕셔너리
           this.locations = Object.values(locationDict); // 딕셔너리 값을 배열로 변환
           this.filteredLocations = [...this.locations]; // 초기 필터링 배열 설정
-          console.log(`Get location DB : ${this.locations.length}`)
+          console.log(this.locations)
         }
       } catch (error) {
         console.error('Error fetching locations:', error);
