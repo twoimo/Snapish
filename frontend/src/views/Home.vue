@@ -80,9 +80,9 @@
     </div>
     <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
         @click="isImagePopupVisible = false">
-        <div class="relative max-w-full max-h-full" @click.stop>
+        <div class="relative flex justify-center items-center" @click.stop>
             <img :src="popupImageUrl" alt="Popup Image"
-                class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+                class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
             <button @click="isImagePopupVisible = false"
                 class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
                 &times;
@@ -90,6 +90,12 @@
         </div>
     </div>
     <input type="file" @change="handleImageUpload" />
+    <div v-if="isAuthenticated">
+        <img :src="avatarUrl" alt="User Avatar" class="avatar" />
+    </div>
+    <div v-else>
+        <img src="/default-avatar.webp" alt="Default Avatar" class="avatar" />
+    </div>
 </template>
 
 <script setup>
@@ -120,17 +126,26 @@ onMounted(() => {
     }
     if (isAuthenticated.value) {
         isLoadingCatches.value = true; // Start loading
-        store.dispatch("fetchCatches").then(() => {
+        if (!store.state.catches) {
+            store.dispatch("fetchCatches").then(() => {
+                const sortedCatches = catches.value.slice().reverse();
+                displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
+                isLoadingCatches.value = false; // End loading
+            });
+        } else {
             const sortedCatches = catches.value.slice().reverse();
             displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
             isLoadingCatches.value = false; // End loading
-        });
+        }
     }
 });
 
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const avatarUrl = computed(() =>
+    store.getters.user.avatar ? `http://localhost:5000${store.getters.user.avatar}` : '/default-avatar.webp'
+);
 
 // 이미지 팝업 관련 상태
 const isImagePopupVisible = ref(false);
@@ -256,5 +271,12 @@ const handlePredictResponse = (data) => {
 
 .transition {
     transition: background-color 0.3s ease;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 </style>

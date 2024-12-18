@@ -73,6 +73,7 @@ class User(Base):
     full_name = Column(String(100))
     age = Column(Integer)
     preferred_font_size = Column(Enum('small', 'medium', 'large'), default='medium')
+    avatar = Column(String(255), nullable=True)  # New field for avatar
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sessions = relationship('UserSession', back_populates='user', cascade='all, delete')
@@ -299,19 +300,13 @@ def token_required(f):
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             user_id = data['user_id']
-
-            session = Session()
-            current_user = session.query(User).filter_by(user_id=user_id).first()
-            session.close()
-
-            if not current_user:
-                return jsonify({'message': '유효하지 않은 토큰입니다.'}), 401
         except jwt.ExpiredSignatureError:
             return jsonify({'message': '토큰이 만료되었습니다.'}), 401
         except Exception:
             return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
 
-        return f(current_user, *args, **kwargs)
+        # Pass user_id to the route
+        return f(user_id, *args, **kwargs)
     return decorated
 
 @app.route('/signup', methods=['POST'])
@@ -353,30 +348,38 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
+    if not username or not password:
+        return jsonify({'message': 'Username and password are required.'}), 400
+
     session = Session()
-    user = session.query(User).filter_by(username=username).first()
-    session.close()
+    try:
+        user = session.query(User).filter_by(username=username).first()
 
-    if user and check_password_hash(user.password_hash, password):
-        # 토큰 생성
-        payload = {
-            'user_id': user.user_id,
-            'exp': datetime.utcnow() + timedelta(hours=24)  # 수정된 부분
-        }
-        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-
-        return jsonify({
-            'message': '로그인 성공',
-            'token': token,
-            'user': {
+        if user and check_password_hash(user.password_hash, password):
+            # 토큰 생성
+            payload = {
                 'user_id': user.user_id,
-                'username': user.username,
-                'email': user.email,
-                # 필요한 사용자 정보 추가
+                'exp': datetime.utcnow() + timedelta(hours=24)  # 수정된 부분
             }
-        })
-    else:
-        return jsonify({'message': '로그인 실패'}), 401
+            token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
+            return jsonify({
+                'message': '로그인 성공',
+                'token': token,
+                'user': {
+                    'user_id': user.user_id,
+                    'username': user.username,
+                    'email': user.email,
+                    # 필요한 사용자 정보 추가
+                }
+            })
+        else:
+            return jsonify({'message': '로그인 실패'}), 401
+    except Exception as e:
+        logging.error(f"Login error: {e}")
+        return jsonify({'message': 'Internal server error'}), 500
+    finally:
+        session.close()
 
 @app.route('/backend/predict', methods=['POST'])
 def predict():
@@ -463,28 +466,42 @@ def predict():
 
 @app.route('/profile', methods=['GET', 'PUT'])
 @token_required
-def profile(current_user):
+def profile(user_id):
+    session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
     if request.method == 'GET':
-        return jsonify({
+        user_data = {
             'user_id': current_user.user_id,
             'username': current_user.username,
             'email': current_user.email,
+            'full_name': current_user.full_name,
+            'age': current_user.age,
+            'avatar': current_user.avatar,  # Include avatar URL
             # 필요한 정보 추가
-        })
+        }
+        session.close()
+        return jsonify(user_data)
     elif request.method == 'PUT':
         data = request.get_json()
         if not data:
+            session.close()
             return jsonify({'message': 'Invalid input'}), 400
         # 사용자 정보 업데이트
         current_user.username = data.get('username', current_user.username)
         current_user.email = data.get('email', current_user.email)
+        current_user.full_name = data.get('full_name', current_user.full_name)
+        current_user.age = data.get('age', current_user.age)
         # 비밀번호 변경 처리
         if data.get('current_password') and data.get('new_password'):
             if check_password_hash(current_user.password_hash, data['current_password']):
                 current_user.password_hash = generate_password_hash(data['new_password'])
             else:
+                session.close()
                 return jsonify({'message': '현재 비밀번호가 일치하지 않습니다.'}), 400
-        session = Session()
         session.add(current_user)
         session.commit()
         session.close()
@@ -492,9 +509,14 @@ def profile(current_user):
 
 @app.route('/recent-activities', methods=['GET'])
 @token_required
-def recent_activities(current_user):
-    # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
+def recent_activities(user_id):
     session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
+    # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
     activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
     session.close()
     
@@ -512,7 +534,7 @@ def recent_activities(current_user):
 
 @app.route('/catches', methods=['POST'])
 @token_required
-def add_catch(current_user):
+def add_catch(user_id):
     data = request.get_json()
     imageUrl = data.get('imageUrl')
     detections = data.get('detections')
@@ -521,6 +543,11 @@ def add_catch(current_user):
         return jsonify({'message': '이미지 URL과 감지 결과가 필요합니다.'}), 400
 
     session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
     new_catch = Catch(
         user_id=current_user.user_id,
         photo_url=imageUrl,
@@ -535,8 +562,13 @@ def add_catch(current_user):
 
 @app.route('/catches', methods=['GET'])
 @token_required
-def get_catches(current_user):
+def get_catches(user_id):
     session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
     catches = session.query(Catch).filter_by(user_id=current_user.user_id).all()
     session.close()
 
@@ -549,13 +581,18 @@ def get_catches(current_user):
 
 @app.route('/catches/<int:catch_id>', methods=['PUT'])
 @token_required
-def update_catch(current_user, catch_id):
+def update_catch(user_id, catch_id):
     data = request.get_json()
     if not data:
         logging.error("Invalid input: No data provided")
         return jsonify({"error": "Invalid input"}), 400
 
     session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
     catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
     if not catch:
         logging.error(f"Catch not found: catch_id={catch_id}, user_id={current_user.user_id}")
@@ -584,13 +621,13 @@ def update_catch(current_user, catch_id):
         session.close()
         return jsonify({"error": str(e)}), 500
 
-@app.route('/uploads/<filename>', methods=['GET'])
+@app.route('/uploads/<path:filename>', methods=['GET'])
 def uploaded_file(filename):
     return send_from_directory('uploads', filename)
 
 @app.route('/backend/get-detections', methods=['GET'])
 @token_required
-def get_detections(current_user):
+def get_detections(user_id):
     imageUrl = request.args.get('imageUrl')
     if not imageUrl:
         return jsonify({'error': 'imageUrl is required'}), 400
@@ -631,11 +668,53 @@ def map_fishing_spot():
         })
     except Exception as e:
         return jsonify({f'message : 호출 실패, {e}'}), 401
+
+# Create uploads directory path
+AVATAR_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, 'avatars')
+if not os.path.exists(AVATAR_UPLOAD_FOLDER):
+    os.makedirs(AVATAR_UPLOAD_FOLDER)
+
+# Endpoint to handle avatar upload
+@app.route('/profile/avatar', methods=['POST'])
+@token_required
+def upload_avatar(user_id):
+    if 'avatar' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{user_id}_{uuid.uuid4().hex}.jpg")
+        file_path = os.path.join(AVATAR_UPLOAD_FOLDER, filename)
+        file.save(file_path)
+        
+        session = Session()
+        try:
+            # Query the user within the new session
+            current_user = session.query(User).filter_by(user_id=user_id).first()
+            if not current_user:
+                return jsonify({'error': 'User not found'}), 404
+
+            # Update user's avatar URL
+            current_user.avatar = f"/uploads/avatars/{filename}"
+            session.commit()
+            avatar_url = current_user.avatar
+        except Exception as e:
+            session.rollback()
+            logging.error(f"Error uploading avatar: {e}")
+            return jsonify({'error': 'Avatar upload failed'}), 500
+        finally:
+            session.close()
+
+        return jsonify({'message': 'Avatar uploaded successfully', 'avatarUrl': avatar_url}), 200
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
+
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
 def remove_session(exception=None):
     Session.remove()
 
+# Ensure the backend server is running on port 5000
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
     app.run(host='0.0.0.0', port=5000, debug=False)

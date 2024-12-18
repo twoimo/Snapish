@@ -10,7 +10,7 @@
                             @click="openImagePopup(catchItem.imageUrl)" />
                         <p class="text-gray-800 text-sm text-center flex justify-center items-center">
                             {{ catchItem.detections[0].label }}
-                            <span v-if="catchItem.detections[0].label === '알 수 없음'" class="ml-2 cursor-pointer"
+                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
                                 @click="openEditPopup(catchItem)">
                                 <Edit class="h-4 w-4 text-blue-500" />
                             </span>
@@ -28,15 +28,15 @@
                     <div class="bg-white p-6 rounded-lg shadow-lg w-80">
                         <h2 class="text-lg mb-4 text-center">데이터 수정</h2>
                         <div class="mb-4">
-                            <label class="block text-sm mb-1">라벨</label>
+                            <label class="block text-sm mb-1">라벨(Name)</label>
                             <input v-model="selectedCatch.detections[0].label" class="border p-2 w-full rounded" />
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm mb-1">날짜</label>
+                            <label class="block text-sm mb-1">날짜(YYYY-MM-DD)</label>
                             <input type="date" v-model="selectedCatch.catch_date" class="border p-2 w-full rounded" />
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm mb-1">신뢰도</label>
+                            <label class="block text-sm mb-1">신뢰도(0.01~1.00)</label>
                             <input type="number" step="0.01" v-model.number="selectedCatch.detections[0].confidence"
                                 class="border p-2 w-full rounded" />
                         </div>
@@ -51,9 +51,9 @@
                 <div v-if="isImagePopupVisible"
                     class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
                     @click="isImagePopupVisible = false">
-                    <div class="relative max-w-full max-h-full" @click.stop>
+                    <div class="relative flex justify-center items-center max-w-full max-h-full" @click.stop>
                         <img :src="popupImageUrl" alt="Popup Image"
-                            class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+                            class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
                         <button @click="isImagePopupVisible = false"
                             class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
                             &times;
@@ -76,7 +76,7 @@ const loading = ref(false);
 const isEditPopupVisible = ref(false);
 const selectedCatch = ref(null);
 const displayedCatches = ref([]);
-const itemsToLoad = 6;
+const itemsToLoad = 8;
 const loadMoreTrigger = ref(null);
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
@@ -86,10 +86,15 @@ const BACKEND_BASE_URL = 'http://localhost:5000';
 
 onMounted(() => {
     if (store.getters.isAuthenticated) {
-        store.dispatch('fetchCatches').then(() => {
+        if (!store.state.catches) {
+            store.dispatch('fetchCatches').then(() => {
+                const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+                displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
+            });
+        } else {
             const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
             displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
-        });
+        }
     }
 
     const observer = new IntersectionObserver((entries) => {
@@ -126,7 +131,7 @@ function openEditPopup(catchItem) {
         return;
     }
     selectedCatch.value = { ...catchItem };
-    selectedCatch.value.detections[0].confidence = 1.00;
+    selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence.toFixed(2)); // Ensure two decimal places
     isEditPopupVisible.value = true;
 }
 
