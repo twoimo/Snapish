@@ -34,7 +34,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_weather_by_coordinates
-from services.location_service import haversine
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 from services.initialize_db import initialize_service
 from ultralytics import YOLO
