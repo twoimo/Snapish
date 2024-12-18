@@ -103,22 +103,22 @@ const services = computed(() => {
         store.dispatch('fetchServices');
     }
     return store.state.services || [
-        { id: 1, icon: '/icons/service1.png', name: '서비스 1' },
-        { id: 2, icon: '/icons/service2.png', name: '서비스 2' },
-        { id: 3, icon: '/icons/service3.png', name: '서비스 3' },
-        { id: 4, icon: '/icons/service4.png', name: '서비스 4' },
-        { id: 5, icon: '/icons/service5.png', name: '서비스 5' },
-        { id: 6, icon: '/icons/service6.png', name: '서비스 6' },
-        { id: 7, icon: '/icons/service7.png', name: '서비스 7' },
-        { id: 8, icon: '/icons/service8.png', name: '서비스 8' },
-        { id: 9, icon: '/icons/service9.png', name: '서비스 9' },
-        { id: 10, icon: '/icons/service10.png', name: '서비스 10' },
-        { id: 11, icon: '/icons/service11.png', name: '서비스 11' },
-        { id: 12, icon: '/icons/service12.png', name: '서비스 12' },
-        { id: 13, icon: '/icons/service12.png', name: '서비스 13' },
-        { id: 14, icon: '/icons/service12.png', name: '서비스 14' },
-        { id: 15, icon: '/icons/service12.png', name: '서비스 15' },
-        { id: 16, icon: '/icons/service12.png', name: '서비스 16' },
+        { id: 1, icon: '/', name: '서비스 1' },
+        { id: 2, icon: '/', name: '서비스 2' },
+        { id: 3, icon: '/', name: '서비스 3' },
+        { id: 4, icon: '/', name: '서비스 4' },
+        { id: 5, icon: '/', name: '서비스 5' },
+        { id: 6, icon: '/', name: '서비스 6' },
+        { id: 7, icon: '/', name: '서비스 7' },
+        { id: 8, icon: '/', name: '서비스 8' },
+        { id: 9, icon: '/', name: '서비스 9' },
+        { id: 10, icon: '/', name: '서비스 10' },
+        { id: 11, icon: '/', name: '서비스 11' },
+        { id: 12, icon: '/', name: '서비스 12' },
+        { id: 13, icon: '/', name: '서비스 13' },
+        { id: 14, icon: '/', name: '서비스 14' },
+        { id: 15, icon: '/', name: '서비스 15' },
+        { id: 16, icon: '/', name: '서비스 16' },
     ];
 });
 
@@ -157,17 +157,29 @@ const uploadAvatar = async (event) => {
         const formData = new FormData();
         formData.append('avatar', file);
         try {
-            const response = await axios.post('http://localhost:5000/profile/avatar', formData, { // Changed URL
+            const response = await axios.post('http://localhost:5000/profile/avatar', formData, { // Ensure this URL is correct
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
             });
-            store.dispatch('updateAvatar', response.data.avatarUrl);
-            alert('아바타가 성공적으로 업데이트되었습니다.');
+
+            // Check if response is JSON
+            if (response.headers['content-type'].includes('application/json')) {
+                store.dispatch('updateAvatar', response.data.avatarUrl);
+                alert('아바타가 성공적으로 업데이트되었습니다.');
+            } else {
+                console.error('Invalid response format:', response);
+                alert('서버 응답이 올바르지 않습니다.');
+            }
         } catch (error) {
-            console.error('Error uploading avatar:', error);
-            alert('아바타 업로드에 실패했습니다.');
+            if (error.response) {
+                console.error('Error response:', error.response);
+                alert(`Error: ${error.response.status} - ${error.response.statusText}`);
+            } else {
+                console.error('Error uploading avatar:', error);
+                alert('아바타 업로드에 실패했습니다.');
+            }
         }
     }
 };
