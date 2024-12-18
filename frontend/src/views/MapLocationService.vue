@@ -30,9 +30,16 @@
               <ul class="location-list">
                 <li v-for="(location, index) in filteredLocations" :key="index" class="location-item"
                   @click="showDetails(location)">
-                  <h3><strong>낚시터 이름 {{ location.location_id }}</strong></h3>
-                  <p>{{ location.address_ko }}</p>
-                  <p><strong>설명:</strong> {{ location.details }}</p>
+                  <h3> {{ location.name }} <strong>{{ location.type }}</strong></h3>
+                  <p v-if="location.address_road && location.address_land">
+                    {{ location.address_road }}
+                  </p>
+                  <p v-else-if="location.address_road">
+                    {{ location.address_road }}
+                  </p>
+                  <p v-else-if="location.address_land">
+                    {{ location.address_land }}
+                  </p>
                 </li>
               </ul>
             </div>
@@ -61,126 +68,7 @@ export default {
     return {
       searchQuery: "", // 검색 입력값
       filteredLocations: [],
-      locations: [{
-        address_ko: "부산광역시 강서구 낙동북로73번가길 200-5 (강동동)",
-        latitude: "35.22365536",
-        longitude: "128.94041200",
-        location_id: 1
-      },
-      {
-        address_ko: "부산광역시 강서구 거가대로 2571 (천성동)",
-        latitude: "35.02301425",
-        longitude: "128.80958840",
-        location_id: 2
-      },
-      {
-        address_ko: "부산광역시 사상구 사상로 120 (감전동)",
-        latitude: "35.15123456",
-        longitude: "128.98765432",
-        location_id: 3
-      },
-      {
-        address_ko: "부산광역시 중구 중앙대로 45 (중앙동)",
-        latitude: "35.10324567",
-        longitude: "129.03216543",
-        location_id: 4
-      },
-      {
-        address_ko: "부산광역시 해운대구 좌동로 22 (좌동)",
-        latitude: "35.17985612",
-        longitude: "129.12563214",
-        location_id: 5
-      },
-      {
-        address_ko: "부산광역시 남구 못골로 11 (대연동)",
-        latitude: "35.12941235",
-        longitude: "129.08453219",
-        location_id: 6
-      },
-      {
-        address_ko: "부산광역시 연제구 중앙대로 999 (연산동)",
-        latitude: "35.17892345",
-        longitude: "129.08123456",
-        location_id: 7
-      },
-      {
-        address_ko: "부산광역시 북구 금곡대로 152 (덕천동)",
-        latitude: "35.21235678",
-        longitude: "128.99345678",
-        location_id: 8
-      },
-      {
-        address_ko: "부산광역시 동래구 온천천로 88 (온천동)",
-        latitude: "35.20345678",
-        longitude: "129.09123456",
-        location_id: 9
-      },
-      {
-        address_ko: "부산광역시 금정구 금샘로 100 (금사동)",
-        latitude: "35.25467891",
-        longitude: "129.09124567",
-        location_id: 10
-      },
-      {
-        address_ko: "부산광역시 사하구 하단로 50 (하단동)",
-        latitude: "35.10451234",
-        longitude: "128.97561234",
-        location_id: 11
-      },
-      {
-        address_ko: "부산광역시 동구 자성로 200 (수정동)",
-        latitude: "35.12567890",
-        longitude: "129.04567890",
-        location_id: 12
-      },
-      {
-        address_ko: "부산광역시 기장군 기장대로 300 (기장읍)",
-        latitude: "35.25467812",
-        longitude: "129.20987654",
-        location_id: 13
-      },
-      {
-        address_ko: "부산광역시 영도구 절영로 20 (영선동)",
-        latitude: "35.09124567",
-        longitude: "129.04123456",
-        location_id: 14
-      },
-      {
-        address_ko: "부산광역시 서구 충무대로 70 (동대신동)",
-        latitude: "35.10894567",
-        longitude: "129.01456789",
-        location_id: 15
-      },
-      {
-        address_ko: "부산광역시 강서구 명지오션시티로 55 (명지동)",
-        latitude: "35.21784567",
-        longitude: "128.94012345",
-        location_id: 16
-      },
-      {
-        address_ko: "부산광역시 해운대구 마린시티3로 15 (우동)",
-        latitude: "35.16324567",
-        longitude: "129.13456789",
-        location_id: 17
-      },
-      {
-        address_ko: "부산광역시 남구 유엔평화로 77 (대연동)",
-        latitude: "35.13456789",
-        longitude: "129.08912345",
-        location_id: 18
-      },
-      {
-        address_ko: "부산광역시 북구 낙동대로 1234 (구포동)",
-        latitude: "35.23012345",
-        longitude: "128.99456789",
-        location_id: 19
-      },
-      {
-        address_ko: "부산광역시 동래구 명륜로 99 (명륜동)",
-        latitude: "35.20987654",
-        longitude: "129.08345678",
-        location_id: 20
-      }], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
+      locations: [], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
       isMapVisible: false, // 지도 표시 여부
       selectedLocation: null, // 선택된 낚시터 데이터
       isDetailsVisible: false, // 상세 정보 슬라이드 표시 여부
@@ -189,7 +77,7 @@ export default {
     };
   },
   mounted() {
-    // this.fetchLocations();     // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
+    this.fetchLocations();     // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
     this.filteredLocations = this.locations; // 초기에는 모든 locations를 표시
     this.updateMaxHeight();     // 페이지 드래그 방지 및 스크롤 숨김 설정
     this.toggleBodyScroll(false);     // 페이지 드래그 방지 및 스크롤 숨김 설정
@@ -207,7 +95,7 @@ export default {
         this.filteredLocations = [...this.locations]; // 모든 데이터 표시
       } else {
         this.filteredLocations = this.locations.filter((location) =>
-          String(location.location_id || "").includes(query)
+          String(location.name || "").includes(query)
         );
       }
     },
