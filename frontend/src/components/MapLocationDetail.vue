@@ -7,13 +7,40 @@
 
     <br>
     <section class=" mb-6 pt-4">   
-      <div class="place-name"> {{ location.location_id }} </div>
-      <p><strong>주소:</strong> {{ location.address_ko }}</p>
-      <p><strong>설명:</strong> {{ location.details }}</p>
+      <div class="place-name"> {{ location.name }} </div>
+      <div class="place-detail">
+        <p v-if="location.address_road && location.address_land">
+          {{ location.address_road }}
+        </p>
+        <p v-else-if="location.address_road">
+          {{ location.address_road }}
+        </p>
+        <p v-else-if="location.address_land">
+          {{ location.address_land }}
+        </p>
+        <p><strong>주로 잡히는 어종 : </strong> {{ location.main_fish_species }}</p>
+        <p v-if="location.address_land">
+          <strong>이용료 : </strong> {{ location.usage_fee }}
+        </p>
+        <p v-if="location.safety_facilities">
+          <strong>제공 시설: </strong> {{ location.safety_facilities.replaceAll(/[+*]/g, ', ') }}
+        </p>
+        <p v-if="location.convenience_facilities">
+          <strong>편의 시설: </strong> {{ location.convenience_facilities.replaceAll(/[+*]/g, ', ') }}
+        </p>
+      </div>
+
     </section>
 
     <section class="mb-6 pt-4">
-      날씨
+      날씨 Section
+      <div v-if="location.type == '바다'">
+        바다날씨
+      </div>
+
+      <div v-if="location.type == '저수지'">
+        일반날씨
+      </div>
     </section>
   </div>
 </template>
