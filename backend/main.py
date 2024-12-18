@@ -35,6 +35,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_weather_by_coordinates
 from services.location_service import get_location_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
+from services.initialize_db import initialize_service
 from ultralytics import YOLO
 from flask_cors import CORS
 
@@ -277,6 +278,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_ep50_confi91_predict.pt').to(device)
+
+# 초기 DB install
+initialize_service()
 
 # 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
@@ -683,19 +687,26 @@ def get_detections(user_id):
 # 추후 Token 관련 데코레이터 추가할 것
 def map_fishing_spot():
     session = Session()
-    fishing_spots = session.query(Location).all()
+    fishing_spots = session.query(FishingPlace).all()
     session.close()
 
     try:
         locations = [{
-            'location_id': spot.location_id,
-
+            'fishing_place_id': spot.fishing_place_id,
+            'name': spot.name,
+            'type': spot.type,
             'latitude': spot.latitude,
             'longitude': spot.longitude,
-            'address_ko': spot.address
+            'address_road': spot.address_road,
+            'address_land': spot.address_land,
+            'phone_number': spot.phone_number,
+            'main_fish_species': spot.main_fish_species,
+            'usage_fee': spot.usage_fee,
+            'safety_facilities': spot.safety_facilities,
+            'convenience_facilities' : spot.convenience_facilities, 
         } for spot in fishing_spots]
         
-        
+
         return jsonify({
             'message': 'DB호출 완료',
             'location': locations
