@@ -26,6 +26,9 @@ from sqlalchemy import (
     Text,
     DECIMAL,
     JSON,
+    Float,
+    VARCHAR,
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -234,6 +237,37 @@ class Ranking(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship('User', back_populates='rankings')
+
+# Add the TidalObservation class
+class TidalObservation(Base):
+    __tablename__ = 'TidalObservations'
+
+    obs_station_id = Column(Integer, primary_key=True, autoincrement=True)
+    obs_post_id = Column(String(20), unique=True)  # 고유 키로 설정
+    obs_post_name = Column(String(50), nullable=False)
+    obs_lat = Column(Float, nullable=False)
+    obs_lon = Column(Float, nullable=False)
+    data_type = Column(String(50), nullable=False)
+    obs_object = Column(String(255), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+# 낚시터 db 컬럼
+class FishingPlace(Base):
+    __tablename__ = 'FishingPlace'
+
+    fishing_place_id = Column(Integer, primary_key=True, autoincrement=True)  # 고유 식별자
+    name = Column(String(255), nullable=False)  # 낚시터명
+    type = Column(String(100), nullable=False)  # 낚시터 유형
+    address_road = Column(String(255), nullable=True)  # 소재지 도로명 주소
+    address_land = Column(String(255), nullable=True)  # 소재지 지번 주소
+    latitude = Column(Float, nullable=False)  # WGS84 위도
+    longitude = Column(Float, nullable=False)  # WGS84 경도
+    phone_number = Column(String(50), nullable=True)  # 낚시터 전화번호
+    main_fish_species = Column(Text, nullable=True)  # 주요 어종
+    usage_fee = Column(VARCHAR(500), nullable=True)  # 이용 요금
+    safety_facilities = Column(Text, nullable=True)  # 안전 시설 현황
+    convenience_facilities = Column(Text, nullable=True)  # 편익 시설 현황
 
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(engine)
