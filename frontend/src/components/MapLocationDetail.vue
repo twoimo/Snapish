@@ -35,18 +35,25 @@
     <section class="mb-6 pt-4">
       날씨 Section
       <div v-if="location.type == '바다'">
-        바다날씨
+        <MapLocationWeatherSea :spotlocation= "[location.latitude, location.longitude]" />
       </div>
 
       <div v-if="location.type == '저수지'">
         일반날씨
+        <MapLocationWeatherLand :spotlocation= "[location.latitude, location.longitude]" />
       </div>
     </section>
   </div>
 </template>
 
 <script>
+import MapLocationWeatherLand from './MapLocationWeatherLand.vue';
+import MapLocationWeatherSea from './MapLocationWeatherSea.vue';
 export default {
+  components: {
+    MapLocationWeatherSea,
+    MapLocationWeatherLand,
+  },
   props: {
     location: {
       type: Object,
