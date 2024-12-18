@@ -51,9 +51,9 @@
                 <div v-if="isImagePopupVisible"
                     class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
                     @click="isImagePopupVisible = false">
-                    <div class="relative max-w-full max-h-full" @click.stop>
+                    <div class="relative flex justify-center items-center max-w-full max-h-full" @click.stop>
                         <img :src="popupImageUrl" alt="Popup Image"
-                            class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+                            class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
                         <button @click="isImagePopupVisible = false"
                             class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
                             &times;

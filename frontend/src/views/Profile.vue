@@ -71,40 +71,12 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Display catches if authenticated -->
-            <div v-if="isAuthenticated" class="p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-6">내 캐치</h2>
-                <ul>
-                    <li v-for="catchItem in catches" :key="catchItem.id" class="mb-4">
-                        <img :src="catchItem.photoUrl ? `${BACKEND_BASE_URL}/uploads/${catchItem.photoUrl}` : '/placeholder.svg'"
-                            alt="Catch Image" class="w-32 h-32 object-cover mb-2 cursor-pointer"
-                            @click="openImagePopup(catchItem.photoUrl)" />
-                        <p class="text-gray-700">물고기: {{ catchItem.detections[0].label }}</p>
-                        <p class="text-gray-700">신뢰도: {{ catchItem.detections[0].confidence }}</p>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Image Popup -->
-            <div v-if="isImagePopupVisible"
-                class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
-                @click="isImagePopupVisible = false">
-                <div class="relative max-w-full max-h-full" @click.stop>
-                    <img :src="popupImageUrl" alt="Popup Image"
-                        class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-                    <button @click="isImagePopupVisible = false"
-                        class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
-                        &times;
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { Edit, LogOut, Settings } from 'lucide-vue-next';
@@ -141,18 +113,6 @@ const services = computed(() => [
 ]);
 
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
-const catches = computed(() => store.getters.catches);
-
-// Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
-
-const isImagePopupVisible = ref(false);
-const popupImageUrl = ref('');
-
-function openImagePopup(imageUrl) {
-    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
-    isImagePopupVisible.value = true;
-}
 
 onMounted(() => {
     store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
