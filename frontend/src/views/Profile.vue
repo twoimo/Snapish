@@ -6,7 +6,7 @@
                 <!-- Avatar 및 사용자 정보 -->
                 <div class="flex flex-col items-center space-y-4">
                     <!-- 아바타 -->
-                    <div class="w-24 h-24 rounded-full bg-gray-200 flex-shrink-0" :style="{
+                    <div class="w-32 h-32 rounded-full bg-gray-200 flex-shrink-0" :style="{
                         backgroundImage: `url(${user.avatar || '/default-avatar.webp'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
