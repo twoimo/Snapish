@@ -71,6 +71,19 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Display catches if authenticated -->
+            <div v-if="isAuthenticated" class="p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">내 캐치</h2>
+                <ul>
+                    <li v-for="catchItem in catches" :key="catchItem.id" class="mb-4">
+                        <img :src="catchItem.photoUrl ? `${BACKEND_BASE_URL}/uploads/${catchItem.photoUrl}` : '/placeholder.svg'"
+                            alt="Catch Image" class="w-32 h-32 object-cover mb-2" />
+                        <p class="text-gray-700">물고기: {{ catchItem.detections[0].label }}</p>
+                        <p class="text-gray-700">신뢰도: {{ catchItem.detections[0].confidence }}</p>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
@@ -112,8 +125,17 @@ const services = computed(() => [
     { id: 16, icon: '/icons/service12.png', name: '서비스 16' },
 ]);
 
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const catches = computed(() => store.getters.catches);
+
+// Define backend base URL
+const BACKEND_BASE_URL = 'http://localhost:5000';
+
 onMounted(() => {
     store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
+    if (isAuthenticated.value) {
+        store.dispatch('fetchCatches');
+    }
 });
 
 const logout = () => {

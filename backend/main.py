@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 import uuid
 from werkzeug.utils import secure_filename
+import base64
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
@@ -18,6 +19,7 @@ from sqlalchemy import (
     Integer,
     String,
     DateTime,
+    ForeignKey,
     ForeignKey,
     Enum,
     Boolean,
@@ -377,19 +379,22 @@ def login():
         return jsonify({'message': '로그인 실패'}), 401
 
 @app.route('/backend/predict', methods=['POST'])
-@token_required
-def predict(current_user):
-    file = request.files.get('image')
-    if not file or not allowed_file(file.filename):
-        return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
-
-    filename = secure_filename(file.filename)
-    unique_filename = str(uuid.uuid4()) + '_' + filename
-    save_path = os.path.join('uploads', unique_filename)
-    file.save(save_path)
+def predict():
+    # Get the image either from 'image' file or 'image_base64' in JSON
+    if 'image' in request.files:
+        file = request.files['image']
+        if not allowed_file(file.filename):
+            return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
+        img = Image.open(file.stream).convert('RGB')
+    else:
+        data = request.get_json()
+        image_base64 = data.get('image_base64')
+        if not image_base64:
+            return jsonify({'error': '유효한 이미지 데이터를 업로드해주세요.'}), 400
+        image_data = base64.b64decode(image_base64)
+        img = Image.open(io.BytesIO(image_data)).convert('RGB')
 
     try:
-        img = Image.open(save_path).convert('RGB')
         results = model(img, exist_ok=True, device=device)
         detections = [
             {
@@ -406,28 +411,51 @@ def predict(current_user):
                 'confidence': 0.0
             })
 
-        # Build the image URL accessible by the frontend
-        photo_url = request.host_url + 'uploads/' + unique_filename
-
-        # Save detections and image info to the database
         session = Session()
-        new_catch = Catch(
-            user_id=current_user.user_id,
-            photo_url=photo_url,
-            exif_data=detections,
-            catch_date=datetime.utcnow()
-        )
-        session.add(new_catch)
-        session.commit()
+        token = request.headers.get('Authorization')
+        if token:
+            token = token.split(' ')[1]
+            try:
+                data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+                user_id = data['user_id']
+                current_user = session.query(User).filter_by(user_id=user_id).first()
+            except:
+                current_user = None
+        else:
+            current_user = None
 
-        response_data = {
-            'id': new_catch.catch_id,  # Included 'id' in the response
-            'detections': detections,
-            'imageUrl': photo_url
-        }
+        if current_user:
+            # Save detections and image info to the database
+            # Generate a unique filename
+            filename = secure_filename(f"{uuid.uuid4().hex}.jpg")
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            img.save(file_path, format='JPEG')
+
+            new_catch = Catch(
+                user_id=current_user.user_id,
+                photo_url=filename,  # Store filename instead of base64
+                exif_data=detections,
+                catch_date=datetime.utcnow()
+            )
+            session.add(new_catch)
+            session.commit()
+            response_data = {
+                'id': new_catch.catch_id,
+                'detections': detections,
+                'imageUrl': filename  # Return filename to frontend
+            }
+        else:
+            # Do not save the image to disk or database
+            # Return detections and base64 encoded image
+            buffered = io.BytesIO()
+            img.save(buffered, format='JPEG')
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            response_data = {
+                'detections': detections,
+                'image_base64': img_str
+            }
 
         session.close()
-
         return jsonify(response_data)
     except Exception as e:
         logging.error(f"Error processing image: {e}")
@@ -603,7 +631,6 @@ def map_fishing_spot():
         })
     except Exception as e:
         return jsonify({f'message : 호출 실패, {e}'}), 401
-
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
 def remove_session(exception=None):

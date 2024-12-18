@@ -33,8 +33,8 @@
 
       <!-- 업로드된 물고기 이미지 표시 -->
       <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-        <img :src="imageUrl" alt="물고기 사진" class="w-full h-full object-cover cursor-pointer"
-          @click="openImagePopup(imageUrl)" />
+        <img :src="imageSource" alt="물고기 사진" class="w-full h-full object-cover cursor-pointer"
+          @click="openImagePopup(imageSource)" />
       </div>
 
       <!-- AI 판별 결과 -->
@@ -127,60 +127,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from '../axios'; // Ensure Axios is correctly imported
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  BellIcon,
-  Settings2Icon,
-  ChevronLeftIcon,
-  Share2Icon,
-} from 'lucide-vue-next';
+import axios from '../axios';
 import html2canvas from 'html2canvas';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon } from 'lucide-vue-next';
+import store from '../store';
 
-// 라우터 인스턴스
+const isLoading = ref(true);
+const errorMessage = ref('');
+const parsedDetections = ref([]);
+const imageUrl = ref('');
+const imageBase64 = ref('');
+const route = useRoute();
 const router = useRouter();
 
-// 로딩 상태
-const isLoading = ref(true);
-
-// 에러 메시지
-const errorMessage = ref('');
-
-// parsedDetections을 ref로 선언
-const parsedDetections = ref([]);
-
-// imageUrl을 ref로 선언
-const imageUrl = ref('');
-
-// 포토카드 모달 제어
+// Define the missing variables
 const showModal = ref(false);
-
-// 포토카드 엘리먼트 참조
 const photocard = ref(null);
-
-// 이미지 팝업 관련 상태
-const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
+const isImagePopupVisible = ref(false);
 
-// Add route to get query parameters
-const route = useRoute();
-
-// Fetch detections from the server
 const fetchDetections = async () => {
   isLoading.value = true;
   try {
-    const token = localStorage.getItem('token'); // Retrieve the token
-    const response = await axios.get('/backend/get-detections', {
-      params: {
-        imageUrl: route.query.imageUrl,
-      },
-      headers: {
-        'Authorization': `Bearer ${token}`, // Include the token in headers
-      },
-    });
-    parsedDetections.value = response.data.detections;
-    imageUrl.value = response.data.imageUrl;
+    const token = localStorage.getItem('token');
+    if (token && route.query.imageUrl) {
+      const response = await axios.get('/backend/get-detections', {
+        params: {
+          imageUrl: route.query.imageUrl,
+        },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      parsedDetections.value = response.data.detections;
+      imageUrl.value = response.data.imageUrl;
+    } else {
+      parsedDetections.value = JSON.parse(decodeURIComponent(route.query.detections));
+      imageBase64.value = route.query.imageBase64;
+    }
     errorMessage.value = '';
   } catch (e) {
     console.error('Failed to fetch detections:', e);
@@ -235,10 +221,22 @@ function navigateToCatches() {
   router.push('/catches');
 }
 
+// Define backend base URL
+const BACKEND_BASE_URL = 'http://localhost:5000';
+
 // 뒤로 가기 기능 구현
 const goBack = () => {
   router.back();
 };
+
+const imageSource = computed(() => {
+  if (imageUrl.value && store.state.isAuthenticated) {
+    return `${BACKEND_BASE_URL}/uploads/${imageUrl.value}`; // Updated to backend URL
+  } else if (imageBase64.value) {
+    return `data:image/jpeg;base64,${imageBase64.value}`;
+  }
+  return '/placeholder.svg';
+});
 </script>
 
 <style scoped>
