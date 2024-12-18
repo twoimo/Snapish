@@ -28,7 +28,7 @@
                         <div class="flex space-x-4">
                             <div v-for="catchItem in displayedCatches" :key="catchItem.id"
                                 class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-80 h-64">
-                                <img :src="catchItem.imageUrl" alt="Catch Image"
+                                <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" alt="Catch Image"
                                     class="w-full h-48 object-cover rounded-lg mb-2 cursor-pointer"
                                     @click="openImagePopup(catchItem.imageUrl)" />
                                 <p class="text-gray-800 text-sm text-center">{{ catchItem.detections[0].label }}
@@ -86,6 +86,7 @@
             </button>
         </div>
     </div>
+    <input type="file" @change="handleImageUpload" />
 </template>
 
 <script setup>
@@ -97,9 +98,15 @@ import {
 import { onMounted, computed, ref } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
+import axios from 'axios'; // Import axios
+import { useRouter } from 'vue-router'; // Import useRouter
 
 // Vuex 스토어 사용
 const store = useStore();
+const router = useRouter(); // Initialize router
+
+// Define backend base URL
+const BACKEND_BASE_URL = 'http://localhost:5000';
 
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(() => {
@@ -140,6 +147,77 @@ function loadMoreCatches(event) {
         displayedCatches.value = [...displayedCatches.value, ...moreCatches];
     }
 }
+
+const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        if (store.state.isAuthenticated) {
+            // Authenticated user: upload file to server
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+                const response = await axios.post('/backend/predict', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${store.state.token}`,
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    withCredentials: true,
+                });
+                handlePredictResponse(response.data);
+            } catch (error) {
+                console.error('Error during Axios POST:', error);
+                alert('이미지 업로드 중 오류가 발생했습니다.');
+            }
+        } else {
+            // Unauthenticated user: handle base64 encoding
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const image_base64 = reader.result.split(',')[1]; // Remove data:image/*;base64,
+                try {
+                    const response = await axios.post('/backend/predict', {
+                        image_base64,
+                    });
+                    handlePredictResponse(response.data);
+                } catch (error) {
+                    console.error('Error during Axios POST:', error);
+                    alert('이미지 업로드 중 오류가 발생했습니다.');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+};
+
+const handlePredictResponse = (data) => {
+    // Handle the response from the backend
+    const detections = data.detections;
+    const imageUrl = data.imageUrl || null;
+    const imageBase64 = data.image_base64 || null;
+
+    if (detections && detections.length > 0) {
+        if (store.state.isAuthenticated) {
+            store.dispatch('fetchCatches');
+            router.push({
+                name: 'FishResultNormal',
+                query: {
+                    imageUrl,
+                    imageBase64,
+                    detections: encodeURIComponent(JSON.stringify(detections)),
+                },
+            });
+        } else {
+            router.push({
+                name: 'FishResultNormal',
+                query: {
+                    imageBase64,
+                    detections: encodeURIComponent(JSON.stringify(detections)),
+                },
+            });
+        }
+    } else {
+        alert('알 수 없는 물고기입니다.');
+    }
+};
 </script>
 
 <style lang="css">

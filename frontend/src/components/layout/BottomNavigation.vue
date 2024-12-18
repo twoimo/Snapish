@@ -31,8 +31,8 @@
 import { ref } from 'vue';
 import { HomeIcon, CameraIcon, UserIcon } from 'lucide-vue-next';
 import CameraActionSheet from '../CameraActionSheet.vue';
+import store from '../../store';
 
-// eslint-disable-next-line no-undef
 const emit = defineEmits(['toggleCameraActions']);
 
 const showCameraActions = ref(false);
@@ -40,12 +40,17 @@ const showCameraActions = ref(false);
 const openCameraActions = () => {
   showCameraActions.value = true;
   emit('toggleCameraActions');
+
+  if (store.state.isAuthenticated) {
+    // Additional actions for authenticated users if needed
+  } else {
+    // Additional actions for unauthenticated users if needed
+  }
 };
 
 const closeCameraActions = () => {
   showCameraActions.value = false;
 };
-
 </script>
 
 <style scoped>

@@ -18,6 +18,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import BottomNavigation from './components/layout/BottomNavigation.vue';
 import Header from './components/layout/Header.vue';
+import store from './store'; // Import the store
 
 // 현재 라우트 확인
 const route = useRoute();
@@ -26,7 +27,13 @@ const route = useRoute();
 const hideHeader = computed(() => /^\/(fish-result)/.test(route.path));
 
 const handleToggleCameraActions = () => {
-  // ...existing code...
+  // This function can be used to trigger image upload actions based on auth
+  // For example, you might open different modals or handle differently
+  if (store.state.isAuthenticated) {
+    // Handle authenticated user actions
+  } else {
+    // Handle unauthenticated user actions
+  }
 };
 
 </script>
