@@ -277,7 +277,7 @@ Base.metadata.create_all(engine)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_with_augmentations1.pt').to(device)
+model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
 # 초기 DB install
 initialize_service()
