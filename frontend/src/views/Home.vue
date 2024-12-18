@@ -126,11 +126,17 @@ onMounted(() => {
     }
     if (isAuthenticated.value) {
         isLoadingCatches.value = true; // Start loading
-        store.dispatch("fetchCatches").then(() => {
+        if (!store.state.catches) {
+            store.dispatch("fetchCatches").then(() => {
+                const sortedCatches = catches.value.slice().reverse();
+                displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
+                isLoadingCatches.value = false; // End loading
+            });
+        } else {
             const sortedCatches = catches.value.slice().reverse();
             displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
             isLoadingCatches.value = false; // End loading
-        });
+        }
     }
 });
 

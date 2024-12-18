@@ -86,10 +86,15 @@ const BACKEND_BASE_URL = 'http://localhost:5000';
 
 onMounted(() => {
     if (store.getters.isAuthenticated) {
-        store.dispatch('fetchCatches').then(() => {
+        if (!store.state.catches) {
+            store.dispatch('fetchCatches').then(() => {
+                const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+                displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
+            });
+        } else {
             const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
             displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
-        });
+        }
     }
 
     const observer = new IntersectionObserver((entries) => {

@@ -98,29 +98,36 @@ const stats = computed(() => {
         following: originalStats?.following || 0,
     };
 });
-const services = computed(() => [
-    { id: 1, icon: '/icons/service1.png', name: '서비스 1' },
-    { id: 2, icon: '/icons/service2.png', name: '서비스 2' },
-    { id: 3, icon: '/icons/service3.png', name: '서비스 3' },
-    { id: 4, icon: '/icons/service4.png', name: '서비스 4' },
-    { id: 5, icon: '/icons/service5.png', name: '서비스 5' },
-    { id: 6, icon: '/icons/service6.png', name: '서비스 6' },
-    { id: 7, icon: '/icons/service7.png', name: '서비스 7' },
-    { id: 8, icon: '/icons/service8.png', name: '서비스 8' },
-    { id: 9, icon: '/icons/service9.png', name: '서비스 9' },
-    { id: 10, icon: '/icons/service10.png', name: '서비스 10' },
-    { id: 11, icon: '/icons/service11.png', name: '서비스 11' },
-    { id: 12, icon: '/icons/service12.png', name: '서비스 12' },
-    { id: 13, icon: '/icons/service12.png', name: '서비스 13' },
-    { id: 14, icon: '/icons/service12.png', name: '서비스 14' },
-    { id: 15, icon: '/icons/service12.png', name: '서비스 15' },
-    { id: 16, icon: '/icons/service12.png', name: '서비스 16' },
-]);
+const services = computed(() => {
+    if (!store.state.services) {
+        store.dispatch('fetchServices');
+    }
+    return store.state.services || [
+        { id: 1, icon: '/icons/service1.png', name: '서비스 1' },
+        { id: 2, icon: '/icons/service2.png', name: '서비스 2' },
+        { id: 3, icon: '/icons/service3.png', name: '서비스 3' },
+        { id: 4, icon: '/icons/service4.png', name: '서비스 4' },
+        { id: 5, icon: '/icons/service5.png', name: '서비스 5' },
+        { id: 6, icon: '/icons/service6.png', name: '서비스 6' },
+        { id: 7, icon: '/icons/service7.png', name: '서비스 7' },
+        { id: 8, icon: '/icons/service8.png', name: '서비스 8' },
+        { id: 9, icon: '/icons/service9.png', name: '서비스 9' },
+        { id: 10, icon: '/icons/service10.png', name: '서비스 10' },
+        { id: 11, icon: '/icons/service11.png', name: '서비스 11' },
+        { id: 12, icon: '/icons/service12.png', name: '서비스 12' },
+        { id: 13, icon: '/icons/service12.png', name: '서비스 13' },
+        { id: 14, icon: '/icons/service12.png', name: '서비스 14' },
+        { id: 15, icon: '/icons/service12.png', name: '서비스 15' },
+        { id: 16, icon: '/icons/service12.png', name: '서비스 16' },
+    ];
+});
 
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
 onMounted(() => {
-    store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
+    if (!store.state.catches) {
+        store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
+    }
     if (isAuthenticated.value) {
         store.dispatch('fetchCatches');
     }
