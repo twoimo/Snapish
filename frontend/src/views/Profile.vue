@@ -131,6 +131,10 @@ onMounted(() => {
     if (isAuthenticated.value) {
         store.dispatch('fetchCatches');
     }
+    const savedAvatar = localStorage.getItem('avatar');
+    if (savedAvatar) {
+        store.dispatch('updateAvatar', savedAvatar); // Load avatar URL from local storage
+    }
 });
 
 const logout = () => {
@@ -166,7 +170,9 @@ const uploadAvatar = async (event) => {
 
             // Check if response is JSON
             if (response.headers['content-type'].includes('application/json')) {
-                store.dispatch('updateAvatar', response.data.avatarUrl);
+                const avatarUrl = response.data.avatarUrl;
+                store.dispatch('updateAvatar', avatarUrl);
+                localStorage.setItem('avatar', avatarUrl); // Save avatar URL to local storage
                 alert('아바타가 성공적으로 업데이트되었습니다.');
             } else {
                 console.error('Invalid response format:', response);
