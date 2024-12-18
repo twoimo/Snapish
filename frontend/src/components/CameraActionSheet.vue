@@ -97,39 +97,73 @@ const handleOption = (action) => {
 const onFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-        const formData = new FormData();
-        formData.append('image', file);
+        const token = localStorage.getItem('token');
+        if (token) {
+            // ...existing code to send image as FormData with token...
+            const formData = new FormData();
+            formData.append('image', file);
 
-        try {
-            const token = localStorage.getItem('token'); // Get the token from localStorage
-            const response = await axios.post('/backend/predict', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`, // Include the token in the headers
-                },
-                withCredentials: true,
-            });
-            const detections = response.data.detections;
-            const imageUrl = response.data.imageUrl;
-
-            if (detections && detections.length > 0) {
-                // Refresh catches in the store
-                await store.dispatch('fetchCatches');
-
-                // Navigate to the result page without passing props
-                router.push({
-                    name: 'FishResultNormal',
-                    query: {
-                        imageUrl,
+            try {
+                const response = await axios.post('/backend/predict', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`,
                     },
+                    withCredentials: true,
                 });
-            } else {
-                alert('알 수 없는 물고기입니다. 데이터베이스에 저장되지 않습니다.');
+                handlePredictResponse(response.data);
+            } catch (error) {
+                console.error('Error during Axios POST:', error);
+                alert('이미지 업로드 중 오류가 발생했습니다.');
             }
-        } catch (error) {
-            console.error('Error during Axios POST:', error);
-            alert('이미지 업로드 중 오류가 발생했습니다.');
+        } else {
+            // Read file as base64 and send it
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const image_base64 = reader.result.split(',')[1]; // Remove data:image/*;base64,
+                try {
+                    const response = await axios.post('/backend/predict', {
+                        image_base64,
+                    });
+                    handlePredictResponse(response.data);
+                } catch (error) {
+                    console.error('Error during Axios POST:', error);
+                    alert('이미지 업로드 중 오류가 발생했습니다.');
+                }
+            };
+            reader.readAsDataURL(file);
         }
+    }
+};
+
+const handlePredictResponse = async (data) => {
+    const detections = data.detections;
+    const imageUrl = data.imageUrl || null;
+    const imageBase64 = data.image_base64 || null;
+
+    if (detections && detections.length > 0) {
+        if (store.state.isAuthenticated) { // Use store.state.isAuthenticated
+            await store.dispatch('fetchCatches');
+            router.push({
+                name: 'FishResultNormal',
+                query: {
+                    imageUrl,
+                    imageBase64,
+                    detections: encodeURIComponent(JSON.stringify(detections)),
+                },
+            });
+        } else {
+            // For unauthenticated users, handle without storing to DB
+            router.push({
+                name: 'FishResultNormal',
+                query: {
+                    imageBase64,
+                    detections: encodeURIComponent(JSON.stringify(detections)),
+                },
+            });
+        }
+    } else {
+        alert('알 수 없는 물고기입니다.');
     }
 };
 </script>
