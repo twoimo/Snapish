@@ -28,12 +28,13 @@ from sqlalchemy import (
     JSON,
     Float,
     VARCHAR,
+    text,
     UniqueConstraint
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_weather_by_coordinates
-from services.location_service import get_location_by_coordinates
+from services.location_service import haversine
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 from services.initialize_db import initialize_service
 from ultralytics import YOLO
@@ -308,6 +309,7 @@ labels_korean = {
 def hello():
     return 'Welcome to SNAPISH'
 
+# 물때 정보 받아오기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -791,6 +793,52 @@ def upload_avatar(user_id):
         return jsonify({'message': 'Avatar uploaded successfully', 'avatarUrl': avatar_url}), 200
     else:
         return jsonify({'error': 'Invalid file type'}), 400
+    
+# 요청 위치 기준 가장 가까운 관측소 위치 반환 
+@app.route('/backend/closest-sealoc', methods=['POST'])
+def get_closest_sealoc():
+    user_lat = request.form.get('lat')
+    user_lon = request.form.get('lon')
+
+    if user_lat is None or user_lon is None:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    # 데이터베이스 세션 시작
+    session = Session()
+
+    # ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
+    query = text("""
+        SELECT obs_station_id, obs_post_id, obs_lat, obs_lon,
+            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
+        FROM TidalObservations
+        ORDER BY distance ASC
+        LIMIT 1
+    """)
+
+    # 쿼리 실행
+    result = session.execute(query, {'lat': user_lat, 'lon': user_lon}).fetchone()
+
+    # 결과 처리
+    if result:
+        # 튜플에서 각 항목에 접근
+        obs_station_id = result[0]
+        obs_post_id = result[1]
+        obs_lat = result[2]
+        obs_lon = result[3]
+        distance = result[4]
+        
+        closest_data = {
+            'obs_station_id': obs_station_id,
+            'obs_post_id': obs_post_id,
+            'obs_lat': obs_lat,
+            'obs_lon': obs_lon,
+            'distance': distance / 1000  # 거리를 킬로미터로 변환
+        }
+        session.close()
+        return jsonify(closest_data)
+    else:
+        session.close()
+        return jsonify({'error': 'No tidal observations found'}), 404
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
