@@ -37,8 +37,8 @@
                                 <p class="text-gray-800 text-sm text-center">{{ catchItem.detections[0].label }}
                                 </p>
                                 <p class="text-gray-600 text-xs text-center mb-2">신뢰도: {{
-                                    catchItem.detections[0].confidence.toFixed(2)
-                                }}%</p>
+                                    (catchItem.detections[0].confidence * 100).toFixed(2)
+                                    }}%</p>
                             </div>
                         </div>
                     </div>
@@ -117,18 +117,7 @@ onMounted(() => {
         store.dispatch("fetchMulddae");
     }
     if (isAuthenticated.value) {
-        isLoadingCatches.value = true; // Start loading
-        if (!store.state.catches) {
-            store.dispatch("fetchCatches").then(() => {
-                const sortedCatches = catches.value.slice().reverse();
-                displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
-                isLoadingCatches.value = false; // End loading
-            });
-        } else {
-            const sortedCatches = catches.value.slice().reverse();
-            displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
-            isLoadingCatches.value = false; // End loading
-        }
+        fetchCatchesData();
     }
 });
 
@@ -156,6 +145,24 @@ function loadMoreCatches(event) {
         const moreCatches = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
         displayedCatches.value = [...displayedCatches.value, ...moreCatches];
     }
+}
+
+function fetchCatchesData() {
+    isLoadingCatches.value = true; // Start loading
+    if (!store.state.catches) {
+        store.dispatch("fetchCatches").then(() => {
+            updateDisplayedCatches();
+            isLoadingCatches.value = false; // End loading
+        });
+    } else {
+        updateDisplayedCatches();
+        isLoadingCatches.value = false; // End loading
+    }
+}
+
+function updateDisplayedCatches() {
+    const sortedCatches = catches.value.slice().reverse();
+    displayedCatches.value = sortedCatches.slice(0, itemsToLoad);
 }
 
 </script>

@@ -21,7 +21,7 @@
                         </p>
                         <p class="text-gray-600 text-xs text-center">{{ catchItem.catch_date }}</p>
                         <p class="text-gray-600 text-xs text-center">신뢰도: {{
-                            catchItem.detections[0].confidence.toFixed(2) }}</p>
+                            (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
                     </div>
                 </div>
                 <div v-else-if="!loading" class="text-gray-500 text-center">아직 잡은 물고기가 없습니다.</div>
@@ -40,8 +40,8 @@
                             <input type="date" v-model="selectedCatch.catch_date" class="border p-2 w-full rounded" />
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm mb-1">신뢰도(0.01~1.00)</label>
-                            <input type="number" step="0.01" v-model.number="selectedCatch.detections[0].confidence"
+                            <label class="block text-sm mb-1">신뢰도(1~100%)</label>
+                            <input type="number" step="0.01" v-model.number="confidenceInput"
                                 class="border p-2 w-full rounded" />
                         </div>
                         <div class="flex justify-between">
@@ -80,6 +80,16 @@ const loading = ref(false);
 const isEditPopupVisible = ref(false);
 const selectedCatch = ref(null);
 const displayedCatches = ref([]);
+const confidenceInput = computed({
+    get() {
+        return selectedCatch.value ? (parseFloat(selectedCatch.value.detections[0].confidence) * 100).toFixed(2) : '100.00';
+    },
+    set(value) {
+        if (selectedCatch.value) {
+            selectedCatch.value.detections[0].confidence = (value / 100).toFixed(2);
+        }
+    }
+});
 const itemsToLoad = 8;
 const loadMoreTrigger = ref(null);
 const isImagePopupVisible = ref(false);
@@ -135,7 +145,7 @@ function openEditPopup(catchItem) {
         return;
     }
     selectedCatch.value = { ...catchItem };
-    selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence.toFixed(2)); // Ensure two decimal places
+    selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence); // Ensure it's a number
     isEditPopupVisible.value = true;
 }
 
@@ -150,6 +160,8 @@ function saveEdit() {
     if (updatedCatch.catch_date) {
         updatedCatch.catch_date = new Date(updatedCatch.catch_date).toISOString().split('T')[0];
     }
+    // Ensure confidence is saved with up to two decimal places
+    updatedCatch.detections[0].confidence = parseFloat(updatedCatch.detections[0].confidence).toFixed(2);
     store.dispatch('updateCatch', updatedCatch).then((response) => {
         console.log("Update response:", response); // Log the response from the server
         // Update displayedCatches after successful update
