@@ -667,6 +667,31 @@ def update_catch(user_id, catch_id):
         session.close()
         return jsonify({"error": str(e)}), 500
 
+@app.route('/catches/<int:catch_id>', methods=['DELETE'])
+@token_required
+def delete_catch(user_id, catch_id):
+    session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
+    catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
+    if not catch:
+        session.close()
+        return jsonify({'message': 'Catch not found'}), 404
+
+    try:
+        session.delete(catch)
+        session.commit()
+        session.close()
+        return jsonify({'message': 'Catch deleted successfully'}), 200
+    except Exception as e:
+        session.rollback()
+        session.close()
+        logging.error(f"Error deleting catch: {e}")
+        return jsonify({'error': 'Error deleting catch'}), 500
+
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def uploaded_file(filename):
     return send_from_directory('uploads', filename)

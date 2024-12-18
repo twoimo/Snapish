@@ -14,6 +14,10 @@
                                 @click="openEditPopup(catchItem)">
                                 <Edit class="h-4 w-4 text-blue-500" />
                             </span>
+                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                @click="confirmDelete(catchItem.id)">
+                                <Trash class="h-4 w-4 text-red-500" />
+                            </span>
                         </p>
                         <p class="text-gray-600 text-xs text-center">{{ catchItem.catch_date }}</p>
                         <p class="text-gray-600 text-xs text-center">신뢰도: {{
@@ -68,7 +72,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { Edit } from 'lucide-vue-next';
+import { Edit, Trash } from 'lucide-vue-next';
 
 const store = useStore();
 const catches = computed(() => store.getters.catches);
@@ -163,6 +167,21 @@ function saveEdit() {
 function openImagePopup(imageUrl) {
     popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
     isImagePopupVisible.value = true;
+}
+
+function confirmDelete(catchId) {
+    if (confirm('정말로 이 항목을 삭제하시겠습니까?')) {
+        deleteCatch(catchId);
+    }
+}
+
+function deleteCatch(catchId) {
+    store.dispatch('deleteCatch', catchId).then(() => {
+        displayedCatches.value = displayedCatches.value.filter(catchItem => catchItem.id !== catchId);
+    }).catch((error) => {
+        console.error("Delete error:", error.response ? error.response.data : error.message); // Detailed error logging
+        alert('데이터 삭제에 실패했습니다.');
+    });
 }
 </script>
 

@@ -61,6 +61,11 @@ export default createStore({
     SET_AVATAR(state, avatarUrl) {
       state.user.avatar = avatarUrl;
     },
+    DELETE_CATCH(state, catchId) {
+      state.catches = state.catches.filter(
+        (catchItem) => catchItem.id !== catchId
+      );
+    },
   },
   actions: {
     // Existing actions
@@ -250,6 +255,23 @@ export default createStore({
       } catch (error) {
         console.error(
           "Update catch error:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
+      }
+    },
+    async deleteCatch({ commit }, catchId) {
+      try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`http://localhost:5000/catches/${catchId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        commit("DELETE_CATCH", catchId);
+      } catch (error) {
+        console.error(
+          "Delete catch error:",
           error.response ? error.response.data : error.message
         );
         throw error;
