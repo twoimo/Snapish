@@ -12,6 +12,7 @@ from functools import wraps
 import jwt
 import torch
 import io
+import requests
 
 from sqlalchemy import (
     create_engine,
@@ -33,7 +34,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
-from services.weather_service import get_weather_by_coordinates
+from services.weather_service import get_sea_weather_by_seapostid, get_weather_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 from services.initialize_db import initialize_service
 from ultralytics import YOLO
@@ -807,9 +808,10 @@ def get_closest_sealoc():
 
     # ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
     query = text("""
-        SELECT obs_station_id, obs_post_id, obs_lat, obs_lon,
+        SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
         FROM TidalObservations
+        WHERE obs_object LIKE '%조위%'
         ORDER BY distance ASC
         LIMIT 1
     """)
@@ -822,18 +824,31 @@ def get_closest_sealoc():
         # 튜플에서 각 항목에 접근
         obs_station_id = result[0]
         obs_post_id = result[1]
-        obs_lat = result[2]
-        obs_lon = result[3]
-        distance = result[4]
+        obs_post_name = result[2]
+        distance = result[3]
         
-        closest_data = {
-            'obs_station_id': obs_station_id,
-            'obs_post_id': obs_post_id,
-            'obs_lat': obs_lat,
-            'obs_lon': obs_lon,
-            'distance': distance / 1000  # 거리를 킬로미터로 변환
-        }
+        # DB 연결 종료
         session.close()
+        
+        # KHOA API 호출
+        try:
+            api_data = get_sea_weather_by_seapostid(obs_post_id)
+            
+            print(api_data)
+
+            # 프론트엔드에 보낼 데이터 구성
+            closest_data = {
+                'obs_station_id': obs_station_id,
+                'obs_post_id': obs_post_id,
+                'obs_post_name': obs_post_name,
+                'distance': distance / 1000,
+                'api_response': api_data  # API 응답 데이터 추가
+            }
+
+        except requests.exceptions.RequestException as e:
+            session.close()
+            return jsonify({'error': f'API request failed: {e}'}), 500
+        
         return jsonify(closest_data)
     else:
         session.close()
