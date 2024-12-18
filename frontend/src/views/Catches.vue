@@ -126,6 +126,7 @@ function openEditPopup(catchItem) {
         return;
     }
     selectedCatch.value = { ...catchItem };
+    selectedCatch.value.detections[0].confidence = 1.00;
     isEditPopupVisible.value = true;
 }
 
@@ -155,7 +156,7 @@ function saveEdit() {
 }
 
 function openImagePopup(imageUrl) {
-    popupImageUrl.value = imageUrl;
+    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
     isImagePopupVisible.value = true;
 }
 </script>
@@ -170,5 +171,18 @@ function openImagePopup(imageUrl) {
 /* Optional: style the edit icon if needed */
 .cursor-pointer:hover svg {
     stroke: #3b82f6;
+}
+
+.fixed {
+    position: fixed;
+}
+
+.absolute {
+    position: absolute;
+}
+
+/* Ensure pop-up images are displayed correctly */
+.object-contain {
+    object-fit: contain;
 }
 </style>
