@@ -14,7 +14,7 @@ export default createStore({
 
     // Authentication state
     isAuthenticated: !!localStorage.getItem("token"),
-    user: JSON.parse(localStorage.getItem("user")) || null,
+    user: JSON.parse(localStorage.getItem("user")) || { avatar: null },
     token: localStorage.getItem("token") || null,
 
     catches: [], // Add catches state
@@ -39,7 +39,7 @@ export default createStore({
     },
     clearAuth(state) {
       state.isAuthenticated = false;
-      state.user = null;
+      state.user = { avatar: null }; // Reset user to default state with no avatar
       state.token = null;
     },
     setCurrentLocation(state, currentlocation) {
@@ -57,6 +57,9 @@ export default createStore({
       if (index !== -1) {
         state.catches.splice(index, 1, updatedCatch);
       }
+    },
+    SET_AVATAR(state, avatarUrl) {
+      state.user.avatar = avatarUrl;
     },
   },
   actions: {
@@ -137,7 +140,7 @@ export default createStore({
     async login({ commit }, { username, password }) {
       try {
         const response = await axios.post("/login", { username, password });
-        const { token, user } = response.data;
+        const { token, user, message } = response.data;
 
         // 저장소와 로컬 스토리지 업데이트
         localStorage.setItem("token", token);
@@ -150,6 +153,7 @@ export default createStore({
         });
       } catch (error) {
         console.error("Login error:", error);
+        // Re-throw the error to be handled in the component
         throw error;
       }
     },
@@ -246,6 +250,9 @@ export default createStore({
         );
         throw error;
       }
+    },
+    updateAvatar({ commit }, avatarUrl) {
+      commit("SET_AVATAR", avatarUrl);
     },
   },
   getters: {

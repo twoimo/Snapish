@@ -4,10 +4,10 @@
             <!-- 프로필 헤더 -->
             <div v-if="user" class="p-6 flex flex-col items-center">
                 <!-- Avatar 및 사용자 정보 -->
-                <div class="flex flex-col items-center space-y-4">
+                <div @click="triggerFileInput" class="flex flex-col items-center space-y-4 cursor-pointer">
                     <!-- 아바타 -->
                     <div class="w-32 h-32 rounded-full bg-gray-200 flex-shrink-0" :style="{
-                        backgroundImage: `url(${user.avatar || '/default-avatar.webp'})`,
+                        backgroundImage: `url(${user.avatar ? `http://localhost:5000${user.avatar}` : '/default-avatar.webp'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }"></div>
@@ -20,6 +20,9 @@
                         <p class="text-gray-600 mt-1">{{ user.tier || '낚시 초보자' }}</p>
                     </div>
                 </div>
+
+                <!-- Hidden file input -->
+                <input type="file" ref="avatarInput" accept="image/*" @change="uploadAvatar" class="hidden" />
 
                 <!-- 액션 버튼 -->
                 <div class="flex items-center space-x-6 mt-4">
@@ -76,13 +79,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { Edit, LogOut, Settings } from 'lucide-vue-next';
+import axios from 'axios';
 
 const store = useStore();
 const router = useRouter();
+const avatarInput = ref(null);
 
 const user = computed(() => store.getters.user);
 const stats = computed(() => {
@@ -134,6 +139,31 @@ const editProfile = () => {
 const goToCatches = () => {
     router.push('/catches');
 };
+
+const triggerFileInput = () => {
+    avatarInput.value.click();
+};
+
+const uploadAvatar = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        try {
+            const response = await axios.post('http://localhost:5000/profile/avatar', formData, { // Changed URL
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+            store.dispatch('updateAvatar', response.data.avatarUrl);
+            alert('아바타가 성공적으로 업데이트되었습니다.');
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            alert('아바타 업로드에 실패했습니다.');
+        }
+    }
+};
 </script>
 
 <style scoped>
@@ -163,5 +193,9 @@ const goToCatches = () => {
 /* Ensure pop-up images are displayed correctly */
 .object-contain {
     object-fit: contain;
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
 </style>

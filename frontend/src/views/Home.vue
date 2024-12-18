@@ -38,7 +38,7 @@
                                 </p>
                                 <p class="text-gray-600 text-xs text-center mb-2">신뢰도: {{
                                     catchItem.detections[0].confidence.toFixed(2)
-                                    }}%</p>
+                                }}%</p>
                             </div>
                         </div>
                     </div>
@@ -90,6 +90,12 @@
         </div>
     </div>
     <input type="file" @change="handleImageUpload" />
+    <div v-if="isAuthenticated">
+        <img :src="avatarUrl" alt="User Avatar" class="avatar" />
+    </div>
+    <div v-else>
+        <img src="/default-avatar.webp" alt="Default Avatar" class="avatar" />
+    </div>
 </template>
 
 <script setup>
@@ -131,6 +137,9 @@ onMounted(() => {
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
+const avatarUrl = computed(() =>
+    store.getters.user.avatar ? `http://localhost:5000${store.getters.user.avatar}` : '/default-avatar.webp'
+);
 
 // 이미지 팝업 관련 상태
 const isImagePopupVisible = ref(false);
@@ -256,5 +265,12 @@ const handlePredictResponse = (data) => {
 
 .transition {
     transition: background-color 0.3s ease;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 </style>

@@ -13,6 +13,11 @@ import EditProfile from "./views/EditProfile.vue"; // 프로필 수정 컴포넌
 import Signup from "./views/Signup.vue"; // Signup 컴포넌트 임포트
 import Catches from "./views/Catches.vue"; // Catches 컴포넌트 임포트
 
+// Example for axios base URL configuration
+import axios from "axios";
+
+axios.defaults.baseURL = "http://localhost:5000";
+
 const routes = [
   {
     path: "/",
