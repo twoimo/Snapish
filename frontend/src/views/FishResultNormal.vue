@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../axios';
 import html2canvas from 'html2canvas';
@@ -178,6 +178,10 @@ const fetchDetections = async () => {
 };
 
 onMounted(() => {
+  fetchDetections();
+});
+
+watch(route, () => {
   fetchDetections();
 });
 
