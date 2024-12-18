@@ -30,9 +30,10 @@
               <ul class="location-list">
                 <li v-for="(location, index) in filteredLocations" :key="index" class="location-item"
                   @click="showDetails(location)">
-                  <h3><strong>낚시터 이름 {{ location.location_id }}</strong></h3>
-                  <p>{{ location.address_ko }}</p>
-                  <p><strong>설명:</strong> {{ location.details }}</p>
+                  <h3><strong>{{ location.name }}</strong></h3>
+                  <p><strong>도로명 주소: </strong> {{ location.adrees_road }}</p>
+                  <p><strong>지번 주소: </strong> {{ location.address_land }}</p>
+                  <p><strong>낚시터 타입:</strong> {{ location.type }}</p>
                 </li>
               </ul>
             </div>
@@ -61,126 +62,133 @@ export default {
     return {
       searchQuery: "", // 검색 입력값
       filteredLocations: [],
-      locations: [{
-        address_ko: "부산광역시 강서구 낙동북로73번가길 200-5 (강동동)",
-        latitude: "35.22365536",
-        longitude: "128.94041200",
-        location_id: 1
-      },
-      {
-        address_ko: "부산광역시 강서구 거가대로 2571 (천성동)",
-        latitude: "35.02301425",
-        longitude: "128.80958840",
-        location_id: 2
-      },
-      {
-        address_ko: "부산광역시 사상구 사상로 120 (감전동)",
-        latitude: "35.15123456",
-        longitude: "128.98765432",
-        location_id: 3
-      },
-      {
-        address_ko: "부산광역시 중구 중앙대로 45 (중앙동)",
-        latitude: "35.10324567",
-        longitude: "129.03216543",
-        location_id: 4
-      },
-      {
-        address_ko: "부산광역시 해운대구 좌동로 22 (좌동)",
-        latitude: "35.17985612",
-        longitude: "129.12563214",
-        location_id: 5
-      },
-      {
-        address_ko: "부산광역시 남구 못골로 11 (대연동)",
-        latitude: "35.12941235",
-        longitude: "129.08453219",
-        location_id: 6
-      },
-      {
-        address_ko: "부산광역시 연제구 중앙대로 999 (연산동)",
-        latitude: "35.17892345",
-        longitude: "129.08123456",
-        location_id: 7
-      },
-      {
-        address_ko: "부산광역시 북구 금곡대로 152 (덕천동)",
-        latitude: "35.21235678",
-        longitude: "128.99345678",
-        location_id: 8
-      },
-      {
-        address_ko: "부산광역시 동래구 온천천로 88 (온천동)",
-        latitude: "35.20345678",
-        longitude: "129.09123456",
-        location_id: 9
-      },
-      {
-        address_ko: "부산광역시 금정구 금샘로 100 (금사동)",
-        latitude: "35.25467891",
-        longitude: "129.09124567",
-        location_id: 10
-      },
-      {
-        address_ko: "부산광역시 사하구 하단로 50 (하단동)",
-        latitude: "35.10451234",
-        longitude: "128.97561234",
-        location_id: 11
-      },
-      {
-        address_ko: "부산광역시 동구 자성로 200 (수정동)",
-        latitude: "35.12567890",
-        longitude: "129.04567890",
-        location_id: 12
-      },
-      {
-        address_ko: "부산광역시 기장군 기장대로 300 (기장읍)",
-        latitude: "35.25467812",
-        longitude: "129.20987654",
-        location_id: 13
-      },
-      {
-        address_ko: "부산광역시 영도구 절영로 20 (영선동)",
-        latitude: "35.09124567",
-        longitude: "129.04123456",
-        location_id: 14
-      },
-      {
-        address_ko: "부산광역시 서구 충무대로 70 (동대신동)",
-        latitude: "35.10894567",
-        longitude: "129.01456789",
-        location_id: 15
-      },
-      {
-        address_ko: "부산광역시 강서구 명지오션시티로 55 (명지동)",
-        latitude: "35.21784567",
-        longitude: "128.94012345",
-        location_id: 16
-      },
-      {
-        address_ko: "부산광역시 해운대구 마린시티3로 15 (우동)",
-        latitude: "35.16324567",
-        longitude: "129.13456789",
-        location_id: 17
-      },
-      {
-        address_ko: "부산광역시 남구 유엔평화로 77 (대연동)",
-        latitude: "35.13456789",
-        longitude: "129.08912345",
-        location_id: 18
-      },
-      {
-        address_ko: "부산광역시 북구 낙동대로 1234 (구포동)",
-        latitude: "35.23012345",
-        longitude: "128.99456789",
-        location_id: 19
-      },
-      {
-        address_ko: "부산광역시 동래구 명륜로 99 (명륜동)",
-        latitude: "35.20987654",
-        longitude: "129.08345678",
-        location_id: 20
-      }], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
+      locations: [
+  {
+    fishing_place_id: 1,
+    name: "착한붕어 낚시카페",
+    type: "기타",
+    adrees_road: "서울특별시 종로구 대학로8가길 52, 지하1층 (동숭동)",
+    address_land: "서울특별시 종로구 동숭동 1-48 지하1층",
+    Latitude: 37.582964,
+    Longitude: 127.002648,
+    phone_number: "02-741-1733",
+    main_fish_species: "붕어",
+    usage_fee: "1시간(성인:10천원, 초,중,고 학생:9천원)",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 2,
+    name: "붕어의 신",
+    type: "기타",
+    adrees_road: "서울특별시 양천구 신월로 321",
+    address_land: "서울특별시 양천구 신정동 977-16",
+    Latitude: 37.5217038,
+    Longitude: 126.8565155,
+    phone_number: "02-2603-2266",
+    main_fish_species: "붕어",
+    usage_fee: "1시간(남 10천, 여9천, 커플18천, 청소년 7천, 아동 5천)  1시간 추가시 요금 발생",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 3,
+    name: "가자실내낚시터",
+    type: "기타",
+    adrees_road: "서울특별시 양천구 지양로 34",
+    address_land: "서울특별시 양천구 신월동 991-12",
+    Latitude: 37.519435,
+    Longitude: 126.8363231,
+    phone_number: "02-2691-2733",
+    main_fish_species: "붕어",
+    usage_fee: "1시간(남 10천, 여10천, 아동 8천)",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 4,
+    name: "입큰붕어낚시카페",
+    type: "기타",
+    adrees_road: "서울특별시 은평구 은평로 101, 지하1층 (응암동)",
+    address_land: "서울특별시 은평구 응암동 90-14",
+    Latitude: "",
+    Longitude: "",
+    phone_number: "",
+    main_fish_species: "-",
+    usage_fee: "10,000원/시간",
+    safety_facilities: "-",
+    convenience_facilities: "-"
+  },
+  {
+    fishing_place_id: 5,
+    name: "잉어킹낚시카페",
+    type: "기타",
+    adrees_road: "서울특별시 은평구 연서로26길 8, 지하1층 (대조동)",
+    address_land: "서울특별시 은평구 대조동 200-2",
+    Latitude: "",
+    Longitude: "",
+    phone_number: "",
+    main_fish_species: "민물고기",
+    usage_fee: "10,000원/시간",
+    safety_facilities: "구급함 구비",
+    convenience_facilities: "음료 자판대"
+  },
+  {
+    fishing_place_id: 6,
+    name: "용곡낚시터",
+    type: "저수지",
+    adrees_road: "충청북도 청주시 상당구 미원면 미원초정로 685-26",
+    address_land: "충청북도 청주시 상당구 미원면 종암리 449",
+    Latitude: 36.683613,
+    Longitude: 127.636857,
+    phone_number: "",
+    main_fish_species: "붕어+잉어+향어",
+    usage_fee: "20000원",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 7,
+    name: "황청낚시터",
+    type: "저수지",
+    adrees_road: "충청북도 청주시 상당구 남일면 황청리길 119",
+    address_land: "충청북도 청주시 상당구 남일면 황청리 163",
+    Latitude: 36.594752,
+    Longitude: 127.555039,
+    phone_number: "",
+    main_fish_species: "붕어+잉어+향어",
+    usage_fee: "25000원",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 8,
+    name: "한계리낚시터",
+    type: "저수지",
+    adrees_road: "충청북도 청주시 상당구 가덕면 한계1길 170",
+    address_land: "충청북도 청주시 상당구 가덕면 한계리 294-1",
+    Latitude: 36.606594,
+    Longitude: 127.562466,
+    phone_number: "",
+    main_fish_species: "붕어+잉어+향어",
+    usage_fee: "30000원",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  },
+  {
+    fishing_place_id: 9,
+    name: "중리낚시터",
+    type: "저수지",
+    adrees_road: "충청북도 청주시 상당구 미원면 쌍이운교로 262",
+    address_land: "충청북도 청주시 상당구 미원면 중리 316-1",
+    Latitude: 36.669118,
+    Longitude: 127.665454,
+    phone_number: "",
+    main_fish_species: "붕어+잉어+향어",
+    usage_fee: "25000원",
+    safety_facilities: "구명부환+소화기+구급약품+전기설비",
+    convenience_facilities: "화장실+쓰레기통"
+  }], // DB에서 위치 데이터를 저장할 배열 - 임시 데이터 넣어둠
       isMapVisible: false, // 지도 표시 여부
       selectedLocation: null, // 선택된 낚시터 데이터
       isDetailsVisible: false, // 상세 정보 슬라이드 표시 여부
@@ -207,7 +215,7 @@ export default {
         this.filteredLocations = [...this.locations]; // 모든 데이터 표시
       } else {
         this.filteredLocations = this.locations.filter((location) =>
-          String(location.location_id || "").includes(query)
+          String(location.name || "").includes(query)
         );
       }
     },
