@@ -38,7 +38,7 @@
                                 </p>
                                 <p class="text-gray-600 text-xs text-center mb-2">신뢰도: {{
                                     catchItem.detections[0].confidence.toFixed(2)
-                                    }}%</p>
+                                }}%</p>
                             </div>
                         </div>
                     </div>
@@ -108,7 +108,8 @@ const store = useStore();
 const BACKEND_BASE_URL = 'http://localhost:5000';
 
 const isLoadingCatches = ref(false); // Add loading state
-const isAuthenticated = ref(true); // Define isAuthenticated
+
+const isAuthenticated = computed(() => store.getters.isAuthenticated); // Use computed property for authentication status
 
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(() => {

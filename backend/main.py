@@ -277,18 +277,30 @@ Base.metadata.create_all(engine)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_ep50_confi91_predict.pt').to(device)
+model = YOLO('./models/yolo11m_with_augmentations1.pt').to(device)
 
 # 초기 DB install
 initialize_service()
 
 # 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
-    0: '넙치',
-    1: '조피볼락',
-    2: '참돔',
-    3: '감성돔',
-    4: '돌돔'
+ 0: '감성돔',
+ 1: '대구',
+ 2: '꽃게',
+ 3: '갈치',
+ 4: '말쥐치',
+ 5: '넙치',
+ 6: '조피볼락',
+ 7: '삼치',
+ 8: '문치가자미',
+ 9: '참문어',
+ 10: '돌돔',
+ 11: '참돔',
+ 12: '낙지',
+ 13: '대게',
+ 14: '살오징어',
+ 15: '옥돔',
+ 16: '주꾸미'
 }
 
 # REST API
@@ -658,6 +670,31 @@ def update_catch(user_id, catch_id):
         session.rollback()
         session.close()
         return jsonify({"error": str(e)}), 500
+
+@app.route('/catches/<int:catch_id>', methods=['DELETE'])
+@token_required
+def delete_catch(user_id, catch_id):
+    session = Session()
+    current_user = session.query(User).filter_by(user_id=user_id).first()
+    if not current_user:
+        session.close()
+        return jsonify({'message': 'User not found'}), 404
+
+    catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
+    if not catch:
+        session.close()
+        return jsonify({'message': 'Catch not found'}), 404
+
+    try:
+        session.delete(catch)
+        session.commit()
+        session.close()
+        return jsonify({'message': 'Catch deleted successfully'}), 200
+    except Exception as e:
+        session.rollback()
+        session.close()
+        logging.error(f"Error deleting catch: {e}")
+        return jsonify({'error': 'Error deleting catch'}), 500
 
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def uploaded_file(filename):

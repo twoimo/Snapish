@@ -150,6 +150,7 @@ const handlePredictResponse = async (data) => {
                     imageUrl,
                     imageBase64,
                     detections: encodeURIComponent(JSON.stringify(detections)),
+                    timestamp: Date.now() // Add a timestamp to ensure the route updates
                 },
             });
         } else {
@@ -159,6 +160,7 @@ const handlePredictResponse = async (data) => {
                 query: {
                     imageBase64,
                     detections: encodeURIComponent(JSON.stringify(detections)),
+                    timestamp: Date.now() // Add a timestamp to ensure the route updates
                 },
             });
         }
