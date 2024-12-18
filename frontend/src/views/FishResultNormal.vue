@@ -212,7 +212,7 @@ const downloadPhotocard = () => {
 
 // 이미지 팝업 열기
 function openImagePopup(imageUrl) {
-  popupImageUrl.value = imageUrl;
+  popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
   isImagePopupVisible.value = true;
 }
 
@@ -253,5 +253,10 @@ const imageSource = computed(() => {
 
 .absolute {
   position: absolute;
+}
+
+/* Ensure pop-up images are displayed correctly */
+.object-contain {
+  object-fit: contain;
 }
 </style>
