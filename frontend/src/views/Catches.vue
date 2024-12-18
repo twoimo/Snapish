@@ -5,7 +5,7 @@
                 <div v-if="displayedCatches.length > 0" class="grid grid-cols-2 gap-4">
                     <div v-for="(catchItem) in displayedCatches" :key="catchItem.id"
                         class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                        <img :src="catchItem.imageUrl" alt="Catch Image"
+                        <img :src="`http://localhost:5000/uploads/${catchItem.imageUrl}`" alt="Catch Image"
                             class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             @click="openImagePopup(catchItem.imageUrl)" />
                         <p class="text-gray-800 text-sm text-center flex justify-center items-center">
