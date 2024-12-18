@@ -258,6 +258,15 @@ export default createStore({
     updateAvatar({ commit }, avatarUrl) {
       commit("SET_AVATAR", avatarUrl);
     },
+    fetchServices({ commit }) {
+      // Define the fetchServices action
+      // Example implementation:
+      return fetch("http://localhost:5000/api/services")
+        .then((response) => response.json())
+        .then((data) => {
+          commit("setServices", data);
+        });
+    },
   },
   getters: {
     // Existing getters
