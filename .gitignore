@@ -131,6 +131,9 @@ dmypy.json
 # Package_lock
 frontend/package-lock.json
 
+# Custom - DB block
+/backend/data/*
+
 #custom
 .DS_Store
 frontend/node_modules
