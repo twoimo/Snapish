@@ -140,7 +140,7 @@ export default createStore({
     async login({ commit }, { username, password }) {
       try {
         const response = await axios.post("/login", { username, password });
-        const { token, user, message } = response.data;
+        const { token, user } = response.data; // Removed 'message'
 
         // 저장소와 로컬 스토리지 업데이트
         localStorage.setItem("token", token);
@@ -171,14 +171,18 @@ export default createStore({
       localStorage.removeItem("user");
       commit("clearAuth");
     },
-    async fetchUserProfile({ commit }) {
+    async fetchUserProfile({ commit, state }) {
       try {
-        const response = await axios.get("/profile");
+        const response = await axios.get("/profile", {
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        });
         const userData = response.data;
         commit("setAuth", {
           isAuthenticated: true,
           user: userData,
-          token: localStorage.getItem("token"),
+          token: state.token,
         });
       } catch (error) {
         console.error("Fetch user profile error:", error);
