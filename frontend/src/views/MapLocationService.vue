@@ -207,7 +207,7 @@ export default {
 
 .slide-up-panel {
   position: absolute; /* absolute에서 fixed로 변경 */
-  bottom: 0;
+  bottom: 60px;
   left: 0;
   width: 100%;
   height: 90%;
