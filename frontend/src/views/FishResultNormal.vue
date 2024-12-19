@@ -23,7 +23,7 @@
     <main class="flex-1 pb-20 px-4 overflow-auto max-w-md mx-auto">
       <!-- 로딩 상태 -->
       <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <span class="text-gray-500">로딩 중...</span>
+        <span class="text-gray-500">Loading...</span>
       </div>
 
       <!-- 에러 메시지 -->
@@ -39,7 +39,9 @@
 
       <!-- AI 판별 결과 -->
       <div v-if="!isLoading && !errorMessage" class="mt-6 bg-blue-50 rounded-lg p-4">
-        <h2 class="text-lg font-bold text-blue-700 mb-2">AI 판별 결과</h2>
+        <div class="flex items-center mb-2">
+            <h2 class="text-lg font-bold text-blue-700">정상: 현재 포획 가능 어종</h2>
+          </div>
         <template v-if="parsedDetections.length > 0">
           <p class="text-blue-600" v-if="parsedDetections[0].label !== '알 수 없음'">
             이 물고기는 <strong>{{ parsedDetections[0].label }}</strong>입니다.
@@ -75,6 +77,12 @@
             예측 결과가 존재하지 않습니다.
           </p>
         </template>
+      </div>
+
+      <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
+        <p class="text-gray-600">학명: {{ scientificName || '정보 없음' }}</p>
+        <p class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
       </div>
 
       <!-- 공유하기 버튼 -->
@@ -147,6 +155,17 @@ const showModal = ref(false);
 const photocard = ref(null);
 const popupImageUrl = ref('');
 const isImagePopupVisible = ref(false);
+
+// Change fishName to a computed property
+const fishName = computed(() => {
+  if (parsedDetections.value.length > 0 && parsedDetections.value[0].label !== '알 수 없음') {
+    return parsedDetections.value[0].label;
+  }
+  return '알 수 없는 물고기';
+});
+
+const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 
 const fetchDetections = async () => {
   isLoading.value = true;
