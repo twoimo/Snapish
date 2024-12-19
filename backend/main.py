@@ -29,8 +29,7 @@ from sqlalchemy import (
     JSON,
     Float,
     VARCHAR,
-    text,
-    UniqueConstraint
+    text
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -835,23 +834,29 @@ def get_closest_sealoc():
 
     session = Session()
     
-    # ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
+    ## ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
+    # 조위, 수온, 기온 , 기압 4개 모두 체크 가능한 경우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
-            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
+            ST_Distance_Sphere(POINT(126.551, 37.5152), POINT(obs_lon, obs_lat)) AS distance
         FROM TidalObservations
         WHERE obs_object LIKE '%조위%'
+            AND obs_object LIKE '%수온%'
+            AND obs_object LIKE '%기온%'
+            AND obs_object LIKE '%기압%'
         ORDER BY distance ASC
-        LIMIT 1
+        LIMIT 1;
     """)
     
+    # 조수간만 태그 + 없음 제거
     query_obspretab = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
         FROM TidalObservations
         WHERE obs_object LIKE '%조수간만%'
+            AND obs_object NOT LIKE '%없음%'
         ORDER BY distance ASC
-        LIMIT 1
+        LIMIT 1;
     """)
 
     try:
