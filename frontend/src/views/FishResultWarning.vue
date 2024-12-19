@@ -58,9 +58,35 @@
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
             <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
           </div>
-          <p class="text-red-600 mt-2">
-            이 물고기는 <strong>{{ fishName }}</strong>입니다.
-            <span class="text-sm text-red-500">(신뢰도: {{ (confidence * 100).toFixed(2) }}%)</span>
+          <p class="text-red-600" v-if="detections[0].label !== '알 수 없음'">
+            이 물고기는 <strong>{{ detections[0].label }}</strong>입니다.
+            <span :class="[
+              'text-sm',
+              getConfidenceColor(detections[0].confidence)
+            ]">
+              신뢰도: {{ (detections[0].confidence * 100).toFixed(2) }}%
+            </span>
+          </p>
+          <p class="text-red-600" v-else>
+            이 물고기는 <strong>알 수 없음</strong>으로 판별되었습니다.
+          </p>
+
+          <!-- 다른 후보 추가 -->
+          <p class="text-sm text-red-600 mt-2"
+            v-if="detections.length > 1 && detections[0].label !== '알 수 없음'">
+            다른 후보:
+            <span class="text-red-500">
+              <span v-for="(detection, index) in detections.slice(1)" :key="index">
+                {{ detection.label }}
+                <span :class="[
+                  'text-sm',
+                  getConfidenceColor(detection.confidence)
+                ]">
+                  (신뢰도: {{ (detection.confidence * 100).toFixed(2) }}%)
+                </span>
+                {{ index < detections.slice(1).length - 1 ? ', ' : '' }}
+              </span>
+            </span>
           </p>
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
@@ -139,8 +165,12 @@ const route = useRoute();
 const router = useRouter();
 
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
-const confidence = detections.length > 0 ? detections[0].confidence : 0;
-const fishName = detections.length > 0 ? detections[0].label : '알 수 없는 물고기';
+const fishName = computed(() => {
+  if (detections.length > 0 && detections[0].label !== '알 수 없음') {
+    return detections[0].label;
+  }
+  return '알 수 없는 물고기';
+});
 const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
 const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
@@ -267,6 +297,13 @@ const getBoundingBoxStyle = (bbox) => {
     pointerEvents: 'none',
     backgroundColor: 'rgba(255, 0, 0, 0.1)'
   };
+};
+
+// 신뢰도에 따른 색상 클래스 반환
+const getConfidenceColor = (confidence) => {
+  if (confidence >= 0.8) return 'text-red-600';
+  if (confidence >= 0.5) return 'text-red-400';
+  return 'text-red-300';
 };
 </script>
 
