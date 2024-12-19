@@ -119,12 +119,12 @@
                 v-model:weatherData="weatherData.sea"
               />
             </div>
-            <div v-if="location.type === '저수지'">
+            <!-- <div v-if="location.type === '저수지'">
               <MapLocationWeatherLand 
                 :spotlocation="[location.latitude, location.longitude]"
                 v-model:weatherData="weatherData.land"
               />
-            </div>
+            </div> -->
           </div>
         </div>
       </section>
@@ -145,13 +145,13 @@ import {
   ChevronDownIcon
 } from 'lucide-vue-next';
 import MapLocationWeatherSea from './MapLocationWeatherSea.vue';
-import MapLocationWeatherLand from './MapLocationWeatherLand.vue';
+// import MapLocationWeatherLand from './MapLocationWeatherLand.vue';
 
 export default {
   name: 'MapLocationDetail',
   components: {
     MapLocationWeatherSea,
-    MapLocationWeatherLand,
+    // MapLocationWeatherLand,
     XIcon,
     MapPinIcon,
     WalletIcon,
