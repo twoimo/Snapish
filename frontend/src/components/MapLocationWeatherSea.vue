@@ -120,13 +120,12 @@ export default {
 
       try {
         const [lat, lon] = this.spotlocation;
+        console.log(lat, lon)
         const response = await fetchSeaPostidByCoordinates(lat, lon);
         const { obsrecent, obspretab } = response;
         this.obsrecent = obsrecent;
         this.obspretab = obspretab;
         this.$emit('update:weatherData', { obsrecent, obspretab });
-        console.log(this.obsrecent)
-        console.log(this.obspretab)
       } catch (error) {
         console.error('Error fetching weather data:', error);
       } finally {
