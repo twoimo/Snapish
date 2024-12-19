@@ -803,11 +803,10 @@ def get_closest_sealoc():
     if user_lat is None or user_lon is None:
         return jsonify({'error': 'Invalid input'}), 400
 
-    # 데이터베이스 세션 시작
     session = Session()
-
+    
     # ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
-    query = text("""
+    query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
         FROM TidalObservations
@@ -815,43 +814,75 @@ def get_closest_sealoc():
         ORDER BY distance ASC
         LIMIT 1
     """)
+    
+    query_obspretab = text("""
+        SELECT obs_station_id, obs_post_id, obs_post_name,
+            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
+        FROM TidalObservations
+        WHERE obs_object LIKE '%조수간만%'
+        ORDER BY distance ASC
+        LIMIT 1
+    """)
 
-    # 쿼리 실행
-    result = session.execute(query, {'lat': user_lat, 'lon': user_lon}).fetchone()
+    try:
+        # 두 개의 쿼리 실행
+        result_obsrecent = session.execute(query_obsrecent, {'lat': user_lat, 'lon': user_lon}).fetchone()
+        result_obspretab = session.execute(query_obspretab, {'lat': user_lat, 'lon': user_lon}).fetchone()
 
-    # 결과 처리
-    if result:
-        # 튜플에서 각 항목에 접근
-        obs_station_id = result[0]
-        obs_post_id = result[1]
-        obs_post_name = result[2]
-        distance = result[3]
-        
-        # DB 연결 종료
-        session.close()
-        
-        # KHOA API 호출
-        try:
-            api_data = get_sea_weather_by_seapostid(obs_post_id)
-            print(api_data)
-
-            # 프론트엔드에 보낼 데이터 구성
-            closest_data = {
-                'obs_station_id': obs_station_id,
-                'obs_post_id': obs_post_id,
-                'obs_post_name': obs_post_name,
-                'distance': distance / 1000,
-                'api_response': api_data  # API 응답 데이터 추가
+        if result_obsrecent and result_obspretab:
+            print(f"obs recent : {result_obsrecent}")
+            print(f"obs pretab : {result_obspretab}")
+            # 조위 관측소 정보
+            obsrecent_data = {
+                'obs_station_id': result_obsrecent[0],
+                'obs_post_id': result_obsrecent[1],
+                'obs_post_name': result_obsrecent[2],
+                'distance': result_obsrecent[3] / 1000
             }
 
-        except requests.exceptions.RequestException as e:
-            session.close()
-            return jsonify({'error': f'API request failed: {e}'}), 500
-        
-        return jsonify(closest_data)
-    else:
+            # 조수간만 관측소 정보
+            obspretab_data = {
+                'obs_station_id': result_obspretab[0],
+                'obs_post_id': result_obspretab[1],
+                'obs_post_name': result_obspretab[2],
+                'distance': result_obspretab[3] / 1000
+            }
+
+            # KHOA API 호출
+            try:
+                api_data = get_sea_weather_by_seapostid({
+                    'obsrecent': obsrecent_data['obs_post_id'],
+                    'obspretab': obspretab_data['obs_post_id']
+                })
+
+                print(f"api recent : {obsrecent_data['obs_post_id']}")
+                print(f"api pretab : {obspretab_data['obs_post_id']}")
+                print(f"api data : {api_data}")
+                # 프론트엔드에 보낼 데이터 구성
+                closest_data = {
+                    'api_response': {
+                        'obsrecent': {
+                            **obsrecent_data,
+                            'api_response': api_data['obsrecent']
+                        },
+                        'obspretab': {
+                            **obspretab_data,
+                            'api_response': api_data['obspretab']
+                        }
+                    }
+                }
+
+                print(f"closest data : {closest_data}")
+                return jsonify(closest_data)
+
+            except requests.exceptions.RequestException as e:
+                return jsonify({'error': f'API request failed: {e}'}), 500
+
+        else:
+            return jsonify({'error': 'No tidal observations found'}), 404
+
+    finally:
         session.close()
-        return jsonify({'error': 'No tidal observations found'}), 404
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
