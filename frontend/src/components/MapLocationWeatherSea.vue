@@ -4,7 +4,10 @@
   <div style="display: flex; flex-direction: column; gap: 1rem;">
     <!-- Location Info -->
     <div v-if="seapostid_result">
-      <p>
+      <p style="font-size: 0.7rem;">
+        출처 : 바다누리 해양정보 서비스
+      </p>
+      <p style="font-size: 0.8rem;">
         기준 관측소 : <strong>{{ seapostid_result.obs_post_name }}</strong>
         와 <strong>{{ seapostid_result.distance.toFixed(3) }} km</strong> 차이
       </p>
@@ -28,7 +31,7 @@
                 <td :class="{ 'high-tide': item.hl_code === '고조', 'low-tide': item.hl_code === '저조' }">
                   {{ item.hl_code }}
                 </td>
-                <td>{{ item.tph_level }}</td>
+                <td>{{ item.tph_level }} cm</td>
               </tr>
             </tbody>
           </table>
@@ -37,6 +40,32 @@
 
         <!-- Right Table -->
         <div style="flex: 1">
+          <h3>현재 관측</h3>
+          <table class="tide-pre-tab">
+            <thead>
+              <tr>
+                <th colspan="2">{{ seapostid_result.api_response.tideObsRecent.record_time.split(' ')[1].slice(0, 5) }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>수온</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.water_temp }}°C</td>
+              </tr>
+              <tr>
+                <td>기온</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.air_temp }}°C</td>
+              </tr>
+              <tr>
+                <td>기압</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.air_press }}hPa</td>
+              </tr>
+              <tr>
+                <td>조위</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.tide_level }}cm</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -54,38 +83,52 @@ export default {
       type: Array,
       required: true,
     },
+    weatherData: Object
   },
+  emits: ['update:weatherData'],
   data(){
     return {
       seapostid_result: null,
     }
   },
   mounted(){
-    this.getWeatherData()
+    this.fetchWeatherData()
   },
-  methods : {
-    async getWeatherData() {
-      console.log(`대상 낚시터 정보 (debug) :  ${ this.spotlocation }`)
+  methods: {
+    async fetchWeatherData() {
+      if (this.weatherData) {
+        // 이미 데이터가 있으면 API 호출하지 않음
+        this.seapostid_result = this.weatherData;
+        return;
+      }
+
+      console.log(`대상 낚시터 정보 (debug) : ${this.spotlocation}`);
       try {
-        const [lat, lon] = this.spotlocation
+        const [lat, lon] = this.spotlocation;
         // fetchSeaPostidByCoordinates를 호출하여 데이터를 가져옴
         const response = await fetchSeaPostidByCoordinates(lat, lon);
-        this.seapostid_result = response; // 결과 데이터를 weatherData에 저장
+        this.seapostid_result = response;
+        // 결과 데이터를 부모 컴포넌트에 전달
+        this.$emit('update:weatherData', response);
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }
 
-      console.log(this.seapostid_result.api_response)
+      if (this.seapostid_result) {
+        console.log(this.seapostid_result.api_response);
+      }
     },
+
     getCurrentDate() {
       const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      return `${year}년 ${month}월 ${day}일`;
-    },
-  },
-};
+      return now.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  }
+}
 </script>
 
 
