@@ -30,13 +30,26 @@
         </div>
 
         <!-- 업로드된 물고기 이미지 표시 -->
-        <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-          <img
-            :src="imageSource"
-            alt="물고기 사진"
-            class="w-full h-full object-cover cursor-pointer"
-            @click="handleImageClick"
-          />
+        <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
+          <div class="relative w-full">
+            <img 
+              ref="fishImage" 
+              :src="imageSource" 
+              alt="물고기 사진" 
+              class="w-full object-contain cursor-pointer"
+              @click="handleImageClick" 
+              @load="onImageLoad" 
+            />
+            <template v-if="imageDimensions.width && imageDimensions.height">
+              <div 
+                v-for="(detection, index) in detections" 
+                :key="index" 
+                class="absolute" 
+                :style="getBoundingBoxStyle(detection.bbox)"
+              >
+              </div>
+            </template>
+          </div>
         </div>
         
         <!-- AI 판별 결과 -->
@@ -216,6 +229,45 @@ onMounted(() => {
     }
   };
 });
+
+const fishImage = ref(null);
+const imageDimensions = ref({ width: 0, height: 0 });
+
+const onImageLoad = () => {
+  const imageElement = fishImage.value;
+  if (imageElement) {
+    imageDimensions.value.width = imageElement.naturalWidth;
+    imageDimensions.value.height = imageElement.naturalHeight;
+    console.log('Image loaded:', fishImage.value);
+  }
+};
+
+const getBoundingBoxStyle = (bbox) => {
+  const [x1, y1, x2, y2] = bbox;
+  const imageElement = fishImage.value;
+
+  if (!imageElement || !imageDimensions.value.width || !imageDimensions.value.height) {
+    return {};
+  }
+
+  // 이미지의 실제 표시 크기와 원본 크기의 비율 계산
+  const displayWidth = imageElement.clientWidth;
+  const displayHeight = imageElement.clientHeight;
+  const scaleX = displayWidth / imageDimensions.value.width;
+  const scaleY = displayHeight / imageDimensions.value.height;
+
+  // 바운딩 박스 위치와 크기 계산
+  return {
+    left: `${x1 * scaleX}px`,
+    top: `${y1 * scaleY}px`,
+    width: `${(x2 - x1) * scaleX}px`,
+    height: `${(y2 - y1) * scaleY}px`,
+    position: 'absolute',
+    border: '2px solid red',
+    pointerEvents: 'none',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)'
+  };
+};
 </script>
 
 <style scoped>

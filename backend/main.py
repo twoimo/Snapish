@@ -419,7 +419,7 @@ def signup():
     session.commit()
     session.close()
 
-    return jsonify({'message': '회원가입이 성공적으로 완료되었습니다.'}), 201
+    return jsonify({'message': '원가입이 성공적으로 완료되었습니다.'}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -478,15 +478,17 @@ def predict():
 
     try:
         results = model(img, exist_ok=True, device=device)
-        detections = [
-            {
-                'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
-                'confidence': float(conf),
-                'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), '')
-            }
-            for result in results
-            for cls, conf in zip(result.boxes.cls, result.boxes.conf)
-        ]
+        detections = []
+        
+        for result in results:  # Iterate over results
+            for cls, conf, bbox in zip(result.boxes.cls, result.boxes.conf, result.boxes.xyxy):
+                detections.append({
+                    'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
+                    'confidence': float(conf),
+                    'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), ''),
+                    'bbox': bbox.tolist()  # Ensure bbox is included
+                })
+
         detections.sort(key=lambda x: x['confidence'], reverse=True)
         if not detections:
             detections.append({
@@ -509,14 +511,13 @@ def predict():
 
         if current_user:
             # Save detections and image info to the database
-            # Generate a unique filename
             filename = secure_filename(f"{uuid.uuid4().hex}.jpg")
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             img.save(file_path, format='JPEG')
 
             new_catch = Catch(
                 user_id=current_user.user_id,
-                photo_url=filename,  # Store filename instead of base64
+                photo_url=filename,
                 exif_data=detections,
                 catch_date=datetime.utcnow()
             )
@@ -525,11 +526,10 @@ def predict():
             response_data = {
                 'id': new_catch.catch_id,
                 'detections': detections,
-                'imageUrl': filename  # Return filename to frontend
+                'imageUrl': filename
             }
         else:
             # Do not save the image to disk or database
-            # Return detections and base64 encoded image
             buffered = io.BytesIO()
             img.save(buffered, format='JPEG')
             img_str = base64.b64encode(buffered.getvalue()).decode()
@@ -620,7 +620,7 @@ def add_catch(user_id):
     detections = data.get('detections')
 
     if not imageUrl or not detections:
-        return jsonify({'message': '이미지 URL과 감지 결과가 필요합니다.'}), 400
+        return jsonify({'message': '이미지 URL 또는 감지 결과가 필요합니다.'}), 400
 
     session = Session()
     current_user = session.query(User).filter_by(user_id=user_id).first()
