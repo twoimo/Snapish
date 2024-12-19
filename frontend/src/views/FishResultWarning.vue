@@ -40,7 +40,7 @@
         </div>
         
         <!-- AI 판별 결과 -->
-        <div v-if="fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
+        <div v-if="!isLoading && fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
             <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
@@ -52,13 +52,13 @@
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
 
-        <div class="mt-6 bg-gray-50 rounded-lg p-4">
+        <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
           <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
           <p class="text-gray-600">학명: {{ scientificName }}</p>
           <p class="mt-2 text-gray-700">{{ fishDescription }}</p>
         </div>
 
-        <div class="mt-6 bg-yellow-50 rounded-lg p-4">
+        <div v-if="!isLoading && !errorMessage" class="mt-6 bg-yellow-50 rounded-lg p-4">
           <h3 class="font-bold text-yellow-700 mb-2">포획 제한 이유</h3>
           <ul class="list-disc list-inside text-yellow-800">
             <li>ChatGPT로 생성된 포획 제한 이유</li>
@@ -252,5 +252,3 @@ header {
   /* 추가적인 모달 스타일이 필요하다면 여기에 작성 */
 }
 </style>
-# End of Selection
-```

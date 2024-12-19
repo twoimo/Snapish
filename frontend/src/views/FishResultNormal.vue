@@ -1,19 +1,20 @@
+# Start of Selection
 <template>
   <div class="min-h-screen bg-white flex flex-col">
     <!-- 헤더 -->
     <header
       class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-15 max-w-md mx-auto">
       <div class="flex items-center">
-        <button class="mr-2" @click="goBack">
+        <button class="mr-2" @click="goBack" :disabled="isLoading">
           <ChevronLeftIcon class="w-6 h-6" />
         </button>
         <h1 class="text-xl font-bold">물고기 판별 결과</h1>
       </div>
       <div class="flex items-center gap-4">
-        <button class="p-2">
+        <button class="p-2" :disabled="isLoading">
           <BellIcon class="w-6 h-6" />
         </button>
-        <button class="p-2">
+        <button class="p-2" :disabled="isLoading">
           <Settings2Icon class="w-6 h-6" />
         </button>
       </div>
@@ -89,7 +90,7 @@
       <!-- 공유하기 버튼 -->
       <div v-if="!isLoading && !errorMessage" class="mt-6">
         <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="shareResult">
+          @click="shareResult" :disabled="isLoading">
           <Share2Icon class="w-5 h-5 mr-2" />
           <span>공유하기</span>
         </button>
@@ -98,7 +99,7 @@
       <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
       <div v-if="!isLoading && !errorMessage" class="mt-4">
         <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="navigateToCatches">
+          @click="navigateToCatches" :disabled="isLoading">
           <InfoIcon class="w-5 h-5 mr-2" />
           <span>내가 잡은 물고기 리스트 보기</span>
         </button>
@@ -106,7 +107,7 @@
     </main>
 
     <!-- 포토카드 모달 -->
-    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div v-if="showModal && !isLoading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
         <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
         <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
@@ -115,20 +116,21 @@
           <p class="text-center text-sm">신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%</p>
         </div>
         <div class="mt-6 flex justify-end gap-3">
-          <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded">닫기</button>
-          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded">저장하기</button>
+          <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded" :disabled="isLoading">닫기</button>
+          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded" :disabled="isLoading">저장하기</button>
         </div>
       </div>
     </div>
 
     <!-- 이미지 팝업 -->
-    <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+    <div v-if="isImagePopupVisible && !isLoading" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
       @click="isImagePopupVisible = false">
       <div class="relative max-w-full max-h-full" @click.stop>
         <img :src="popupImageUrl" alt="Popup Image"
           class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
         <button @click="isImagePopupVisible = false"
-          class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
+          class="absolute top-2 right-2"
+          :disabled="isLoading">
           &times;
         </button>
       </div>
@@ -295,3 +297,5 @@ const goBack = () => {
   object-fit: contain;
 }
 </style>
+# End of Selection
+```
