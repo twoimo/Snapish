@@ -83,17 +83,45 @@
           </button>
         </div>
       </main>
+
+      <!-- 이미지 팝업 모달 -->
+      <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div class="bg-white p-4 rounded-lg relative">
+          <button class="absolute top-2 right-2" @click="isImagePopupVisible = false">
+            &times;
+          </button>
+          <img :src="popupImageUrl" alt="확대된 이미지" class="max-w-full max-h-full" />
+        </div>
+      </div>
+
+      <!-- 공유 모달 -->
+      <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg relative">
+          <button class="absolute top-2 right-2" @click="showModal = false">
+            &times;
+          </button>
+          <h2 class="text-xl font-bold mb-4">공유하기</h2>
+          <!-- 공유 옵션들 -->
+          <button class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg mb-2">Facebook으로 공유</button>
+          <button class="w-full bg-blue-700 text-white py-2 px-4 rounded-lg mb-2">Twitter로 공유</button>
+          <button class="w-full bg-green-500 text-white py-2 px-4 rounded-lg">링크 복사</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon } from 'lucide-vue-next';
-import store from '../store';
+import { useStore } from 'vuex'; // Updated to use useStore for reactivity
+
+const store = useStore(); // Use the Vuex store with reactivity
 
 const route = useRoute();
+const router = useRouter();
+
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]')); // detections 결과 가져오기
 
 const confidence = detections.length > 0 ? detections[0].confidence : 0; // 첫 번째 감지 결과의 신뢰도
@@ -105,6 +133,7 @@ const isLoading = ref(true);
 const errorMessage = ref('');
 const imageUrl = ref('');
 const imageBase64 = ref('');
+const showModal = ref(false);
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
@@ -113,9 +142,9 @@ const goBack = () => {
   window.history.back();
 };
 
+// 공유하기 기능 구현
 const shareResult = () => {
-  // 공유 기능 구현
-  alert('결과를 공유합니다.');
+  showModal.value = true;
 };
 
 // onMounted 훅을 사용하여 DOM 요소가 마운트된 후에 접근
@@ -124,17 +153,42 @@ onMounted(() => {
   
   // 이미지 URL과 Base64 데이터를 라우트 쿼리에서 가져오기
   imageUrl.value = route.query.imageUrl || '';
-  imageBase64.value = route.query.imageBase64 || '';
+  imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
+
+  // Simulate loading
+  setTimeout(() => {
+    isLoading.value = false;
+    if (!imageSource.value) {
+      errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+    }
+  }, 1000);
 });
 
 const imageSource = computed(() => {
-  if (imageUrl.value && store.state.isAuthenticated) {
-    return `${BACKEND_BASE_URL}/uploads/${imageUrl.value}`; // Updated to backend URL
-  } else if (imageBase64.value) {
+  if (imageBase64.value) {
     return `data:image/jpeg;base64,${imageBase64.value}`;
+  } else if (imageUrl.value && store.state.isAuthenticated) {
+    return `${BACKEND_BASE_URL}/uploads/${imageUrl.value}`;
   }
   return '/placeholder.svg';
 });
+
+// 이미지 팝업 열기
+function openImagePopup(imageSrc) {
+  popupImageUrl.value = imageSrc.startsWith('data:image/')
+    ? imageSrc
+    : `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
+  isImagePopupVisible.value = true;
+}
+
+// Define additional refs for popup
+const popupImageUrl = ref('');
+const isImagePopupVisible = ref(false);
+
+// 내가 잡은 물고기 페���지로 이동
+function navigateToCatches() {
+  router.push('/catches');
+}
 </script>
 
 <style scoped>
@@ -161,5 +215,17 @@ header {
   position: fixed;
   top: 0;
   z-index: 10; /* 헤더가 다른 요소 위에 오도록 설정 */
+}
+
+.fixed {
+  position: fixed;
+}
+
+.bg-opacity-50 {
+  background-opacity: 0.5;
+}
+
+.modal {
+  /* 추가적인 모달 스타일이 필요하다면 여기에 작성 */
 }
 </style>
