@@ -1,29 +1,30 @@
-<!-- filepath: /c:/Users/twoimo/Documents/GitHub/Snapish/frontend/src/views/FishResultNormal.vue -->
+# Start of Selection
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col">
+  <div class="min-h-screen bg-white flex flex-col">
     <!-- 헤더 -->
-    <header class="sticky top-0 bg-white px-4 py-3 flex items-center justify-between border-b">
+    <header
+      class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-15 max-w-md mx-auto">
       <div class="flex items-center">
-        <button class="mr-2" @click="goBack">
+        <button class="mr-2" @click="goBack" :disabled="isLoading">
           <ChevronLeftIcon class="w-6 h-6" />
         </button>
         <h1 class="text-xl font-bold">물고기 판별 결과</h1>
       </div>
       <div class="flex items-center gap-4">
-        <button class="p-2">
+        <button class="p-2" :disabled="isLoading">
           <BellIcon class="w-6 h-6" />
         </button>
-        <button class="p-2">
+        <button class="p-2" :disabled="isLoading">
           <Settings2Icon class="w-6 h-6" />
         </button>
       </div>
     </header>
 
     <!-- 메인 콘텐츠 -->
-    <main class="flex-1 pb-20 px-4 overflow-auto">
+    <main class="flex-1 pb-20 px-4 overflow-auto max-w-md mx-auto">
       <!-- 로딩 상태 -->
       <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <span class="text-gray-500">로딩 중...</span>
+        <span class="text-gray-500">Loading...</span>
       </div>
 
       <!-- 에러 메시지 -->
@@ -32,13 +33,33 @@
       </div>
 
       <!-- 업로드된 물고기 이미지 표시 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-        <img :src="imageUrl" alt="물고기 사진" class="w-full h-full object-cover" />
+      <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
+        <div class="relative w-full">
+          <img 
+            ref="fishImage" 
+            :src="imageSource" 
+            alt="물고기 사진" 
+            class="w-full object-contain cursor-pointer"
+            @click="handleImageClick" 
+            @load="onImageLoad" 
+          />
+          <template v-if="imageDimensions.width && imageDimensions.height">
+            <div 
+              v-for="(detection, index) in parsedDetections" 
+              :key="index" 
+              class="absolute" 
+              :style="getBoundingBoxStyle(detection.bbox)"
+            >
+            </div>
+          </template>
+        </div>
       </div>
 
       <!-- AI 판별 결과 -->
       <div v-if="!isLoading && !errorMessage" class="mt-6 bg-blue-50 rounded-lg p-4">
-        <h2 class="text-lg font-bold text-blue-700 mb-2">AI 판별 결과</h2>
+        <div class="flex items-center mb-2">
+          <h2 class="text-lg font-bold text-blue-700">정상: 현재 포획 가능 어종</h2>
+        </div>
         <template v-if="parsedDetections.length > 0">
           <p class="text-blue-600" v-if="parsedDetections[0].label !== '알 수 없음'">
             이 물고기는 <strong>{{ parsedDetections[0].label }}</strong>입니다.
@@ -65,8 +86,9 @@
                 ]">
                   (신뢰도: {{ (detection.confidence * 100).toFixed(2) }}%)
                 </span>
-                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }} </span>
+                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }}
               </span>
+            </span>
           </p>
         </template>
         <template v-else>
@@ -76,98 +98,137 @@
         </template>
       </div>
 
+      <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
+        <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
+        <p class="text-gray-600">학명: {{ scientificName || '정보 없음' }}</p>
+        <p class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
+      </div>
+
       <!-- 공유하기 버튼 -->
       <div v-if="!isLoading && !errorMessage" class="mt-6">
         <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="shareResult">
+          @click="shareResult" :disabled="isLoading">
           <Share2Icon class="w-5 h-5 mr-2" />
           <span>공유하기</span>
+        </button>
+      </div>
+
+      <!-- ��가 잡은 물고기 페이지로 이동 버튼 -->
+      <div v-if="!isLoading && !errorMessage" class="mt-4">
+        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="navigateToCatches" :disabled="isLoading">
+          <InfoIcon class="w-5 h-5 mr-2" />
+          <span>내가 잡은 물고기 리스트 보기</span>
         </button>
       </div>
     </main>
 
     <!-- 포토카드 모달 -->
-    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div class="bg-white rounded-lg shadow-lg p-4 w-10/12 max-w-sm">
-        <h2 class="text-lg font-bold mb-2 text-center">나만의 포토카드</h2>
-        <div ref="photocard" class="bg-gray-100 p-2 rounded-lg overflow-hidden">
-          <img :src="imageUrl" alt="물고기 사진" class="w-full h-48 object-cover rounded-lg" />
-          <h3 class="text-md font-semibold mt-2 text-center">{{ parsedDetections[0].label }}</h3>
+    <div v-if="showModal && !isLoading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
+        <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
+        <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
+          <img :src="imageSource" alt="물고기 사진" class="w-full h-64 object-contain rounded-lg" />
+          <h3 class="text-md font-semibold mt-4 text-center">{{ parsedDetections[0].label }}</h3>
           <p class="text-center text-sm">신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%</p>
         </div>
-        <div class="mt-4 flex justify-end gap-2">
-          <button @click="closeModal" class="px-3 py-1 bg-gray-300 rounded">닫기</button>
-          <button @click="downloadPhotocard" class="px-3 py-1 bg-blue-500 text-white rounded">저장하기</button>
+        <div class="mt-6 flex justify-end gap-3">
+          <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded" :disabled="isLoading">닫기</button>
+          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded" :disabled="isLoading">저장하기</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 이미지 팝업 -->
+    <div v-if="isImagePopupVisible && !isLoading" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+      @click="isImagePopupVisible = false">
+      <div class="relative max-w-full max-h-full" @click.stop>
+        <img :src="popupImageUrl" alt="Popup Image"
+          class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
+        <button @click="isImagePopupVisible = false"
+          class="absolute top-2 right-2"
+          :disabled="isLoading">
+          &times;
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, ref, watch } from 'vue';
-import {
-  BellIcon,
-  Settings2Icon,
-  ChevronLeftIcon,
-  Share2Icon,
-} from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import axios from '../axios';
 import html2canvas from 'html2canvas';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon } from 'lucide-vue-next';
+import { useStore } from 'vuex';
 
-// props 정의
-const props = defineProps({
-  detections: {
-    type: String, // JSON 문자열로 전달됨
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-    required: true,
-  },
-});
-
-// 라우터 인스턴스
+const store = useStore();
+const route = useRoute();
 const router = useRouter();
 
-// 로딩 상태
 const isLoading = ref(true);
-
-// 에러 메시지
 const errorMessage = ref('');
-
-// parsedDetections을 ref로 선언
 const parsedDetections = ref([]);
-
-// 포토카드 모달 제어
+const imageUrl = ref('');
+const imageBase64 = ref('');
 const showModal = ref(false);
-
-// 포토카드 엘리먼트 참조
 const photocard = ref(null);
+const popupImageUrl = ref('');
+const isImagePopupVisible = ref(false);
+const fishImage = ref(null);
+const imageDimensions = ref({ width: 0, height: 0 });
 
-// watch를 통해 props.detections을 파싱하고 에러 처리
-watch(
-  () => props.detections,
-  (newVal) => {
-    console.log('Received detections:', newVal); // 추가된 로그
-    try {
-      // detections을 디코딩하여 파싱
-      const decodedVal = decodeURIComponent(newVal);
-      console.log('Decoded detections:', decodedVal); // 디코딩된 값 확인
-      const detections = JSON.parse(decodedVal);
-      console.log('Parsed detections:', detections); // 파싱된 값 확인
-      parsedDetections.value = detections;
-      errorMessage.value = '';
-    } catch (e) {
-      console.error('Failed to parse detections:', e);
-      errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
-      parsedDetections.value = [];
-    } finally {
-      isLoading.value = false;
+// Define backend base URL
+const BACKEND_BASE_URL = 'http://localhost:5000';
+
+// Change fishName to a computed property
+const fishName = computed(() => {
+  if (parsedDetections.value.length > 0 && parsedDetections.value[0].label !== '알 수 없음') {
+    return parsedDetections.value[0].label;
+  }
+  return '알 수 없는 물고기';
+});
+
+const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
+
+const fetchDetections = async () => {
+  isLoading.value = true;
+  try {
+    const token = localStorage.getItem('token');
+    if (token && route.query.imageUrl) {
+      const response = await axios.get('/backend/get-detections', {
+        params: {
+          imageUrl: route.query.imageUrl,
+        },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      parsedDetections.value = response.data.detections;
+      imageUrl.value = response.data.imageUrl;
+    } else {
+      parsedDetections.value = JSON.parse(decodeURIComponent(route.query.detections));
+      imageBase64.value = route.query.imageBase64;
     }
-  },
-  { immediate: true }
-);
+    errorMessage.value = '';
+  } catch (e) {
+    console.error('Failed to fetch detections:', e);
+    errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
+    parsedDetections.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchDetections();
+});
+
+watch(route, () => {
+  fetchDetections();
+});
 
 // 신뢰도에 따른 색상 클래스 반환
 const getConfidenceColor = (confidence) => {
@@ -189,18 +250,85 @@ const closeModal = () => {
 // 포토카드 다운로드
 const downloadPhotocard = () => {
   if (photocard.value) {
-    html2canvas(photocard.value).then((canvas) => {
+    html2canvas(photocard.value, { useCORS: true, scale: 2 }).then((canvas) => {
       const link = document.createElement('a');
       link.download = 'photocard.png';
-      link.href = canvas.toDataURL();
+      link.href = canvas.toDataURL('image/png');
       link.click();
     });
   }
 };
 
+// 이미지 소스 계산
+const imageSource = computed(() => {
+  if (imageUrl.value && store.state.isAuthenticated) {
+    return `${BACKEND_BASE_URL}/uploads/${imageUrl.value}`; // Authenticated users get the image from backend
+  } else if (imageBase64.value) {
+    return `data:image/jpeg;base64,${imageBase64.value}`; // Unauthenticated users get base64 image
+  }
+  return '/placeholder.svg'; // Fallback placeholder
+});
+
+// 이미지 클릭 핸들러
+const handleImageClick = () => {
+  if (imageSource.value === '/placeholder.svg') {
+    alert('이미지를 불러올 수 없습니다.');
+    return;
+  }
+  openImagePopup(imageSource.value);
+};
+
+// 이미지 팝업 열기
+function openImagePopup(imageSrc) {
+  // Directly assign imageSrc without adding '/uploads/' again
+  popupImageUrl.value = imageSrc;
+  isImagePopupVisible.value = true;
+}
+
+// 내가 잡은 물고기 페이지로 이동
+function navigateToCatches() {
+  router.push('/catches');
+}
+
 // 뒤로 가기 기능 구현
 const goBack = () => {
   router.back();
+};
+
+const onImageLoad = () => {
+  const imageElement = fishImage.value;
+  if (imageElement) {
+    imageDimensions.value.width = imageElement.naturalWidth;
+    imageDimensions.value.height = imageElement.naturalHeight;
+    console.log('Image loaded:', fishImage.value);
+  }
+};
+
+const getBoundingBoxStyle = (bbox) => {
+  const [x1, y1, x2, y2] = bbox;
+  const imageElement = fishImage.value;
+
+  if (!imageElement || !imageDimensions.value.width || !imageDimensions.value.height) {
+    return {};
+  }
+
+  // 이미지의 실제 표시 크기와 원본 크기의 비율 계산
+  const displayWidth = imageElement.clientWidth;
+  const displayHeight = imageElement.clientHeight;
+  const scaleX = displayWidth / imageDimensions.value.width;
+  const scaleY = displayHeight / imageDimensions.value.height;
+
+  // 바운딩 박스 위치와 크기 계산
+  return {
+    left: `${x1 * scaleX}px`,
+    top: `${y1 * scaleY}px`,
+    width: `${(x2 - x1) * scaleX}px`,
+    height: `${(y2 - y1) * scaleY}px`,
+    position: 'absolute',
+    border: '2px solid red',
+    pointerEvents: 'none',
+    backgroundColor: 'rgba(255, 0, 0, 0.1)'
+  };
 };
 </script>
 
@@ -218,4 +346,11 @@ const goBack = () => {
 .absolute {
   position: absolute;
 }
+
+/* Ensure pop-up images are displayed correctly */
+.object-contain {
+  object-fit: contain;
+}
 </style>
+# End of Selection
+```
