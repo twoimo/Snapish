@@ -854,25 +854,18 @@ def get_closest_sealoc():
                     'obsrecent': obsrecent_data['obs_post_id'],
                     'obspretab': obspretab_data['obs_post_id']
                 })
-
-                print(f"api recent : {obsrecent_data['obs_post_id']}")
-                print(f"api pretab : {obspretab_data['obs_post_id']}")
-                print(f"api data : {api_data}")
+                
                 # 프론트엔드에 보낼 데이터 구성
                 closest_data = {
-                    'api_response': {
-                        'obsrecent': {
-                            **obsrecent_data,
-                            'api_response': api_data['obsrecent']
-                        },
-                        'obspretab': {
-                            **obspretab_data,
-                            'api_response': api_data['obspretab']
-                        }
+                    'obsrecent': {
+                        **obsrecent_data,
+                        'api_response': api_data['obsrecent']
+                    },
+                    'obspretab': {
+                        **obspretab_data,
+                        'api_response': api_data['obspretab']
                     }
                 }
-
-                print(f"closest data : {closest_data}")
                 return jsonify(closest_data)
 
             except requests.exceptions.RequestException as e:
