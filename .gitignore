@@ -139,6 +139,8 @@ frontend/dist
 backend/__pycache__
 backend/models
 backend/.gcloudignore
+backend/uploads
+backend/data
 public/pics/1015/1.jpg
 public/pics/1015/2.jpg
 public/pics/1015/3.jpg
