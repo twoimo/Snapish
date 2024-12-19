@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex justify-center">
     <div class="w-full max-w-md bg-white shadow-lg">
-      <header class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-15 max-w-md mx-auto">
+      <header class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-10 max-w-md mx-auto">
         <div class="flex items-center">
           <button class="mr-2" @click="goBack">
             <ChevronLeftIcon class="w-6 h-6" />
@@ -31,17 +31,23 @@
 
         <!-- 업로드된 물고기 이미지 표시 -->
         <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4 flex justify-center">
-          <img :src="imageSource" alt="물고기 사진" class="max-w-full max-h-96 object-contain cursor-pointer" @click="openImagePopup(imageSource)" />
+          <img
+            :src="imageSource"
+            alt="물고기 사진"
+            class="max-w-full max-h-96 object-contain cursor-pointer"
+            @click="handleImageClick"
+          />
         </div>
         
         <!-- AI 판별 결과 -->
         <div v-if="fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
-            <h2 class="text-lg font-bold text-red-700">주의: 현재 포획 금지 어종</h2>
+            <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
           </div>
-          <p class="text-red-600 mt-2">이 물고기는 <strong>{{ fishName }}</strong>입니다.
-                <span class="text-sm text-red-500">(신뢰도: {{ (confidence * 100).toFixed(2) }}%)</span>
+          <p class="text-red-600 mt-2">
+            이 물고기는 <strong>{{ fishName }}</strong>입니다.
+            <span class="text-sm text-red-500">(신뢰도: {{ (confidence * 100).toFixed(2) }}%)</span>
           </p>
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
@@ -79,9 +85,13 @@
       </main>
 
       <!-- 이미지 팝업 모달 -->
-      <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-        <div class="bg-white p-4 rounded-lg relative">
-          <button class="absolute top-2 right-2" @click="isImagePopupVisible = false">
+      <div
+        v-if="isImagePopupVisible"
+        class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30"
+        @click="closeImagePopup"
+      >
+        <div class="bg-white p-4 rounded-lg relative" @click.stop>
+          <button class="absolute top-2 right-2" @click="closeImagePopup">
             &times;
           </button>
           <img :src="popupImageUrl" alt="확대된 이미지" class="max-w-full max-h-full" />
@@ -109,20 +119,18 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon } from 'lucide-vue-next';
-import { useStore } from 'vuex'; // Updated to use useStore for reactivity
+import { useStore } from 'vuex';
 
-const store = useStore(); // Use the Vuex store with reactivity
-
+const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
-const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]')); // detections 결과 가져오기
-
-const confidence = detections.length > 0 ? detections[0].confidence : 0; // 첫 번째 감지 결과의 신뢰도
-const fishName = detections.length > 0 ? detections[0].label : '알 수 없는 물고기'; // 첫 번째 감지 결과의 라벨
-const prohibitedDates = route.query.prohibitedDates || '알 수 없음'; // 금어기 기간
-const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
-const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
+const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
+const confidence = detections.length > 0 ? detections[0].confidence : 0;
+const fishName = detections.length > 0 ? detections[0].label : '알 수 없는 물고기';
+const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
+const scientificName = ref('ChatGPT로 생성된 학명');
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 const isLoading = ref(true);
 const errorMessage = ref('');
 const imageUrl = ref('');
@@ -141,23 +149,7 @@ const shareResult = () => {
   showModal.value = true;
 };
 
-// onMounted 훅을 사용하여 DOM 요소가 마운트된 후에 접근
-onMounted(() => {
-  console.log('컴포넌트가 마운트되었습니다.');
-  
-  // 이미지 URL과 Base64 데이터를 라우트 쿼리에서 가져오기
-  imageUrl.value = route.query.imageUrl || '';
-  imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
-
-  // Simulate loading
-  setTimeout(() => {
-    isLoading.value = false;
-    if (!imageSource.value) {
-      errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
-    }
-  }, 1000);
-});
-
+// 이미지 소스 계산
 const imageSource = computed(() => {
   if (imageBase64.value) {
     return `data:image/jpeg;base64,${imageBase64.value}`;
@@ -167,22 +159,63 @@ const imageSource = computed(() => {
   return '/placeholder.svg';
 });
 
-// 이미지 팝업 열기
-function openImagePopup(imageSrc) {
-  popupImageUrl.value = imageSrc.startsWith('data:image/')
-    ? imageSrc
-    : `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
-  isImagePopupVisible.value = true;
-}
-
-// Define additional refs for popup
+// 이미지 팝업 상태
 const popupImageUrl = ref('');
 const isImagePopupVisible = ref(false);
 
-// 내가 잡은 물고기 페���지로 이동
+// 이미지 클릭 핸들러
+const handleImageClick = () => {
+  if (imageSource.value === '/placeholder.svg') {
+    alert('이미지를 불러올 수 없습니다.');
+    return;
+  }
+  openImagePopup(imageSource.value);
+};
+
+// 이미지 팝업 열기
+function openImagePopup(imageSrc) {
+  if (
+    imageSrc.startsWith('data:image/') ||
+    imageSrc.startsWith('http://') ||
+    imageSrc.startsWith('https://')
+  ) {
+    popupImageUrl.value = imageSrc;
+  } else {
+    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
+  }
+  isImagePopupVisible.value = true;
+}
+
+// 이미지 팝업 닫기
+function closeImagePopup() {
+  isImagePopupVisible.value = false;
+}
+
+// 내가 잡은 물고기 페이지로 이동
 function navigateToCatches() {
   router.push('/catches');
 }
+
+// 컴포넌트 마운트 시 초기화
+onMounted(() => {
+  console.log('컴포넌트가 마운트되었습니다.');
+  
+  imageUrl.value = route.query.imageUrl || '';
+  imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
+
+  // 실제 이미지 로딩 완료 시에만 isLoading을 false로 설정
+  const img = new Image();
+  img.src = imageSource.value;
+  img.onload = () => {
+    isLoading.value = false;
+  };
+  img.onerror = () => {
+    isLoading.value = false;
+    if (imageSource.value === '/placeholder.svg') {
+      errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+    }
+  };
+});
 </script>
 
 <style scoped>
@@ -211,10 +244,6 @@ header {
   z-index: 10; /* 헤더가 다른 요소 위에 오도록 설정 */
 }
 
-.fixed {
-  position: fixed;
-}
-
 .bg-opacity-50 {
   background-opacity: 0.5;
 }
@@ -223,3 +252,5 @@ header {
   /* 추가적인 모달 스타일이 필요하다면 여기에 작성 */
 }
 </style>
+# End of Selection
+```
