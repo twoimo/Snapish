@@ -1,11 +1,9 @@
-
-
 <template>
   <div style="display: flex; flex-direction: column; gap: 1rem;">
     <!-- Location Info -->
     <div v-if="seapostid_result">
       <p style="font-size: 0.7rem;">
-        출처 : 바다누리 해양정보 서비스
+        출처 : 바다누리 해양정보 서비스 | 실시간 특성상 일부 데이터에 <strong>결측</strong>이 있을 수 있습니다.
       </p>
       <p style="font-size: 0.8rem;">
         기준 관측소 : <strong>{{ seapostid_result.obs_post_name }}</strong>
@@ -50,19 +48,19 @@
             <tbody>
               <tr>
                 <td>수온</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.water_temp }}°C</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.water_temp ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.water_temp ? '°C' : '' }}</td>
               </tr>
               <tr>
                 <td>기온</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.air_temp }}°C</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.air_temp ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.air_temp ? '°C' : '' }}</td>
               </tr>
               <tr>
                 <td>기압</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.air_press }}hPa</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.air_press ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.air_press ? 'hPa' : '' }}</td>
               </tr>
               <tr>
                 <td>조위</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.tide_level }}cm</td>
+                <td>{{ seapostid_result.api_response.tideObsRecent.tide_level ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.tide_level ? 'cm' : '' }}</td>
               </tr>
             </tbody>
           </table>
