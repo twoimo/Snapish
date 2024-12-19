@@ -266,7 +266,7 @@ class FishingPlace(Base):
     longitude = Column(Float, nullable=False)  # WGS84 경도
     phone_number = Column(String(50), nullable=True)  # 낚시터 전화번호
     main_fish_species = Column(Text, nullable=True)  # 주요 어종
-    usage_fee = Column(VARCHAR(500), nullable=True)  # 이용 요금
+    usage_fee = Column(VARCHAR(500), nullable=True)  # 이 요금
     safety_facilities = Column(Text, nullable=True)  # 안전 시설 현황
     convenience_facilities = Column(Text, nullable=True)  # 편익 시설 현황
 
@@ -301,6 +301,35 @@ labels_korean = {
  14: '살오징어',
  15: '옥돔',
  16: '주꾸미'
+}
+
+# Add this dictionary at the top of your file
+PROHIBITED_DATES = {
+    "넙치": "",
+    "조피볼락": "",
+    "참돔": "",
+    "감성돔": "05.01~05.31",
+    "돌돔": "",
+    "명태": "01.01~12.31",
+    "대구": "01.16~02.15",
+    "살오징어": "04.01~05.31",
+    "고등어": "04.01~06.30",
+    "삼치": "05.01~05.31",
+    "참문어": "05.16~06.30",
+    "전어": "05.01~07.15",
+    "말쥐치": "05.01~07.31",
+    "주꾸미": "05.11~08.31",
+    "낙지": "06.01~06.30",
+    "참홍어": "06.01~07.15",
+    "꽃게": "06.21~08.20",
+    "대게": "06.01~11.30",
+    "갈치": "07.01~07.31",
+    "참조기": "07.01~07.31",
+    "붉은대게": "07.10~08.25",
+    "옥돔": "07.21~08.20",
+    "연어": "10.01~11.30",
+    "쥐노래미": "11.01~12.31",
+    "문치가자미": "12.01~01.31"
 }
 
 # REST API
@@ -452,7 +481,8 @@ def predict():
         detections = [
             {
                 'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
-                'confidence': float(conf)
+                'confidence': float(conf),
+                'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), '')
             }
             for result in results
             for cls, conf in zip(result.boxes.cls, result.boxes.conf)
