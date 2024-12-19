@@ -34,7 +34,7 @@
           <img
             :src="imageSource"
             alt="물고기 사진"
-            class="max-w-full max-h-96 object-contain cursor-pointer"
+            class="w-full h-full object-cover cursor-pointer"
             @click="handleImageClick"
           />
         </div>
