@@ -51,13 +51,13 @@
     computed: {
       ...mapState(["currentlocation", "loading", "error", "mulddae"]),
       currentDate() {
-        return new Date().toISOString().split("T")[0];
+        return new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', ''); 
       },
     },
     methods: {
       ...mapActions(["fetchMulddae"]),
       fetchTodayMulddae() {
-        const today = new Date().toISOString().split("T")[0]; // 오늘 날짜 (YYYY-MM-DD 형식)
+        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');  // 오늘 날짜 (YYYY-MM-DD 형식)
         this.fetchMulddae(today);
     },
     getMoonIcon(phase) {
