@@ -911,6 +911,35 @@ def get_closest_sealoc():
 
     finally:
         session.close()
+        
+@app.route('/backend/get-weather', methods=['POST'])
+def get_weather_api():
+    try:
+        # Get and validate coordinates
+        lat = request.form.get('lat')
+        lon = request.form.get('lon')
+        
+        if not lat or not lon:
+            return jsonify({'error': 'Latitude and longitude are required'}), 400
+        
+        print(f"lat : {lat}, lon : {lon}")
+            
+        try:
+            lat = float(lat)
+            lon = float(lon)
+        except ValueError:
+            return jsonify({'error': 'Invalid coordinate format'}), 400
+        
+        # Get weather data
+        weather_data = get_weather_by_coordinates(lat, lon)
+        if not weather_data:
+            return jsonify({'error': 'Failed to fetch weather data'}), 500
+            
+        return jsonify(weather_data)
+        
+    except Exception as e:
+        logging.error(f"Error in get_weather_api: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
