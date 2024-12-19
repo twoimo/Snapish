@@ -921,14 +921,16 @@ def get_weather_api():
         
         if not lat or not lon:
             return jsonify({'error': 'Latitude and longitude are required'}), 400
+        
+        print(f"lat : {lat}, lon : {lon}")
             
         try:
             lat = float(lat)
             lon = float(lon)
         except ValueError:
             return jsonify({'error': 'Invalid coordinate format'}), 400
-                    
-       # Get weather data
+        
+        # Get weather data
         weather_data = get_weather_by_coordinates(lat, lon)
         if not weather_data:
             return jsonify({'error': 'Failed to fetch weather data'}), 500

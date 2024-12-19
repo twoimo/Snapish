@@ -5,8 +5,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # API 키와 base URL 설정
 KHOA_API_KEY = os.getenv('KHOA_API_KEY')
-OPENWEATHER_API_KEY = os.getenv('WEATHER_API_KEY')  # API 키를 환경변수로 관리
-OPENWEATHER_API_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')  # API 키를 환경변수로 관리
 
 def get_sea_weather_by_seapostid(obs_data):
     current_date = datetime.now().strftime('%Y%m%d')
@@ -75,13 +74,19 @@ def get_weather_by_coordinates(lat, lon):
             "units": "metric"
         }
         
+        
+        OPENWEATHER_API_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+        
         response = requests.get(OPENWEATHER_API_BASE_URL, params=params)
         data = response.json()
-
+        
         if response.status_code != 200:
             raise ValueError(data.get('message', 'Unknown error occurred'))
         
-        return process_weather_data(data)
+        try:
+            return process_weather_data(data)
+        except Exception as e:
+            raise Exception(f"Error Preprocessing weather data: {str(e)}")
 
     except Exception as e:
         raise Exception(f"Error fetching weather data: {str(e)}")
@@ -98,14 +103,16 @@ def get_wind_direction(degrees):
 
 def process_weather_data(data):
     return {
-        "temp": data['main']['temp'],
-        "temp_min": data['main']['temp_min'],
-        "temp_max": data['main']['temp_max'],
-        "humidity": data['main']['humidity'],
-        "pressure": data['main']['pressure'],
-        "wind_speed": data['wind']['speed'],
-        "wind_deg": get_wind_direction(data['wind']['deg']),
-        "weather": data['weather'][0]['description'],
-        "sunrise": datetime.fromtimestamp(data['sys']['sunrise']).strftime('%H:%M:%S'),
-        "sunset": datetime.fromtimestamp(data['sys']['sunset']).strftime('%H:%M:%S')
+        "weather" :{
+            "temp": data['main']['temp'],
+            "temp_min": data['main']['temp_min'],
+            "temp_max": data['main']['temp_max'],
+            "humidity": data['main']['humidity'],
+            "pressure": data['main']['pressure'],
+            "wind_speed": data['wind']['speed'],
+            "wind_deg": get_wind_direction(data['wind']['deg']),
+            "weather": data['weather'][0]['description'],
+            "sunrise": datetime.fromtimestamp(data['sys']['sunrise']).strftime('%H:%M:%S'),
+            "sunset": datetime.fromtimestamp(data['sys']['sunset']).strftime('%H:%M:%S')
+            }
     }
