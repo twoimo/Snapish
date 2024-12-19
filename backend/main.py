@@ -833,7 +833,6 @@ def get_closest_sealoc():
         # KHOA API 호출
         try:
             api_data = get_sea_weather_by_seapostid(obs_post_id)
-            
             print(api_data)
 
             # 프론트엔드에 보낼 데이터 구성
