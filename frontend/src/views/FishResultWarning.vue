@@ -59,13 +59,6 @@
           </ul>
         </div>
 
-        <div class="mt-6 space-y-3">
-          <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center">
-            <InfoIcon class="w-5 h-5 mr-2" />
-            <span>더 자세한 정보 보기</span>
-          </button>
-        </div>
-
         <!-- 공유하기 버튼 -->
         <div v-if="!isLoading && !errorMessage" class="mt-6">
           <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
@@ -79,6 +72,7 @@
         <div v-if="!isLoading && !errorMessage" class="mt-4">
           <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
             @click="navigateToCatches">
+            <InfoIcon class="w-5 h-5 mr-2" />
             <span>내가 잡은 물고기 리스트 보기</span>
           </button>
         </div>

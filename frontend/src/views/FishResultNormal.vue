@@ -98,6 +98,7 @@
       <div v-if="!isLoading && !errorMessage" class="mt-4">
         <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
           @click="navigateToCatches">
+          <InfoIcon class="w-5 h-5 mr-2" />
           <span>내가 잡은 물고기 리스트 보기</span>
         </button>
       </div>
@@ -139,7 +140,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../axios';
 import html2canvas from 'html2canvas';
-import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon } from 'lucide-vue-next';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon } from 'lucide-vue-next';
 import store from '../store';
 
 const isLoading = ref(true);
