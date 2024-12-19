@@ -142,25 +142,55 @@ const handlePredictResponse = async (data) => {
     const imageBase64 = data.image_base64 || null;
 
     if (detections && detections.length > 0) {
-        if (store.state.isAuthenticated) { // Use store.state.isAuthenticated
+        const currentDate = new Date();
+        const currentMonthDay = `${(currentDate.getMonth() + 1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}`;
+
+        console.log('현재 날짜:', currentMonthDay); // 현재 날짜 확인
+
+        const isProhibited = detections.some(detection => {
+            const prohibitedDates = detection.prohibited_dates; // 금어기 날짜 가져오기
+            console.log('감지된 물고기:', detection.label); // 감지된 물고기 확인
+            console.log('금어기 날짜:', prohibitedDates); // 금어기 날짜 확인
+
+            if (!prohibitedDates) return false;
+
+            const [start, end] = prohibitedDates.split('~');
+            console.log('시작 날짜:', start, '종료 날짜:', end); // 시작 및 종료 날짜 확인
+
+            // 금어기 날짜 비교 로직 수정
+            if (end.startsWith('01.')) {
+                // 종료 날짜가 다음 해의 날짜인 경우
+                return (currentMonthDay >= start || currentMonthDay <= end);
+            } else {
+                // 일반적인 경우
+                return currentMonthDay >= start && currentMonthDay <= end;
+            }
+        });
+
+        console.log('금어기 여부:', isProhibited); // 금어기 여부 확인
+
+        const routeName = isProhibited ? 'FishResultWarning' : 'FishResultNormal';
+
+        if (store.state.isAuthenticated) {
             await store.dispatch('fetchCatches');
             router.push({
-                name: 'FishResultNormal',
+                name: routeName,
                 query: {
                     imageUrl,
                     imageBase64,
                     detections: encodeURIComponent(JSON.stringify(detections)),
-                    timestamp: Date.now() // Add a timestamp to ensure the route updates
+                    prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
+                    timestamp: Date.now()
                 },
             });
         } else {
-            // For unauthenticated users, handle without storing to DB
             router.push({
-                name: 'FishResultNormal',
+                name: routeName,
                 query: {
                     imageBase64,
                     detections: encodeURIComponent(JSON.stringify(detections)),
-                    timestamp: Date.now() // Add a timestamp to ensure the route updates
+                    prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
+                    timestamp: Date.now()
                 },
             });
         }

@@ -78,7 +78,7 @@ export default createStore({
         const cachedMulddae = localStorage.getItem("mulddae");
         const cachedDate = localStorage.getItem("mulddaeDate"); // 이전에 저장된 날짜
         const now = new Date();
-        const today = now.toISOString().split("T")[0]; // 오늘 날짜 (yyyy-mm-dd 형식)
+        const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', ''); // 오늘 날짜 (yyyy-mm-dd 형식)
 
         // 캐시된 데이터와 날짜 확인
         if (cachedMulddae && cachedDate === today) {
