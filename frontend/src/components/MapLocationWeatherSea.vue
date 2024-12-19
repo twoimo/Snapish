@@ -1,22 +1,32 @@
-<template>
+ <template>
   <div style="display: flex; flex-direction: column; gap: 1rem;">
-    <!-- Location Info -->
-    <div v-if="seapostid_result">
-      <p style="font-size: 0.7rem;">
-        출처 : 바다누리 해양정보 서비스 | 실시간 특성상 일부 데이터에 <strong>결측</strong>이 있을 수 있습니다.
-      </p>
-      <p style="font-size: 0.8rem;">
-        기준 관측소 : <strong>{{ seapostid_result.obs_post_name }}</strong>
-        와 <strong>{{ seapostid_result.distance.toFixed(3) }} km</strong> 차이
-      </p>
+    <!-- Loading State -->
+    <div v-if="isLoading">
+      <p style="font-size: 0.8rem; text-align: center;">데이터를 불러오는 중입니다...</p>
     </div>
-    <!-- Table Section -->
-    <div v-if="seapostid_result" class="data-table">
-      <div class="table-container" style="display: flex; gap: 2rem;">
-        <!-- Left Space (Empty) -->
 
-        <div style="flex: 1">
-          <h3>조수간만</h3>
+    <!-- Data Loaded State -->
+    <div v-else-if="obsrecent">
+      <!-- Location Info -->
+      <div>
+        <p style="font-size: 0.7rem;">
+          출처 : 바다누리 해양정보 서비스 | 실시간 특성상 일부 데이터에 <strong>결측</strong>이 있을 수 있습니다.
+        </p>
+        <p v-if="obspretab?.api_response" style="font-size: 0.8rem;">
+          조석예보 기준 관측소: <strong>{{ obspretab.obs_post_name }}</strong>
+          | <strong>{{ obspretab.distance?.toFixed(3) }} km</strong> 거리
+        </p>
+        <p style="font-size: 0.8rem;">
+          실시간예보 기준 관측소: <strong>{{ obsrecent.obs_post_name }}</strong>
+          | <strong>{{ obsrecent.distance?.toFixed(3) }} km</strong> 거리
+        </p>
+      </div>
+
+      <!-- Table Section -->
+      <div class="data-table" style="display: flex; gap: 2rem;">
+        <!-- Tide Forecast -->
+        <div style="flex: 1;">
+          <h3>조석예보</h3>
           <table class="tide-pre-tab">
             <thead>
               <tr>
@@ -24,8 +34,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item, index) in seapostid_result.api_response.tideObsPreTab" :key="index">
-                <td>{{ item.tph_time.split(' ')[1].slice(0, 5) }}</td>
+              <tr v-for="(item, index) in obspretab?.api_response" :key="index">
+                <td>{{ item?.tph_time?.split(' ')[1]?.slice(0, 5) }}</td>
                 <td :class="{ 'high-tide': item.hl_code === '고조', 'low-tide': item.hl_code === '저조' }">
                   {{ item.hl_code }}
                 </td>
@@ -35,32 +45,33 @@
           </table>
         </div>
 
-
-        <!-- Right Table -->
-        <div style="flex: 1">
-          <h3>현재 관측</h3>
+        <!-- Real-Time Observations -->
+        <div style="flex: 1;">
+          <h3>실시간 관측</h3>
           <table class="tide-pre-tab">
             <thead>
               <tr>
-                <th colspan="2">{{ seapostid_result.api_response.tideObsRecent.record_time.split(' ')[1].slice(0, 5) }}</th>
+                <th colspan="2">
+                  {{ obsrecent?.api_response?.record_time?.split(' ')[1]?.slice(0, 5) || '-' }}
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>수온</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.water_temp ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.water_temp ? '°C' : '' }}</td>
+                <td>{{ obsrecent?.api_response?.water_temp ?? '-' }}°C</td>
               </tr>
               <tr>
                 <td>기온</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.air_temp ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.air_temp ? '°C' : '' }}</td>
+                <td>{{ obsrecent?.api_response?.air_temp ?? '-' }}°C</td>
               </tr>
               <tr>
                 <td>기압</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.air_press ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.air_press ? 'hPa' : '' }}</td>
+                <td>{{ obsrecent?.api_response?.air_press ?? '-' }}hPa</td>
               </tr>
               <tr>
                 <td>조위</td>
-                <td>{{ seapostid_result.api_response.tideObsRecent.tide_level ?? '-' }}{{ seapostid_result.api_response.tideObsRecent.tide_level ? 'cm' : '' }}</td>
+                <td>{{ obsrecent?.api_response?.tide_level ?? '-' }}cm</td>
               </tr>
             </tbody>
           </table>
@@ -68,11 +79,14 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <div v-else>
+      <p style="font-size: 0.8rem; text-align: center; color: red;">데이터를 불러오는 데 실패했습니다.</p>
+    </div>
   </div>
 </template>
 
 <script>
-// import axios from '@/axios';
 import { fetchSeaPostidByCoordinates } from '../services/locationService';
 
 export default {
@@ -81,39 +95,42 @@ export default {
       type: Array,
       required: true,
     },
-    weatherData: Object
+    weatherData: Object,
   },
   emits: ['update:weatherData'],
-  data(){
+  data() {
     return {
-      seapostid_result: null,
-    }
+      obsrecent: null,
+      obspretab: null,
+      isLoading: true,
+    };
   },
-  mounted(){
-    this.fetchWeatherData()
+  mounted() {
+    this.fetchWeatherData();
   },
   methods: {
     async fetchWeatherData() {
       if (this.weatherData) {
-        // 이미 데이터가 있으면 API 호출하지 않음
-        this.seapostid_result = this.weatherData;
+        const { obsrecent, obspretab } = this.weatherData;
+        this.obsrecent = obsrecent;
+        this.obspretab = obspretab;
+        this.isLoading = false;
         return;
       }
 
-      console.log(`대상 낚시터 정보 (debug) : ${this.spotlocation}`);
       try {
         const [lat, lon] = this.spotlocation;
-        // fetchSeaPostidByCoordinates를 호출하여 데이터를 가져옴
         const response = await fetchSeaPostidByCoordinates(lat, lon);
-        this.seapostid_result = response;
-        // 결과 데이터를 부모 컴포넌트에 전달
-        this.$emit('update:weatherData', response);
+        const { obsrecent, obspretab } = response;
+        this.obsrecent = obsrecent;
+        this.obspretab = obspretab;
+        this.$emit('update:weatherData', { obsrecent, obspretab });
+        console.log(this.obsrecent)
+        console.log(this.obspretab)
       } catch (error) {
         console.error('Error fetching weather data:', error);
-      }
-
-      if (this.seapostid_result) {
-        console.log(this.seapostid_result.api_response);
+      } finally {
+        this.isLoading = false;
       }
     },
 
@@ -122,13 +139,12 @@ export default {
       return now.toLocaleDateString('ko-KR', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
-    }
-  }
-}
+    },
+  },
+};
 </script>
-
 
 <style scoped>
 .data-table {
