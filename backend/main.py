@@ -12,6 +12,7 @@ from functools import wraps
 import jwt
 import torch
 import io
+import requests
 
 from sqlalchemy import (
     create_engine,
@@ -28,12 +29,12 @@ from sqlalchemy import (
     JSON,
     Float,
     VARCHAR,
+    text,
     UniqueConstraint
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
-from services.weather_service import get_weather_by_coordinates
-from services.location_service import get_location_by_coordinates
+from services.weather_service import get_sea_weather_by_seapostid, get_weather_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 from services.initialize_db import initialize_service
 from ultralytics import YOLO
@@ -337,6 +338,7 @@ PROHIBITED_DATES = {
 def hello():
     return 'Welcome to SNAPISH'
 
+# 물때 정보 받아오기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -821,6 +823,89 @@ def upload_avatar(user_id):
         return jsonify({'message': 'Avatar uploaded successfully', 'avatarUrl': avatar_url}), 200
     else:
         return jsonify({'error': 'Invalid file type'}), 400
+    
+# 요청 위치 기준 가장 가까운 관측소 위치 반환 
+@app.route('/backend/closest-sealoc', methods=['POST'])
+def get_closest_sealoc():
+    user_lat = request.form.get('lat')
+    user_lon = request.form.get('lon')
+
+    if user_lat is None or user_lon is None:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    session = Session()
+    
+    # ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
+    query_obsrecent = text("""
+        SELECT obs_station_id, obs_post_id, obs_post_name,
+            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
+        FROM TidalObservations
+        WHERE obs_object LIKE '%조위%'
+        ORDER BY distance ASC
+        LIMIT 1
+    """)
+    
+    query_obspretab = text("""
+        SELECT obs_station_id, obs_post_id, obs_post_name,
+            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
+        FROM TidalObservations
+        WHERE obs_object LIKE '%조수간만%'
+        ORDER BY distance ASC
+        LIMIT 1
+    """)
+
+    try:
+        # 두 개의 쿼리 실행
+        result_obsrecent = session.execute(query_obsrecent, {'lat': user_lat, 'lon': user_lon}).fetchone()
+        result_obspretab = session.execute(query_obspretab, {'lat': user_lat, 'lon': user_lon}).fetchone()
+
+        if result_obsrecent and result_obspretab:
+            print(f"obs recent : {result_obsrecent}")
+            print(f"obs pretab : {result_obspretab}")
+            # 조위 관측소 정보
+            obsrecent_data = {
+                'obs_station_id': result_obsrecent[0],
+                'obs_post_id': result_obsrecent[1],
+                'obs_post_name': result_obsrecent[2],
+                'distance': result_obsrecent[3] / 1000
+            }
+
+            # 조수간만 관측소 정보
+            obspretab_data = {
+                'obs_station_id': result_obspretab[0],
+                'obs_post_id': result_obspretab[1],
+                'obs_post_name': result_obspretab[2],
+                'distance': result_obspretab[3] / 1000
+            }
+
+            # KHOA API 호출
+            try:
+                api_data = get_sea_weather_by_seapostid({
+                    'obsrecent': obsrecent_data['obs_post_id'],
+                    'obspretab': obspretab_data['obs_post_id']
+                })
+                
+                # 프론트엔드에 보낼 데이터 구성
+                closest_data = {
+                    'obsrecent': {
+                        **obsrecent_data,
+                        'api_response': api_data['obsrecent']
+                    },
+                    'obspretab': {
+                        **obspretab_data,
+                        'api_response': api_data['obspretab']
+                    }
+                }
+                return jsonify(closest_data)
+
+            except requests.exceptions.RequestException as e:
+                return jsonify({'error': f'API request failed: {e}'}), 500
+
+        else:
+            return jsonify({'error': 'No tidal observations found'}), 404
+
+    finally:
+        session.close()
 
 # 애플리케이션 종료 시 세션 제거
 @app.teardown_appcontext
