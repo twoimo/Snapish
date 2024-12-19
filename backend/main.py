@@ -838,7 +838,7 @@ def get_closest_sealoc():
     # 조위, 수온, 기온 , 기압 4개 모두 체크 가능한 경우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
-            ST_Distance_Sphere(POINT(126.551, 37.5152), POINT(obs_lon, obs_lat)) AS distance
+            ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
         FROM TidalObservations
         WHERE obs_object LIKE '%조위%'
             AND obs_object LIKE '%수온%'
