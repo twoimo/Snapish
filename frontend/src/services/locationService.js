@@ -1,3 +1,25 @@
+import axios from "@/axios";
+
+const apisealocBaseUrl = process.env.VUE_APP_CLOSEST_SEALOC_URL;
+
+export async function fetchSeaPostidByCoordinates(lat, lon) {
+  try {
+    const response = await axios.post(
+      apisealocBaseUrl,
+      new URLSearchParams({ lat: lat, lon: lon }).toString()
+      , {
+        headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+      console.error("Error fetching weather data:", error);
+    return { error: error.message };
+  }
+}
+
 export function getCurrentLocation() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
