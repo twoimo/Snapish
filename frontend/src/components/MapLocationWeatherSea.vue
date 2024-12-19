@@ -9,27 +9,38 @@
         와 <strong>{{ seapostid_result.distance.toFixed(3) }} km</strong> 차이
       </p>
     </div>
-
     <!-- Table Section -->
     <div v-if="seapostid_result" class="data-table">
-      <h3>조수간만</h3>
-      <div class="table-container" style="overflow-x: auto;">
-        <table class="tide-pre-tab">
-          <thead>
-            <tr>
-              <th><i class="fas fa-tag"></i> Name</th>
-              <th><i class="fas fa-clock"></i> Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in seapostid_result.api_response.tideObsPreTab" :key="index">
-              <td>{{ item.hl_code }}</td>
-              <td>{{ item.tph_level }} / {{ item.tph_time }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table-container" style="display: flex; gap: 2rem;">
+        <!-- Left Space (Empty) -->
+
+        <div style="flex: 1">
+          <h3>조수간만</h3>
+          <table class="tide-pre-tab">
+            <thead>
+              <tr>
+                <th colspan="3">{{ getCurrentDate() }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in seapostid_result.api_response.tideObsPreTab" :key="index">
+                <td>{{ item.tph_time.split(' ')[1].slice(0, 5) }}</td>
+                <td :class="{ 'high-tide': item.hl_code === '고조', 'low-tide': item.hl_code === '저조' }">
+                  {{ item.hl_code }}
+                </td>
+                <td>{{ item.tph_level }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+
+        <!-- Right Table -->
+        <div style="flex: 1">
+        </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -65,6 +76,13 @@ export default {
       }
 
       console.log(this.seapostid_result.api_response)
+    },
+    getCurrentDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}년 ${month}월 ${day}일`;
     },
   },
 };
@@ -117,5 +135,20 @@ h3 {
 p {
   font-size: 1rem;
   color: #555;
+}
+
+.high-tide {
+  background-color: #e6f3ff;  /* 파란 배경 */
+}
+
+.low-tide {
+  background-color: #ffe6e6;  /* 붉은 배경 */
+}
+
+.tide-pre-tab th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
 }
 </style>

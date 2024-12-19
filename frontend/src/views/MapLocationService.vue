@@ -45,8 +45,15 @@
             </div>
           </div>
 
-          <div class="slide-up-panel" :class="{ visible: isDetailsVisible }" @click.self="hideDetails">
-            <MapLocationDetail v-if="isDetailsVisible" :location="selectedLocation" @close="hideDetails" />
+          <div class="slide-up-panel" 
+              :class="{ visible: isDetailsVisible }" 
+              @click.self="hideDetails"
+              :style="{ overflow: isDetailsVisible ? 'hidden' : 'auto' }">
+            <MapLocationDetail 
+              v-if="isDetailsVisible" 
+              :location="selectedLocation" 
+              @close="hideDetails" 
+            />
           </div>
         </section>
       </main>
@@ -112,10 +119,12 @@ export default {
     showDetails(location) {
       this.selectedLocation = location;
       this.isDetailsVisible = true;
+      document.body.classList.add('detail-active');
     },
     hideDetails() {
       this.selectedLocation = null;
       this.isDetailsVisible = false;
+      document.body.classList.remove('detail-active');
     },
     toggleMapComponent() {
       this.isMapVisible = !this.isMapVisible;
@@ -196,9 +205,8 @@ export default {
   margin-bottom: 10px;
 }
 
-/* 슬라이드 패널 */
 .slide-up-panel {
-  position: absolute;
+  position: absolute; /* absolute에서 fixed로 변경 */
   bottom: 0;
   left: 0;
   width: 100%;
@@ -208,15 +216,13 @@ export default {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
   transform: translateY(100%);
-  /* 기본 상태 */
   transition: transform 0.3s ease-in-out;
-  /* 애니메이션 추가 */
-  z-index: 10;
+  z-index: 10; /* z-index 증가 */
+  overflow: hidden; /* 패널 자체는 overflow hidden */
 }
 
 .slide-up-panel.visible {
   transform: translateY(0);
-  /* 보이는 상태 */
 }
 
 .details-content {
@@ -251,5 +257,10 @@ export default {
 
 .search-btn:hover {
   background-color: #0056b3;
+}
+
+/* body 스크롤 방지를 위한 클래스 */
+:global(body.detail-active) {
+  overflow: hidden !important;
 }
 </style>
