@@ -24,7 +24,7 @@
                 <td :class="{ 'high-tide': item.hl_code === '고조', 'low-tide': item.hl_code === '저조' }">
                   {{ item.hl_code }}
                 </td>
-                <td>{{ item.tph_level }} cm</td>
+                <td>{{ item.tph_level }} <span class="unit">cm</span></td>
               </tr>
             </tbody>
           </table>
@@ -44,19 +44,19 @@
             <tbody>
               <tr>
                 <td>수온</td>
-                <td>{{ obsrecent?.api_response?.water_temp ?? '-' }}°C</td>
+                <td>{{ obsrecent?.api_response?.water_temp ?? '-' }} <span class="unit">°C</span></td>
               </tr>
               <tr>
                 <td>기온</td>
-                <td>{{ obsrecent?.api_response?.air_temp ?? '-' }}°C</td>
+                <td>{{ obsrecent?.api_response?.air_temp ?? '-' }} <span class="unit">°C</span></td>
               </tr>
               <tr>
                 <td>기압</td>
-                <td>{{ obsrecent?.api_response?.air_press ?? '-' }}hPa</td>
+                <td>{{ obsrecent?.api_response?.air_press ?? '-' }} <span class="unit">hPa</span></td>
               </tr>
               <tr>
                 <td>조위</td>
-                <td>{{ obsrecent?.api_response?.tide_level ?? '-' }}cm</td>
+                <td>{{ obsrecent?.api_response?.tide_level ?? '-' }} <span class="unit">cm</span></td>
               </tr>
             </tbody>
           </table>
@@ -153,57 +153,52 @@ export default {
   width: 100%;
   border-collapse: collapse;
   font-size: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .tide-pre-tab th, .tide-pre-tab td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px;
   text-align: center;
+  border: none;
+  border-bottom: 1px solid #eee;
 }
 
 .tide-pre-tab th {
-  background-color: #f4f4f4;
+  background-color: #f0f0f0;
   font-weight: bold;
-  text-transform: uppercase;
+  color: #333;
 }
 
-.tide-pre-tab tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.tide-pre-tab tr:hover {
-  background-color: #f1f1f1;
-}
-
-.table-container {
-  max-width: 100%;
-  overflow-x: auto;
+.tide-pre-tab tr:last-child td {
+  border-bottom: none;
 }
 
 h3 {
   margin-bottom: 0.5rem;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
-}
-
-p {
-  font-size: 1rem;
-  color: #555;
+  color: #495057;
 }
 
 .high-tide {
-  background-color: #e6f3ff;  /* 파란 배경 */
+  background-color: #e6f3ff;
 }
 
 .low-tide {
-  background-color: #ffe6e6;  /* 붉은 배경 */
+  background-color: #ffe6e6;
 }
 
-.tide-pre-tab th {
-  background-color: #f4f4f4;
-  font-weight: bold;
-  text-align: center;
-  padding: 10px;
+.tide-pre-tab td {
+  font-size: 0.9rem;
+}
+
+.tide-pre-tab tr {
+  background-color: #f8f8f8;
+}
+
+.unit {
+  font-size: 0.7rem;
 }
 </style>
