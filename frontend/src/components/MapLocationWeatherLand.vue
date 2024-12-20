@@ -3,19 +3,19 @@
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
-    <div v-else-if="weatherData" class="weather-container">
+    <div v-else-if="localWeather" class="weather-container">
       <h3>현재 날씨 정보</h3>
       
-      <div v-if="weatherData.weather" class="weather-content">
+      <div v-if="localWeather.weather" class="weather-content">
         <!-- 일출/일몰 정보 -->
         <div class="time-box">
           <div class="time-item">
             <SunriseIcon class="icon" />
-            <span>{{ weatherData.weather.sunrise }}</span>
+            <span>{{ localWeather.weather.sunrise }}</span>
           </div>
           <div class="time-item">
             <SunsetIcon class="icon" />
-            <span>{{ weatherData.weather.sunset }}</span>
+            <span>{{ localWeather.weather.sunset }}</span>
           </div>
         </div>
 
@@ -24,27 +24,27 @@
           <div class="info-item">
             <ThermometerIcon class="icon" />
             <span class="label">기온</span>
-            <span class="value">{{ weatherData.weather.temp }}°C</span>
+            <span class="value">{{ localWeather.weather.temp }}°C</span>
           </div>
           <div class="info-item">
             <DropletIcon class="icon" />
             <span class="label">습도</span>
-            <span class="value">{{ weatherData.weather.humidity }}%</span>
+            <span class="value">{{ localWeather.weather.humidity }}%</span>
           </div>
           <div class="info-item">
             <WindIcon class="icon" />
             <span class="label">풍속</span>
-            <span class="value">{{ weatherData.weather.wind_speed }}m/s</span>
+            <span class="value">{{ localWeather.weather.wind_speed }}m/s</span>
           </div>
           <div class="info-item">
             <CompassIcon class="icon" />
             <span class="label">풍향</span>
-            <span class="value">{{ weatherData.weather.wind_deg }}</span>
+            <span class="value">{{ localWeather.weather.wind_deg }}</span>
           </div>
           <div class="info-item">
             <CloudIcon class="icon" />
             <span class="label">날씨</span>
-            <span class="value">{{ weatherData.weather.weather }}</span>
+            <span class="value">{{ localWeather.weather.weather }}</span>
           </div>
         </div>
       </div>
@@ -82,10 +82,12 @@ export default {
       type: Array,
       required: true,
     },
+    weatherData: Object,
   },
+  emits: ['update:weatherData'],
   data() {
     return {
-      weatherData: null,
+      localWeather: null,
       error: null,
     };
   },
@@ -98,11 +100,17 @@ export default {
   methods: {
     async fetchWeather() {
       if (this.spotlocation && this.spotlocation.length === 2) {
+        if (this.weatherData) {
+          this.localWeather = this.weatherData;
+          return;
+        }
+
         try {
           this.error = null;
-          this.weatherData = null;
           const [lat, lon] = this.spotlocation;
-          this.weatherData = await fetchWeatherByCoordinates(lat, lon);
+          const response = await fetchWeatherByCoordinates(lat, lon);
+          this.localWeather = response;
+          this.$emit('update:weatherData', response);
         } catch (error) {
           console.error('날씨 정보를 가져오는데 실패했습니다:', error);
           this.error = '날씨 정보를 가져오는데 실패했습니다.';
