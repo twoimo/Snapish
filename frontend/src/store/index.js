@@ -9,7 +9,7 @@ export default createStore({
     currentlocation: null,
     loading: false,
     error: null,
-    mulddae: null, // 물때 정보 추가
+    mulddae: JSON.parse(localStorage.getItem('mulddae')) || null, // 물때 정보 추가
     mulddaeDate: null,
 
     // Authentication state
@@ -17,7 +17,8 @@ export default createStore({
     user: JSON.parse(localStorage.getItem("user")) || { avatar: null },
     token: localStorage.getItem("token") || null,
 
-    catches: [], // Add catches state
+    catches: JSON.parse(localStorage.getItem('catches')) || [], // Add catches state
+    hotIssues: JSON.parse(localStorage.getItem('hotIssues')) || [],
   },
   mutations: {
     // Existing mutations
@@ -29,6 +30,7 @@ export default createStore({
     },
     setMulddae(state, mulddae) {
       state.mulddae = mulddae; // 물때 정보 업데이트
+      localStorage.setItem('mulddae', JSON.stringify(mulddae));
     },
 
     // Authentication mutations
@@ -48,6 +50,7 @@ export default createStore({
 
     setCatches(state, catches) {
       state.catches = catches;
+      localStorage.setItem('catches', JSON.stringify(catches));
     },
     addCatch(state, newCatch) {
       state.catches.push(newCatch);
@@ -68,6 +71,13 @@ export default createStore({
     },
     SET_USER(state, userData) {
       state.user = userData;
+    },
+    setUser(state, user) {
+      state.user = user;
+    },
+    setHotIssues(state, issues) {
+      state.hotIssues = issues;
+      localStorage.setItem('hotIssues', JSON.stringify(issues));
     },
   },
   actions: {
@@ -177,25 +187,21 @@ export default createStore({
     logout({ commit }) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem('mulddae');
+      localStorage.removeItem('catches');
+      localStorage.removeItem('hotIssues');
       commit("clearAuth");
     },
-    async fetchUserProfile({ commit, state }) {
+    async fetchUserProfile({ commit }) {
       try {
-        const response = await axios.get("/profile", {
+        const response = await axios.get('http://localhost:5000/profile', {
           headers: {
-            Authorization: `Bearer ${state.token}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
         });
-        const userData = response.data;
-        commit("setAuth", {
-          isAuthenticated: true,
-          user: userData,
-          token: state.token,
-        });
+        commit('setUser', response.data);
       } catch (error) {
-        console.error("Fetch user profile error:", error);
-        commit("clearAuth");
-        throw error;
+        console.error('Error fetching user profile:', error);
       }
     },
     async updateProfile({ commit, state }, payload) {
@@ -294,6 +300,17 @@ export default createStore({
     },
     updateUser({ commit }, userData) {
       commit('SET_USER', userData);
+    },
+    async fetchInitialData({ dispatch }) {
+      try {
+        await Promise.all([
+          dispatch('fetchMulddae'),
+          dispatch('fetchCatches'),
+          dispatch('fetchHotIssues')
+        ]);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
     },
   },
   getters: {
