@@ -24,22 +24,22 @@
           <div class="info-item">
             <ThermometerIcon class="icon" />
             <span class="label">기온</span>
-            <span class="value">{{ localWeather.weather.temp }}°C</span>
+            <span class="value">{{ localWeather.weather.temp }} <span class="unit">°C</span></span>
           </div>
           <div class="info-item">
             <DropletIcon class="icon" />
             <span class="label">습도</span>
-            <span class="value">{{ localWeather.weather.humidity }}%</span>
+            <span class="value">{{ localWeather.weather.humidity }} <span class="unit">%</span></span>
           </div>
           <div class="info-item">
             <WindIcon class="icon" />
             <span class="label">풍속</span>
-            <span class="value">{{ localWeather.weather.wind_speed }}m/s</span>
+            <span class="value">{{ localWeather.weather.wind_speed }} <span class="unit">m/s</span></span>
           </div>
           <div class="info-item">
             <CompassIcon class="icon" />
             <span class="label">풍향</span>
-            <span class="value">{{ localWeather.weather.wind_deg }}</span>
+            <span class="value">{{ localWeather.weather.wind_deg }} </span>
           </div>
           <div class="info-item">
             <CloudIcon class="icon" />
@@ -218,6 +218,10 @@ h3 {
   text-align: center;
   color: #666;
   font-size: 0.9rem;
+}
+
+.unit {
+  font-size: 0.7rem;
 }
 </style>
 
