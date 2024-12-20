@@ -305,6 +305,12 @@ const onImageLoad = () => {
 };
 
 const getBoundingBoxStyle = (bbox) => {
+  // Handle case where bbox is not an array
+  if (!Array.isArray(bbox)) {
+    console.warn('Invalid bbox format:', bbox);
+    return {};
+  }
+
   const [x1, y1, x2, y2] = bbox;
   const imageElement = fishImage.value;
 
