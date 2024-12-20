@@ -140,24 +140,22 @@ export default {
 </script>
 
 <style scoped>
-.data-table {
-  margin: 1rem 0;
-}
-
+/* 중복되는 스타일 통합 */
 .tide-pre-tab {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1rem;
   background-color: white;
   border-radius: 8px;
   overflow: hidden;
 }
 
-.tide-pre-tab th, .tide-pre-tab td {
+.tide-pre-tab th, 
+.tide-pre-tab td {
   padding: 12px;
   text-align: center;
   border: none;
   border-bottom: 1px solid #eee;
+  font-size: 0.9rem;  /* td에만 있던 스타일을 통합 */
 }
 
 .tide-pre-tab th {
@@ -166,8 +164,17 @@ export default {
   color: #333;
 }
 
+.tide-pre-tab tr {
+  background-color: #f8f8f8;
+}
+
 .tide-pre-tab tr:last-child td {
   border-bottom: none;
+}
+
+/* 나머지 스타일은 그대로 유지 */
+.data-table {
+  margin: 1rem 0;
 }
 
 h3 {
@@ -183,14 +190,6 @@ h3 {
 
 .low-tide {
   background-color: #ffe6e6;
-}
-
-.tide-pre-tab td {
-  font-size: 0.9rem;
-}
-
-.tide-pre-tab tr {
-  background-color: #f8f8f8;
 }
 
 .unit {

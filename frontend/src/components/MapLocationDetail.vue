@@ -115,14 +115,12 @@
           <div v-if="isWeatherOpen">
             <div v-if="weatherLoaded">
               <MapLocationWeatherLand 
-                ref="landWeather"
                 :spotlocation="[location.latitude, location.longitude]"
                 v-model:weatherData="weatherData.land"
               />
             </div>
             <div v-if="weatherLoaded && location.type === '바다'">
               <MapLocationWeatherSea 
-                ref="seaWeather"
                 :spotlocation="[location.latitude, location.longitude]"
                 v-model:weatherData="weatherData.sea"
                 @update:observationInfo="updateObservationInfo"
@@ -227,7 +225,7 @@ export default {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
+/* 사용되지 않는 스타일 제거 */
 .overflow-y-auto {
   scrollbar-width: thin;
   scrollbar-color: #CBD5E0 transparent;
@@ -246,6 +244,7 @@ export default {
   border-radius: 3px;
 }
 
+/* content-scroll 클래스는 template에서 사용중이므로 유지 */
 .content-scroll {
   flex: 1;
   overflow-y: auto;
@@ -253,16 +252,11 @@ export default {
   padding-bottom: 60px;
 }
 
-/* 토글 관련 스타일 추가 */
+/* 필요한 스타일만 유지 */
 .rotate-180 {
   transform: rotate(180deg);
 }
 
-.facility-toggle, .weather-toggle {
-  transition: all 0.3s ease;
-}
-
-/* 기존 스타일 유지 */
 .facility-section {
   padding-bottom: 0.75rem;
 }

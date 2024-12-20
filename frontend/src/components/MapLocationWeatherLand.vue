@@ -122,7 +122,6 @@ export default {
 </script>
 
 <style scoped>
-
 h3 {
   margin-bottom: 0.5rem;
   font-size: 1.2rem;
@@ -134,14 +133,6 @@ h3 {
   padding: 16px 0;
   width: 100%;
   box-sizing: border-box;
-}
-
-.weather-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  text-align: left;
-  padding-left: 0;
 }
 
 .weather-content {
