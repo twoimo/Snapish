@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { Edit, Trash } from 'lucide-vue-next';
 
@@ -110,9 +110,9 @@ const filteredCatches = computed(() => {
     });
 
     if (sortOption.value === 'latest') {
-        return catchesFiltered.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+        return catchesFiltered.sort((a, b) => b.id - a.id);
     } else {
-        return catchesFiltered.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+        return catchesFiltered.sort((a, b) => a.id - b.id);
     }
 });
 
@@ -122,7 +122,7 @@ const BACKEND_BASE_URL = 'http://localhost:5000';
 onMounted(() => {
     if (store.getters.isAuthenticated) {
         store.dispatch('fetchCatches').then(() => {
-            const sortedCatches = store.getters.catches.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+            const sortedCatches = store.getters.catches.slice().sort((a, b) => b.id - a.id);
             displayedCatches.value = sortedCatches;
             loading.value = false;
         }).catch(() => {
@@ -147,58 +147,66 @@ onMounted(() => {
     }
 });
 
+watch(() => catches.value, () => {
+    updateDisplayedCatches();
+}, { deep: true });
+
+function updateDisplayedCatches() {
+    const sortedCatches = [...catches.value].sort((a, b) => 
+        new Date(b.catch_date) - new Date(a.catch_date)
+    );
+    displayedCatches.value = sortedCatches;
+}
+
 function loadMoreCatches() {
     loading.value = true;
     setTimeout(() => {
         const currentLength = displayedCatches.value.length;
-        const sortedCatches = catches.value.slice().sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
+        const sortedCatches = catches.value.slice().sort((a, b) => b.id - a.id);
         const moreCatches = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
         displayedCatches.value = [...displayedCatches.value, ...moreCatches];
         loading.value = false;
-    }, 1000); // Simulate loading delay
+    }, 1000);
 }
 
 function openEditPopup(catchItem) {
-    console.log("Opening edit popup for:", catchItem); // Inspect the catch item
-    if (!catchItem.id) { // Changed from '_id' to 'id'
+    console.log("Opening edit popup for:", catchItem);
+    if (!catchItem.id) {
         console.error("Cannot open edit popup: 'id' is undefined.");
         alert("수정할 수 없는 항목입니다: 식별자가 없습니다.");
         return;
     }
     selectedCatch.value = { ...catchItem };
-    selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence); // Ensure it's a number
+    selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence);
     isEditPopupVisible.value = true;
 }
 
 function saveEdit() {
     const updatedCatch = { ...selectedCatch.value };
-    if (!updatedCatch.id) { // Changed from '_id' to 'id'
+    if (!updatedCatch.id) {
         console.error("Save failed: 'id' is undefined.");
         alert("데이터 저장에 실패했습니다: 식별자가 없습니다.");
         return;
     }
-    // Ensure catch_date is correctly formatted
+    
     if (updatedCatch.catch_date) {
         updatedCatch.catch_date = new Date(updatedCatch.catch_date).toISOString().split('T')[0];
     }
-    // Ensure confidence is saved with up to two decimal places
+    
     updatedCatch.detections[0].confidence = parseFloat(updatedCatch.detections[0].confidence).toFixed(2);
+    
     store.dispatch('updateCatch', updatedCatch).then((response) => {
-        console.log("Update response:", response); // Log the response from the server
-        // Update displayedCatches after successful update
-        const index = displayedCatches.value.findIndex(catchItem => catchItem.id === updatedCatch.id); // Changed from '_id' to 'id'
-        if (index !== -1) {
-            displayedCatches.value[index] = { ...updatedCatch };
-        }
+        console.log("Update response:", response);
+        updateDisplayedCatches();
         isEditPopupVisible.value = false;
     }).catch((error) => {
-        console.error("Update error:", error.response ? error.response.data : error.message); // Detailed error logging
+        console.error("Update error:", error.response ? error.response.data : error.message);
         alert('데이터 업데이트에 실패했습니다.');
     });
 }
 
 function openImagePopup(imageUrl) {
-    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
+    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`;
     isImagePopupVisible.value = true;
 }
 
@@ -210,9 +218,9 @@ function confirmDelete(catchId) {
 
 function deleteCatch(catchId) {
     store.dispatch('deleteCatch', catchId).then(() => {
-        displayedCatches.value = displayedCatches.value.filter(catchItem => catchItem.id !== catchId);
+        updateDisplayedCatches();
     }).catch((error) => {
-        console.error("Delete error:", error.response ? error.response.data : error.message); // Detailed error logging
+        console.error("Delete error:", error.response ? error.response.data : error.message);
         alert('데이터 삭제에 실패했습니다.');
     });
 }
