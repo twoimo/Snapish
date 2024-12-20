@@ -171,19 +171,18 @@ const uploadAvatar = async (event) => {
         const formData = new FormData();
         formData.append('avatar', file);
         try {
-            const response = await axios.post('http://localhost:5000/profile/avatar', formData, { // Ensure this URL is correct
+            const response = await axios.post('http://localhost:5000/profile/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
-            // Check if response is JSON
             if (response.headers['content-type'].includes('application/json')) {
-                const avatarUrl = response.data.avatarUrl;
+                const avatarUrl = `${response.data.avatarUrl}?t=${Date.now()}`;
                 store.dispatch('updateAvatar', avatarUrl);
-                localStorage.setItem('avatar', avatarUrl); // Save avatar URL to local storage
-                alert('아바타가 성공적��로 업데이트되었습니다.');
+                localStorage.setItem('avatar', avatarUrl);
+                alert('아바타가 성공적으로 업데이트되었습니다.');
             } else {
                 console.error('Invalid response format:', response);
                 alert('서버 응답이 올바르지 않습니다.');
