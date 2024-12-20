@@ -125,24 +125,9 @@ const services = computed(() => {
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
 onMounted(async () => {
-    if (!store.state.catches) {
-        await store.dispatch("fetchCatches");
-    }
     if (isAuthenticated.value) {
-        try {
-            const response = await axios.get('http://localhost:5000/profile', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`  // Bearer 추가
-                }
-            });
-            store.dispatch('updateUser', response.data);
-            if (response.data.avatar) {
-                store.dispatch('updateAvatar', response.data.avatar);
-                localStorage.setItem('avatar', response.data.avatar);
-            }
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-        }
+        await store.dispatch('fetchUserProfile');
+        await store.dispatch('fetchCatches');
     }
 });
 
@@ -178,23 +163,13 @@ const uploadAvatar = async (event) => {
                 },
             });
 
-            if (response.headers['content-type'].includes('application/json')) {
-                const avatarUrl = `${response.data.avatarUrl}?t=${Date.now()}`;
-                store.dispatch('updateAvatar', avatarUrl);
-                localStorage.setItem('avatar', avatarUrl);
+            if (response.data.avatarUrl) {
+                await store.dispatch('fetchUserProfile');
                 alert('아바타가 성공적으로 업데이트되었습니다.');
-            } else {
-                console.error('Invalid response format:', response);
-                alert('서버 응답이 올바르지 않습니다.');
             }
         } catch (error) {
-            if (error.response) {
-                console.error('Error response:', error.response);
-                alert(`Error: ${error.response.status} - ${error.response.statusText}`);
-            } else {
-                console.error('Error uploading avatar:', error);
-                alert('아바타 업로드에 실패했습니다.');
-            }
+            console.error('Error uploading avatar:', error);
+            alert('아바타 업로드에 실패했습니다.');
         }
     }
 };
