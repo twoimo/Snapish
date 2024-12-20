@@ -54,7 +54,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # 환경 변수 로드
-load_dotenv("./.env")
+load_dotenv("./backend/.env")
 
 SQL_KEY = os.getenv("SQL_KEY")
 
@@ -277,7 +277,7 @@ Base.metadata.create_all(engine)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
+model = YOLO('./models/weights/yolov11-custom/yani/yolo11m_aug7_conf87.pt').to(device)
 
 # 초기 DB install
 initialize_service()
