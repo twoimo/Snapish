@@ -115,26 +115,34 @@ export default {
 
 <style scoped>
 .weather-container {
-  padding: 16px;
+  padding: 16px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .weather-title {
-  font-size: 1rem;
-  font-weight: 500;
-  margin-bottom: 12px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: left;
+  padding-left: 0;
 }
 
 .weather-content {
   background-color: #f8f9fa;
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
 }
 
 .time-box {
   display: flex;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: #f8f9fa;
+  background: linear-gradient(to right, 
+    rgba(255, 236, 179, 0.2), /* 일출: 밝은 노란색 */
+    rgba(255, 148, 148, 0.2)  /* 일몰: 붉은색 */
+  );
   border-bottom: 1px solid #eee;
 }
 
@@ -142,6 +150,9 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: transparent;
 }
 
 .time-item span {
@@ -152,8 +163,8 @@ export default {
 .info-box {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  padding: 12px;
-  gap: 8px;
+  padding: 16px;
+  gap: 12px;
 }
 
 .info-item {
