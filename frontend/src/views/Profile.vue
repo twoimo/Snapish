@@ -124,25 +124,16 @@ const services = computed(() => {
 
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
-onMounted(async () => {
+onMounted(() => {
     if (!store.state.catches) {
-        await store.dispatch("fetchCatches");
+        store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
     }
     if (isAuthenticated.value) {
-        try {
-            const response = await axios.get('http://localhost:5000/profile', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`  // Bearer 추가
-                }
-            });
-            store.dispatch('updateUser', response.data);
-            if (response.data.avatar) {
-                store.dispatch('updateAvatar', response.data.avatar);
-                localStorage.setItem('avatar', response.data.avatar);
-            }
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-        }
+        store.dispatch('fetchCatches');
+    }
+    const savedAvatar = localStorage.getItem('avatar');
+    if (savedAvatar) {
+        store.dispatch('updateAvatar', savedAvatar); // Load avatar URL from local storage
     }
 });
 
