@@ -4,7 +4,7 @@
       {{ error }}
     </div>
     <div v-else-if="weatherData" class="weather-container">
-      <h3 class="weather-title">현재 날씨 정보</h3>
+      <h3>현재 날씨 정보</h3>
       
       <div v-if="weatherData.weather" class="weather-content">
         <!-- 일출/일몰 정보 -->
@@ -114,6 +114,14 @@ export default {
 </script>
 
 <style scoped>
+
+h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
 .weather-container {
   padding: 16px 0;
   width: 100%;
@@ -121,7 +129,7 @@ export default {
 }
 
 .weather-title {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 16px;
   text-align: left;
