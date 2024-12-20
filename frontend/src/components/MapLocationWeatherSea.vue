@@ -32,7 +32,7 @@
 
         <!-- Real-Time Observations -->
         <div style="flex: 1;">
-          <h3>실시간 날씨 예보</h3>
+          <h3>실시간 바다 날씨</h3>
           <table class="tide-pre-tab">
             <thead>
               <tr>
@@ -62,20 +62,6 @@
           </table>
         </div>
       </div>
-      <!-- Location Info -->
-        <div>
-          <p v-if="obspretab?.api_response" style="font-size: 0.8rem;">
-            조석예보 기준 관측소: <strong>{{ obspretab.obs_post_name }}</strong>
-            | <strong>{{ obspretab.distance?.toFixed(3) }} km</strong> 거리
-          </p>
-          <p style="font-size: 0.8rem;">
-            실시간 날씨 예보 기준 관측소: <strong>{{ obsrecent.obs_post_name }}</strong>
-            | <strong>{{ obsrecent.distance?.toFixed(3) }} km</strong> 거리
-          </p>
-          <p style="font-size: 0.7rem;">
-            출처 : 바다누리 해양정보 서비스 | 실시간 특성상 일부 데이터에 <strong>결측</strong>이 있을 수 있습니다.
-          </p>
-        </div>
     </div>
 
     <!-- Error State -->
@@ -96,7 +82,7 @@ export default {
     },
     weatherData: Object,
   },
-  emits: ['update:weatherData'],
+  emits: ['update:weatherData', 'update:observationInfo'],
   data() {
     return {
       obsrecent: null,
@@ -125,6 +111,14 @@ export default {
         this.obsrecent = obsrecent;
         this.obspretab = obspretab;
         this.$emit('update:weatherData', { obsrecent, obspretab });
+        
+        // 관측소 정보 전달
+        this.$emit('update:observationInfo', {
+          tideStation: obspretab?.obs_post_name,
+          tideDistance: obspretab?.distance,
+          weatherStation: obsrecent?.obs_post_name,
+          weatherDistance: obsrecent?.distance
+        });
       } catch (error) {
         console.error('Error fetching weather data:', error);
       } finally {

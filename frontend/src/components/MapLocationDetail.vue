@@ -113,17 +113,43 @@
           </button>
           
           <div v-if="isWeatherOpen">
-            <div>
+            <div v-if="weatherLoaded">
               <MapLocationWeatherLand 
+                ref="landWeather"
                 :spotlocation="[location.latitude, location.longitude]"
                 v-model:weatherData="weatherData.land"
               />
             </div>
-            <div v-if="location.type === '바다'">
+            <div v-if="weatherLoaded && location.type === '바다'">
               <MapLocationWeatherSea 
+                ref="seaWeather"
                 :spotlocation="[location.latitude, location.longitude]"
                 v-model:weatherData="weatherData.sea"
+                @update:observationInfo="updateObservationInfo"
               />
+              
+              <!-- 관측소 정보 표시 -->
+              <div v-if="observationInfo" class="mt-1">
+                <div class="space-y-1">
+                  <p v-if="observationInfo.tideStation" class="text-xs">
+                    조석예보 기준 관측소: <strong>{{ observationInfo.tideStation }}</strong>
+                    | <strong>{{ observationInfo.tideDistance?.toFixed(3) }} km</strong> 거리
+                  </p>
+                  <p class="text-xs">
+                    실시간 바다 날씨 기준 관측소: <strong>{{ observationInfo.weatherStation }}</strong>
+                    | <strong>{{ observationInfo.weatherDistance?.toFixed(3) }} km</strong> 거리
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- 출처 및 주의사항 -->
+            <div class="mt-2">
+              <p style="font-size: 0.65rem;" class="text-gray-500">
+                출처 : {{ observationInfo ? '바다누리 해양정보 서비스 | ' : '' }}openweathermap.org 
+              </p>
+              <p style="font-size: 0.65rem;" class="text-gray-500">
+                실시간 측정 API 특성상 일부 데이터에 <strong>결측</strong>이 있을 수 있습니다.
+              </p>
             </div>
           </div>
         </div>
@@ -174,7 +200,9 @@ export default {
       weatherData: {
         sea: null,
         land: null
-      }
+      },
+      weatherLoaded: false,
+      observationInfo: null
     }
   },
   methods: {
@@ -183,6 +211,16 @@ export default {
     },
     toggleWeather() {
       this.isWeatherOpen = !this.isWeatherOpen;
+    },
+    updateObservationInfo(info) {
+      this.observationInfo = info;
+    }
+  },
+  watch: {
+    isWeatherOpen(newValue) {
+      if (newValue && !this.weatherLoaded) {
+        this.weatherLoaded = true;
+      }
     }
   }
 }
