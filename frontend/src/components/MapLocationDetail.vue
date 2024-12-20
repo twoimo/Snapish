@@ -17,14 +17,30 @@
 
       <!-- 기본 정보 영역 -->
       <section class="info-section p-4">
-        <!-- 주소 섹션 -->
-        <div class="facility-section">
-          <h3 class="flex items-center gap-2 text-lg font-semibold">
-            <MapPinIcon class="w-5 h-5" /> 
-            위치
-          </h3>
+        <!-- 위치 정보 토글 -->
+        <div class="location-toggle">
+          <button @click="toggleLocation" 
+                  class="w-full py-3 flex justify-between items-center">
+            <div>
+              <h3 class="flex items-center gap-2 text-lg font-semibold">
+                <MapPinIcon class="w-5 h-5" /> 
+                위치
+              </h3>
+              <p class="text-sm text-gray-600 mt-1">
+                {{ location.address_road || location.address_land }}
+              </p>
+            </div>
+            <ChevronDownIcon :class="['w-5 h-5 transition-transform', { 'rotate-180': isLocationOpen }]" />
+          </button>
+          
           <div class="facility-content mt-2">
-            {{ location.address_road || location.address_land }}
+            <div v-if="mapLoaded">
+              <MapComponent 
+                v-show="isLocationOpen" 
+                :locations="[location]" 
+                mapType="B" 
+              />
+            </div>
           </div>
         </div>
 
@@ -170,12 +186,14 @@ import {
 } from 'lucide-vue-next';
 import MapLocationWeatherSea from './MapLocationWeatherSea.vue';
 import MapLocationWeatherLand from './MapLocationWeatherLand.vue';
+import MapComponent from './MapComponent.vue';
 
 export default {
   name: 'MapLocationDetail',
   components: {
     MapLocationWeatherSea,
     MapLocationWeatherLand,
+    MapComponent,
     XIcon,
     MapPinIcon,
     WalletIcon,
@@ -193,6 +211,7 @@ export default {
   },
   data() {
     return {
+      isLocationOpen: false,
       isFacilitiesOpen: false,
       isWeatherOpen: false,
       weatherData: {
@@ -200,10 +219,14 @@ export default {
         land: null
       },
       weatherLoaded: false,
+      mapLoaded: false,
       observationInfo: null
     }
   },
   methods: {
+    toggleLocation() {
+      this.isLocationOpen = !this.isLocationOpen;
+    },
     toggleFacilities() {
       this.isFacilitiesOpen = !this.isFacilitiesOpen;
     },
@@ -215,6 +238,11 @@ export default {
     }
   },
   watch: {
+    isLocationOpen(newValue) {
+      if (newValue && !this.mapLoaded) {
+        this.mapLoaded = true;
+      }
+    },
     isWeatherOpen(newValue) {
       if (newValue && !this.weatherLoaded) {
         this.weatherLoaded = true;

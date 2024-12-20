@@ -18,18 +18,20 @@
         },
         data () {
             return {
-                map : null
+                map : null,
+                mapHeight: '80vh'
             }
         },
         mounted() {
+            this.mapHeight = this.mapType === 'A' ? '80vh' : '40vh';
             if (this.mapType === 'A') {
-                this._initializeKakaoMap_A();
+                this._initializeKakaoMap_fullview();
             } else {
-                this._initializeKakaoMap_B();
+                this._initializeKakaoMap_spotview();
             }
         },
         methods: {
-            _initializeKakaoMap_A() {
+            _initializeKakaoMap_fullview() {
                 try {
                     const script = document.createElement("script");
                     const key = process.env.VUE_APP_KAKAO_API_KEY
@@ -70,41 +72,39 @@
                     console.log("load KAKAOmap A");
                 }
             },
-            _initializeKakaoMap_B() {
+            _initializeKakaoMap_spotview() {
                 try {
                     const script = document.createElement("script");
                     const key = process.env.VUE_APP_KAKAO_API_KEY
                     
-                    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${key}&libraries=clusterer`;
+                    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${key}`;
                     document.head.appendChild(script);
 
                     script.onload = () => { 
                         kakao.maps.load(() => {
-                            var container = document.getElementById('kakaoMap');
-                            var options = {
-                                center: new kakao.maps.LatLng(36.0, 128.0),
-                                level: 13
+                            var container = document.getElementById('kakaoMap'); // 지도를 표시할 div 
+                            var option = { 
+                                center: new kakao.maps.LatLng(
+                                    parseFloat(this.locations[0].latitude),
+                                    parseFloat(this.locations[0].longitude)
+                                ), // 지도의 중심좌표
+                                level: 5 // 지도의 확대 레벨
                             };
-                            var map = new kakao.maps.Map(container, options);
 
-                            var clusterer = new kakao.maps.MarkerClusterer({
-                                map: map,
-                                averageCenter: true,
-                                minLevel: 8
-                            });
+                            // 지도 객체를 컴포넌트의 data에 저장
+                            var map = new kakao.maps.Map(container, option);
 
-                            var markers = this.locations.map(location => {
-                                return new kakao.maps.Marker({
+                            var marker = new kakao.maps.Marker({
                                     position: new kakao.maps.LatLng(
-                                        parseFloat(location.latitude),
-                                        parseFloat(location.longitude)
+                                        parseFloat(this.locations[0].latitude),
+                                        parseFloat(this.locations[0].longitude)
                                     ),
                                 });
+                                // 각 마커를 지도에 표시
+                            marker.setMap(map);
                             });
-
-                            clusterer.addMarkers(markers);
-                        });
-                    };
+                        }
+                    
                 } catch (error) {
                     alert("Maps B:" + error.message);
                 } finally {
@@ -117,9 +117,9 @@
 
 <style scoped>
     #kakaoMap {
-        width: 100%; /* 적절한 너비로 설정 */
-        height: 80vh; /* 뷰포트 높이의 80% */
-        margin: 0px auto; /* 상단 여백은 17px, 좌우 가운데 정렬 */
-        display: block; /* 가운데 정렬을 위해 블록 요소로 설정 */
-        } 
+        width: 100%;
+        height: v-bind(mapHeight);
+        margin: 0px auto;
+        display: block;
+    } 
 </style>
