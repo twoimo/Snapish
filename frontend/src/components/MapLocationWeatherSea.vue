@@ -38,6 +38,7 @@
               <tr>
                 <th colspan="2">
                   {{ obsrecent?.api_response?.record_time?.split(' ')[1]?.slice(0, 5) || '-' }}
+                  기준 측정
                 </th>
               </tr>
             </thead>
