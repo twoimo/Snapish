@@ -34,24 +34,28 @@
 
       <!-- 업로드된 물고기 이미지 표시 -->
       <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
-        <div class="relative w-full aspect-[4/3] bg-gray-100">
-          <img 
-            ref="fishImage" 
-            :src="imageSource" 
-            alt="물고기 사진" 
-            class="absolute inset-0 w-full h-full object-contain cursor-pointer"
-            @click="handleImageClick" 
-            @load="onImageLoad" 
-          />
-          <template v-if="imageDimensions.width && imageDimensions.height">
-            <div 
-              v-for="(detection, index) in parsedDetections" 
-              :key="index" 
-              class="absolute" 
-              :style="getBoundingBoxStyle(detection.bbox)"
-            >
+        <div class="image-container" :style="imageContainerStyle">
+          <div class="image-wrapper">
+            <div class="detection-area">
+              <img 
+                ref="fishImage" 
+                :src="imageSource" 
+                alt="물고기 사진" 
+                :class="imageClass"
+                @click="handleImageClick" 
+                @load="onImageLoad" 
+              />
+              <template v-if="imageDimensions.width && imageDimensions.height">
+                <div 
+                  v-for="(detection, index) in parsedDetections" 
+                  :key="index" 
+                  class="bounding-box" 
+                  :style="getBoundingBoxStyle(detection.bbox)"
+                >
+                </div>
+              </template>
             </div>
-          </template>
+          </div>
         </div>
       </div>
 
@@ -156,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../axios';
 import html2canvas from 'html2canvas';
@@ -298,14 +302,19 @@ const goBack = () => {
 const onImageLoad = () => {
   const imageElement = fishImage.value;
   if (imageElement) {
-    imageDimensions.value.width = imageElement.naturalWidth;
-    imageDimensions.value.height = imageElement.naturalHeight;
-    console.log('Image loaded:', fishImage.value);
+    imageDimensions.value = {
+      width: imageElement.naturalWidth,
+      height: imageElement.naturalHeight
+    };
+    
+    // resize 이벤트 리스너 추가
+    window.addEventListener('resize', updateBoundingBoxes);
+    // 초기 bbox 업데이트를 위해 약간의 지연 추가
+    setTimeout(updateBoundingBoxes, 100);
   }
 };
 
 const getBoundingBoxStyle = (bbox) => {
-  // Handle case where bbox is not an array
   if (!Array.isArray(bbox)) {
     console.warn('Invalid bbox format:', bbox);
     return {};
@@ -318,31 +327,115 @@ const getBoundingBoxStyle = (bbox) => {
     return {};
   }
 
-  // 이미지의 실제 표시 크기와 원본 크기의 비율 계산
-  const displayWidth = imageElement.clientWidth;
-  const displayHeight = imageElement.clientHeight;
-  const scaleX = displayWidth / imageDimensions.value.width;
-  const scaleY = displayHeight / imageDimensions.value.height;
+  const renderedWidth = imageElement.clientWidth;
+  const renderedHeight = imageElement.clientHeight;
 
-  // 바운딩 박스 위치와 크기 계산
+  const scaleX = renderedWidth / imageDimensions.value.width;
+  const scaleY = renderedHeight / imageDimensions.value.height;
+
   return {
     left: `${x1 * scaleX}px`,
     top: `${y1 * scaleY}px`,
     width: `${(x2 - x1) * scaleX}px`,
-    height: `${(y2 - y1) * scaleY}px`,
-    position: 'absolute',
-    border: '2px solid red',
-    pointerEvents: 'none',
-    backgroundColor: 'rgba(255, 0, 0, 0.1)'
+    height: `${(y2 - y1) * scaleY}px`
   };
+};
+
+// 이미지 크기에 따른 클래스 계산
+const imageClass = computed(() => {
+  if (!imageDimensions.value.width || !imageDimensions.value.height) {
+    return 'detection-image';
+  }
+  
+  // 작은 이미지 기준 (예: 800px)
+  return imageDimensions.value.width < 800 
+    ? 'detection-image small-image' 
+    : 'detection-image';
+});
+
+const imageContainerStyle = computed(() => {
+  if (!imageDimensions.value.width || !imageDimensions.value.height) {
+    return { 
+      minHeight: 'fit-content',
+      padding: '0.5rem'
+    };
+  }
+
+  const style = {
+    minHeight: 'fit-content',
+    padding: '0.5rem'
+  };
+
+  // 작은 이미지일 경우 패딩 제거
+  if (imageDimensions.value.width < 800) {
+    style.padding = '0';
+  }
+
+  return style;
+});
+
+// 컴포넌트 언마운트 시 이벤트 리스너 제거
+onUnmounted(() => {
+  window.removeEventListener('resize', updateBoundingBoxes);
+});
+
+// bbox 업데이트 함수
+const updateBoundingBoxes = () => {
+  // 강제로 Vue가 bbox를 다시 계산하도록 함
+  imageDimensions.value = { ...imageDimensions.value };
 };
 </script>
 
 <style scoped>
-.uploaded-image img {
+.image-container {
+  position: relative;
+  width: 100%;
+  background-color: #f3f4f6;
+  min-height: fit-content;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detection-area {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100vw;  /* 화면 너비 최대로 설정 */
+}
+
+.detection-image {
+  display: block;
+  width: 100%;
   max-width: 100%;
   height: auto;
-  object-fit: cover;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+/* 작은 이미지 처리를 위한 스타일 */
+.small-image {
+  width: 100vw;
+  max-width: none;
+  margin: -0.5rem;  /* 컨테이너 패딩 상쇄 */
+}
+
+.bounding-box {
+  position: absolute;
+  border: 2px solid red;
+  pointer-events: none;
+  background-color: rgba(255, 0, 0, 0.1);
 }
 
 .fixed {
