@@ -124,16 +124,25 @@ const services = computed(() => {
 
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
-onMounted(() => {
+onMounted(async () => {
     if (!store.state.catches) {
-        store.dispatch("fetchCatches"); // Fetch catches when the component is mounted
+        await store.dispatch("fetchCatches");
     }
     if (isAuthenticated.value) {
-        store.dispatch('fetchCatches');
-    }
-    const savedAvatar = localStorage.getItem('avatar');
-    if (savedAvatar) {
-        store.dispatch('updateAvatar', savedAvatar); // Load avatar URL from local storage
+        try {
+            const response = await axios.get('http://localhost:5000/profile', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`  // Bearer 추가
+                }
+            });
+            store.dispatch('updateUser', response.data);
+            if (response.data.avatar) {
+                store.dispatch('updateAvatar', response.data.avatar);
+                localStorage.setItem('avatar', response.data.avatar);
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
     }
 });
 
@@ -174,7 +183,7 @@ const uploadAvatar = async (event) => {
                 const avatarUrl = response.data.avatarUrl;
                 store.dispatch('updateAvatar', avatarUrl);
                 localStorage.setItem('avatar', avatarUrl); // Save avatar URL to local storage
-                alert('아바타가 성공적으로 업데이트되었습니다.');
+                alert('아바타가 성공적��로 업데이트되었습니다.');
             } else {
                 console.error('Invalid response format:', response);
                 alert('서버 응답이 올바르지 않습니다.');

@@ -562,7 +562,6 @@ def profile(user_id):
             'full_name': current_user.full_name,
             'age': current_user.age,
             'avatar': current_user.avatar,  # Include avatar URL
-            # 필요한 정보 추가
         }
         session.close()
         return jsonify(user_data)
