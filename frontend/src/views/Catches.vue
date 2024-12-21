@@ -18,9 +18,9 @@
                             v-model="sortOption" 
                             class="px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors cursor-pointer"
                         >
-                            <option value="latest">최신순</option>
-                            <option value="oldest">오래된순</option>
-                        </select>
+                        <option value="latest">최신순</option>
+                        <option value="oldest">오래된순</option>
+                    </select>
                     </div>
                 </div>
             </div>
@@ -97,25 +97,25 @@
                                 <div v-if="catchItem.memo" class="flex items-start text-sm text-gray-600">
                                     <FileText class="w-4 h-4 mr-2 mt-0.5" />
                                     <p class="line-clamp-2">{{ catchItem.memo }}</p>
-                                </div>
-                            </div>
+                        </div>
+                        </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 추가 로딩 인디케이터 -->
-                <div v-if="isLoadingMore && hasMore" class="flex justify-center items-center py-8">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    <span class="ml-2 text-gray-600">더 많은 물고기 불러오는 중...</span>
-                </div>
-
-                <!-- 더 이상 데이터가 없을 때 메시지 -->
-                <div v-if="!hasMore && displayedCatches.length > 0" class="text-center text-gray-500 py-8">
-                    모든 물고기를 불러왔습니다.
+                <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
+                        <span class="text-sm text-gray-500">물고기 불러오는 중...</span>
+                    </div>
                 </div>
 
                 <!-- 더 보기 트리거 -->
-                <div v-if="hasMore" ref="loadMoreTrigger" class="h-10 mt-6"></div>
+                <div v-if="hasMoreItems" 
+                    ref="loadMoreTrigger" 
+                    class="h-10 mt-6">
+                </div>
             </div>
         </main>
 
@@ -131,8 +131,7 @@
         <!-- 이미지 팝업 -->
         <div v-if="isImagePopupVisible"
             class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
-            @click="isImagePopupVisible = false"
-        >
+            @click="isImagePopupVisible = false">
             <div class="relative max-w-4xl w-full mx-4" @click.stop>
                 <img 
                     :src="popupImageUrl" 
@@ -151,59 +150,64 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { Edit, Trash, Search, Fish, Calendar, Target, Scale, FileText, X } from 'lucide-vue-next';
 import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
-const catches = computed(() => store.getters.catches);
+const catches = computed(() => store.getters.catches || []);
 const loading = ref(true);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
-const displayedCatches = ref([]);
-const itemsToLoad = 6;
-const initialLoad = 6;
+const initialLoad = 2;
+const itemsToLoad = 2;
+const displayCount = ref(initialLoad);
 const loadMoreTrigger = ref(null);
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
 const searchQuery = ref('');
 const sortOption = ref('latest');
 const isLoadingMore = ref(false);
-const hasMore = computed(() => displayedCatches.value.length < catches.value.length);
-
-const filteredCatches = computed(() => {
-    // 전체 catches에서 필터링
-    const allCatches = catches.value || [];
-    const catchesFiltered = allCatches.filter(catchItem => {
-        return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
-    });
-
-    // 정렬
-    if (sortOption.value === 'latest') {
-        catchesFiltered.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
-    } else {
-        catchesFiltered.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
-    }
-
-    // 현재 표시할 개수만큼만 반환
-    return catchesFiltered.slice(0, displayedCatches.value.length);
-});
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
+
+let observer = null;
+
+const totalFilteredItems = computed(() => {
+    if (!catches.value) return 0;
+    const filtered = catches.value.filter(catchItem => 
+        catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+    return filtered.length;
+});
+
+const hasMoreItems = computed(() => {
+    return displayCount.value < totalFilteredItems.value;
+});
+
+const filteredCatches = computed(() => {
+    if (!catches.value) return [];
+    const allFilteredCatches = catches.value.filter(catchItem => {
+        return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
+    });
+
+    const sortedCatches = sortOption.value === 'latest'
+        ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
+        : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+    
+    return sortedCatches.slice(0, displayCount.value);
+});
 
 onMounted(async () => {
     if (store.getters.isAuthenticated) {
         try {
             await store.dispatch('fetchCatches');
-            const sortedCatches = store.getters.catches
-                .slice()
-                .sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
-            displayedCatches.value = sortedCatches.slice(0, initialLoad);
-
-            // Intersection Observer 설정
-            setupIntersectionObserver();
+            displayCount.value = initialLoad;
+            nextTick(() => {
+                setupIntersectionObserver();
+            });
         } catch (error) {
             console.error('Error fetching catches:', error);
         } finally {
@@ -214,61 +218,95 @@ onMounted(async () => {
     }
 });
 
-watch(() => catches.value, () => {
-    updateDisplayedCatches();
-}, { deep: true });
+function setupIntersectionObserver() {
+    if (observer) {
+        observer.disconnect();
+    }
 
-function updateDisplayedCatches() {
-    const sortedCatches = [...catches.value].sort((a, b) => 
-        new Date(b.catch_date) - new Date(a.catch_date)
-    );
-    displayedCatches.value = sortedCatches.slice(0, displayedCatches.value.length);
+    observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore.value && hasMoreItems.value) {
+            console.log('Loading more items...', {
+                currentCount: displayCount.value,
+                totalItems: totalFilteredItems.value
+            });
+            loadMoreCatches();
+        }
+    }, {
+        root: null,
+        rootMargin: '50px',
+        threshold: 0
+    });
+
+    nextTick(() => {
+        if (loadMoreTrigger.value) {
+            observer.observe(loadMoreTrigger.value);
+        }
+    });
 }
 
-function setupIntersectionObserver() {
-    if (loadMoreTrigger.value) {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const target = entries[0];
-                if (target.isIntersecting && !isLoadingMore.value && hasMore.value) {
-                    loadMoreCatches();
-                }
-            },
-            {
-                root: null,
-                rootMargin: '100px',
-                threshold: 0.1
-            }
-        );
-        observer.observe(loadMoreTrigger.value);
-    }
+function preloadImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => reject(url);
+        img.src = url;
+    });
 }
 
 function loadMoreCatches() {
-    if (isLoadingMore.value || !hasMore.value) return;
-    
+    if (isLoadingMore.value) return;
     isLoadingMore.value = true;
-    console.log('Loading more catches...'); // 디버깅용
 
-    setTimeout(() => {
+    const loadNextBatch = async () => {
+        if (!catches.value || !catches.value.length) {
+            isLoadingMore.value = false;
+            return;
+        }
+
+        const allFilteredCatches = catches.value.filter(catchItem => 
+            catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+
+        const sortedCatches = sortOption.value === 'latest'
+            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
+            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+
+        const nextItems = sortedCatches.slice(
+            displayCount.value,
+            displayCount.value + itemsToLoad
+        );
+
+        if (nextItems.length === 0) {
+            isLoadingMore.value = false;
+            return;
+        }
+
         try {
-            const currentLength = displayedCatches.value.length;
-            const sortedCatches = [...catches.value].sort((a, b) => 
-                new Date(b.catch_date) - new Date(a.catch_date)
+            const imagePromises = nextItems.map(item => 
+                preloadImage(`${BACKEND_BASE_URL}/uploads/${item.imageUrl}`)
             );
-            
-            // 다음 페이지 데이터 추가
-            const nextItems = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
-            if (nextItems.length > 0) {
-                displayedCatches.value = [...displayedCatches.value, ...nextItems];
-                console.log('Added new items:', nextItems.length); // 디버깅용
-            }
+
+            await Promise.allSettled(imagePromises);
+
+            console.log('Adding more items:', {
+                before: displayCount.value,
+                adding: itemsToLoad,
+                after: displayCount.value + itemsToLoad,
+                nextItemsCount: nextItems.length
+            });
+            displayCount.value += itemsToLoad;
+
+            nextTick(() => {
+                setupIntersectionObserver();
+            });
         } catch (error) {
-            console.error('Error loading more catches:', error);
+            console.error('Error loading images:', error);
         } finally {
             isLoadingMore.value = false;
         }
-    }, 500);
+    };
+
+    loadNextBatch();
 }
 
 function openEditModal(catchItem) {
@@ -285,13 +323,8 @@ function openEditModal(catchItem) {
 
 const handleFishDataSave = async (updatedData) => {
     try {
-        const response = await store.dispatch('updateCatch', updatedData);
+        await store.dispatch('updateCatch', updatedData);
         showEditModal.value = false;
-        const index = displayedCatches.value.findIndex(c => c.id === response.id);
-        if (index !== -1) {
-            displayedCatches.value[index] = response;
-        }
-        displayedCatches.value = [...displayedCatches.value];
     } catch (error) {
         console.error('Error saving fish data:', error);
         alert('물고기 정보 저장에 실패했습니다.');
@@ -311,12 +344,32 @@ function confirmDelete(catchId) {
 
 function deleteCatch(catchId) {
     store.dispatch('deleteCatch', catchId).then(() => {
-        updateDisplayedCatches();
+        const currentTotal = totalFilteredItems.value;
+        displayCount.value = Math.min(displayCount.value, currentTotal);
     }).catch((error) => {
         console.error("Delete error:", error.response ? error.response.data : error.message);
         alert('데이터 삭제에 실패했습니다.');
     });
 }
+
+watch([searchQuery, sortOption], () => {
+    displayCount.value = initialLoad;
+    nextTick(() => {
+        setupIntersectionObserver();
+    });
+});
+
+watch(() => catches.value, () => {
+    nextTick(() => {
+        setupIntersectionObserver();
+    });
+}, { deep: true });
+
+onUnmounted(() => {
+    if (observer) {
+        observer.disconnect();
+    }
+});
 </script>
 
 <style scoped>
@@ -325,5 +378,21 @@ function deleteCatch(catchId) {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+.grid > div {
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

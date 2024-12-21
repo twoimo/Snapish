@@ -504,7 +504,7 @@ def predict():
         detections.sort(key=lambda x: x['confidence'], reverse=True)
         if not detections:
             detections.append({
-                'label': '알 수 ��음',
+                'label': '알 수 없음',
                 'confidence': 0.0
             })
 
