@@ -23,7 +23,8 @@ export default createStore({
     consent: {
       hasConsent: false,
       lastConsentDate: null
-    }
+    },
+    globalLoading: false,
   },
   mutations: {
     // Existing mutations
@@ -86,6 +87,9 @@ export default createStore({
     },
     SET_CONSENT(state, { hasConsent, lastConsentDate }) {
       state.consent = { hasConsent, lastConsentDate };
+    },
+    SET_GLOBAL_LOADING(state, isLoading) {
+      state.globalLoading = isLoading;
     }
   },
   actions: {
@@ -117,7 +121,7 @@ export default createStore({
             );
           }
 
-          // 물때 정보 API 호출
+          // 물때 정�� API 호출
           const mulddaeData = await fetchMulddae(today);
           commit("setMulddae", mulddaeData);
 
@@ -380,6 +384,9 @@ export default createStore({
         console.error('Error creating catch:', error);
         throw error;
       }
+    },
+    setGlobalLoading({ commit }, isLoading) {
+      commit('SET_GLOBAL_LOADING', isLoading);
     }
   },
   getters: {
@@ -394,5 +401,6 @@ export default createStore({
     catches(state) {
       return state.catches;
     },
+    isGlobalLoading: state => state.globalLoading
   },
 });
