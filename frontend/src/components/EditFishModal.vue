@@ -13,6 +13,15 @@
           />
         </div>
 
+        <div>
+          <label class="block text-sm font-medium text-gray-700">날짜</label>
+          <input 
+            v-model="fishData.catch_date" 
+            type="date" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">무게 (kg)</label>

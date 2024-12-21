@@ -15,50 +15,44 @@
                         <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" alt="Catch Image"
                             class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             @click="openImagePopup(catchItem.imageUrl)" />
-                        <p class="text-gray-800 text-sm text-center flex justify-center items-center">
-                            {{ catchItem.detections[0].label }}
-                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                @click="openEditPopup(catchItem)">
-                                <Edit class="h-4 w-4 text-blue-500" />
-                            </span>
-                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                @click="confirmDelete(catchItem.id)">
-                                <Trash class="h-4 w-4 text-red-500" />
-                            </span>
-                        </p>
-                        <p class="text-gray-600 text-xs text-center">{{ catchItem.catch_date }}</p>
-                        <p class="text-gray-600 text-xs text-center">신뢰도: {{
-                            (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <p class="text-gray-800 font-medium">
+                                    {{ catchItem.detections[0].label }}
+                                </p>
+                                <div class="flex gap-2">
+                                    <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                        @click="openEditModal(catchItem)">
+                                        <Edit class="h-4 w-4 text-blue-500" />
+                                    </span>
+                                    <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                        @click="confirmDelete(catchItem.id)">
+                                        <Trash class="h-4 w-4 text-red-500" />
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <p>날짜: {{ catchItem.catch_date }}</p>
+                                <p>신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
+                                <p v-if="catchItem.weight_kg">무게: {{ catchItem.weight_kg }}kg</p>
+                                <p v-if="catchItem.length_cm">길이: {{ catchItem.length_cm }}cm</p>
+                                <p v-if="catchItem.memo" class="text-gray-500 text-xs mt-1">
+                                    {{ catchItem.memo }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div v-else-if="!loading" class="text-gray-500 text-center">아직 잡은 물고기가 없습니다.</div>
                 <div v-if="loading" class="text-center text-gray-500 mt-4">Loading...</div>
                 <div ref="loadMoreTrigger" class="text-center text-gray-500 mt-4"></div>
-                <div v-if="isEditPopupVisible"
-                    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-20">
-                    <div class="bg-white p-6 rounded-lg shadow-lg w-80">
-                        <h2 class="text-lg mb-4 text-center">데이터 수정</h2>
-                        <div class="mb-4">
-                            <label class="block text-sm mb-1">라벨(Name)</label>
-                            <input v-model="selectedCatch.detections[0].label" class="border p-2 w-full rounded" />
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm mb-1">날짜(YYYY-MM-DD)</label>
-                            <input type="date" v-model="selectedCatch.catch_date" class="border p-2 w-full rounded" />
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm mb-1">신뢰도(1~100%)</label>
-                            <input type="number" step="0.01" v-model.number="confidenceInput"
-                                class="border p-2 w-full rounded" />
-                        </div>
-                        <div class="flex justify-between">
-                            <button @click="saveEdit"
-                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors duration-300">저장</button>
-                            <button @click="isEditPopupVisible = false"
-                                class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-300">취소</button>
-                        </div>
-                    </div>
-                </div>
+                <EditFishModal
+                    v-if="showEditModal"
+                    :isVisible="showEditModal"
+                    :catchData="selectedCatch"
+                    @close="showEditModal = false"
+                    @save="handleFishDataSave"
+                />
                 <div v-if="isImagePopupVisible"
                     class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
                     @click="isImagePopupVisible = false">
@@ -80,23 +74,14 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { Edit, Trash } from 'lucide-vue-next';
+import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
 const catches = computed(() => store.getters.catches);
 const loading = ref(true);
-const isEditPopupVisible = ref(false);
+const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const displayedCatches = ref([]);
-const confidenceInput = computed({
-    get() {
-        return selectedCatch.value ? (parseFloat(selectedCatch.value.detections[0].confidence) * 100).toFixed(2) : '100.00';
-    },
-    set(value) {
-        if (selectedCatch.value) {
-            selectedCatch.value.detections[0].confidence = (value / 100).toFixed(2);
-        }
-    }
-});
 const itemsToLoad = 8;
 const loadMoreTrigger = ref(null);
 const isImagePopupVisible = ref(false);
@@ -169,8 +154,8 @@ function loadMoreCatches() {
     }, 1000);
 }
 
-function openEditPopup(catchItem) {
-    console.log("Opening edit popup for:", catchItem);
+function openEditModal(catchItem) {
+    console.log("Opening edit modal for:", catchItem);
     if (!catchItem.id) {
         console.error("Cannot open edit popup: 'id' is undefined.");
         alert("수정할 수 없는 항목입니다: 식별자가 없습니다.");
@@ -178,31 +163,18 @@ function openEditPopup(catchItem) {
     }
     selectedCatch.value = { ...catchItem };
     selectedCatch.value.detections[0].confidence = parseFloat(selectedCatch.value.detections[0].confidence);
-    isEditPopupVisible.value = true;
+    showEditModal.value = true;
 }
 
-function saveEdit() {
-    const updatedCatch = { ...selectedCatch.value };
-    if (!updatedCatch.id) {
-        console.error("Save failed: 'id' is undefined.");
-        alert("데이터 저장에 실패했습니다: 식별자가 없습니다.");
-        return;
-    }
-    
-    if (updatedCatch.catch_date) {
-        updatedCatch.catch_date = new Date(updatedCatch.catch_date).toISOString().split('T')[0];
-    }
-    
-    updatedCatch.detections[0].confidence = parseFloat(updatedCatch.detections[0].confidence).toFixed(2);
-    
-    store.dispatch('updateCatch', updatedCatch).then((response) => {
-        console.log("Update response:", response);
+const handleFishDataSave = async (updatedData) => {
+    try {
+        await store.dispatch('updateCatch', updatedData);
+        showEditModal.value = false;
         updateDisplayedCatches();
-        isEditPopupVisible.value = false;
-    }).catch((error) => {
-        console.error("Update error:", error.response ? error.response.data : error.message);
-        alert('데이터 업데이트에 실패했습니다.');
-    });
+    } catch (error) {
+        console.error('Error saving fish data:', error);
+        alert('물고기 정보 저장에 실패했습니다.');
+    }
 }
 
 function openImagePopup(imageUrl) {
