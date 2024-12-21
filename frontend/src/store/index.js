@@ -424,25 +424,32 @@ export default createStore({
     },
     async fetchHotIssues({ commit }) {
       try {
-        // 임시 데이터 사용 (실제 API 연동 전까지)
+        // 임시 데��터 사용 (실제 API 연동 전까지)
         const tempHotIssues = [
           {
             id: 1,
             title: '오늘의 조황 정보',
-            content: '서해안 조황 정보입니다.',
+            content: '서해안 조황 정보입니다. 감성돔과 우럭이 잘 잡힙니다.',
             timestamp: new Date(),
-            author: '낚시꾼1',
-            imageUrl: null
+            author: '낚시왕',
+            imageUrl: 'https://picsum.photos/800/600?random=1'
           },
           {
             id: 2,
             title: '주말 날씨 전망',
-            content: '주말 낚시하기 좋은 날씨입니다.',
-            timestamp: new Date(),
+            content: '주말 낚시하기 좋은 날씨입니다. 파고도 낮고 날씨도 맑습니다.',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2시간 전
             author: '기상전문가',
-            imageUrl: null
+            imageUrl: 'https://picsum.photos/800/600?random=2'
           },
-          // 추가 더미 데이터...
+          {
+            id: 3,
+            title: '금어기 안내',
+            content: '올해 주요 어종별 금어기 정보를 확인하세요.',
+            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4시간 전
+            author: '수산청',
+            imageUrl: 'https://picsum.photos/800/600?random=3'
+          }
         ];
 
         commit('SET_HOT_ISSUES', tempHotIssues);

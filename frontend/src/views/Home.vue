@@ -79,21 +79,28 @@
                     </div>
                     <div class="space-y-3">
                         <article v-for="issue in hotIssues" :key="issue.id"
-                            class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition">
+                            class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition cursor-pointer">
                             <div class="flex gap-3">
                                 <div
-                                    class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                                    <ImageIcon class="w-8 h-8 text-gray-400" />
+                                    class="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img 
+                                        :src="issue.imageUrl" 
+                                        :alt="issue.title"
+                                        class="w-full h-full object-cover"
+                                        @error="$event.target.src = DEFAULT_IMAGE"
+                                    />
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-medium mb-1">{{ issue.title }}</h3>
+                                    <h3 class="font-medium mb-1 text-blue-900">{{ issue.title }}</h3>
                                     <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <ClockIcon class="w-4 h-4 mr-1" />
-                                        <span>{{ formatTimestamp(issue.timestamp) }}</span>
+                                    <div class="flex items-center justify-between text-sm text-gray-500">
+                                        <span class="font-medium text-gray-600">{{ issue.author }}</span>
+                                        <div class="flex items-center">
+                                            <ClockIcon class="w-4 h-4 mr-1" />
+                                            <span>{{ formatTimestamp(issue.timestamp) }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                             </div>
                         </article>
                     </div>
@@ -125,7 +132,6 @@
 <script setup>
 import {
     ChevronRightIcon,
-    ImageIcon,
     ClockIcon,
     X,
 } from 'lucide-vue-next'
@@ -267,6 +273,9 @@ function formatTimestamp(timestamp) {
         return date.toLocaleDateString();
     }
 }
+
+// 기본 이미지 (Community.vue와 동일한 DEFAULT_IMAGE 사용)
+const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7snbTrr7jsp4Ag7JeG7J2EPC90ZXh0Pjwvc3ZnPg==';
 
 </script>
 

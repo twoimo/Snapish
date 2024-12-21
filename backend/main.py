@@ -290,6 +290,14 @@ CORS(app, resources={r"/*": {
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
+# 초시 헤더를 위한 after_request 데코레이터를 앱 초기화 직후에 추가
+@app.after_request
+def add_header(response):
+    if request.path.startswith('/uploads/'):
+        response.cache_control.max_age = 31536000  # 1년
+        response.cache_control.public = True
+    return response
+
 # 초기 DB install
 initialize_service()
 
@@ -510,14 +518,6 @@ def predict():
         # 이미지 최적화
         optimized_buffer = optimize_image(img)
         img = Image.open(optimized_buffer)
-
-        # 캐시 헤더 추가
-        @app.after_request
-        def add_header(response):
-            if request.path.startswith('/uploads/'):
-                response.cache_control.max_age = 31536000  # 1년
-                response.cache_control.public = True
-            return response
 
         results = model(img, exist_ok=True, device=device)
         detections = []
@@ -1098,6 +1098,6 @@ def get_services():
             "icon": "/icons/community.png",
             "route": "/community"
         },
-        # 추가 서비스들...
+        # ��가 서비스들...
     ]
     return jsonify(services)

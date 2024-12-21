@@ -147,6 +147,22 @@
             <span>내가 잡은 물고기 리스트 보기</span>
           </button>
         </div>
+
+        <!-- AI 모델 경고 문구 추가 -->
+        <div class="mt-6 mb-4 bg-red-50 rounded-lg p-4 border border-red-100 shadow-sm">
+          <div class="flex flex-col items-center gap-2">
+            <div class="flex items-center justify-center gap-2 text-red-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="font-semibold">AI 판별 주의사항</span>
+            </div>
+            <p class="text-sm text-red-600 text-center leading-relaxed">
+              인공지능 모델의 판별 결과는 참고용입니다.<br>
+              실제 상황과 법적 규제를 반드시 확인하세요.
+            </p>
+          </div>
+        </div>
       </main>
 
       <!-- 이미지 팝업 -->
@@ -249,7 +265,7 @@ const shareResult = () => {
   showModal.value = true;
 };
 
-// ��미지 소스 계산
+// 이미지 소스 계산
 const imageSource = computed(() => {
   if (imageBase64.value) {
     return `data:image/jpeg;base64,${imageBase64.value}`;
