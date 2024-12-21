@@ -1,67 +1,138 @@
 <template>
-    <div class="min-h-screen bg-gray-100 flex justify-center">
-        <div class="w-full max-w-4xl bg-white shadow-lg">
-            <main class="p-4">
-                <div class="mb-4 flex items-center">
-                    <input type="text" v-model="searchQuery" placeholder="물고기 검색..." class="border p-2 w-full rounded" />
-                    <select v-model="sortOption" class="border p-2 ml-2 rounded">
-                        <option value="latest">최신순</option>
-                        <option value="oldest">오래된순</option>
-                    </select>
+    <div class="min-h-screen bg-gray-50">
+        <!-- 상단 검색/필터 영역 -->
+        <div class="sticky top-0 bg-white shadow-sm z-10 px-4 py-3">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <input 
+                            type="text" 
+                            v-model="searchQuery" 
+                            placeholder="물고기 검색..." 
+                            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        />
+                        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    </div>
+                    <div class="flex gap-2">
+                        <select 
+                            v-model="sortOption" 
+                            class="px-4 py-2 rounded-lg border border-gray-200 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors cursor-pointer"
+                        >
+                            <option value="latest">최신순</option>
+                            <option value="oldest">오래된순</option>
+                        </select>
+                    </div>
                 </div>
-                <div v-if="filteredCatches.length > 0" class="grid grid-cols-2 gap-4">
-                    <div v-for="(catchItem) in filteredCatches" :key="catchItem.id"
-                        class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                        <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" alt="Catch Image"
-                            class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
-                            @click="openImagePopup(catchItem.imageUrl)" />
-                        <div class="text-center">
-                            <p class="text-gray-800 text-sm flex justify-center items-center">
+            </div>
+        </div>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="max-w-4xl mx-auto px-4 py-6">
+            <!-- 로딩 상태 -->
+            <div v-if="loading" class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+
+            <!-- 데이터 없음 상태 -->
+            <div v-else-if="!filteredCatches.length" class="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Fish class="w-16 h-16 mb-4 text-gray-300" />
+                <p class="text-lg">아직 잡은 물고기가 없습니다.</p>
+                <p class="text-sm mt-2">물고기를 잡아서 추억을 기록해보세요!</p>
+            </div>
+
+            <!-- 물고기 목록 -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div v-for="catchItem in filteredCatches" 
+                    :key="catchItem.id"
+                    class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
+                >
+                    <!-- 이미지 섹션 -->
+                    <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                        <img 
+                            :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
+                            alt="Catch Image"
+                            class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                            @click="openImagePopup(catchItem.imageUrl)"
+                        />
+                    </div>
+
+                    <!-- 정보 섹션 -->
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold text-gray-800">
                                 {{ catchItem.detections[0].label }}
-                                <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                    @click="openEditModal(catchItem)">
-                                    <Edit class="h-4 w-4 text-blue-500" />
-                                </span>
-                                <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                    @click="confirmDelete(catchItem.id)">
-                                    <Trash class="h-4 w-4 text-red-500" />
-                                </span>
-                            </p>
-                            <p class="text-gray-600 text-xs">{{ catchItem.catch_date }}</p>
-                            <p class="text-gray-600 text-xs">신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
-                            <div v-if="catchItem.weight_kg || catchItem.length_cm" class="text-xs text-gray-600 mt-1">
-                                <p v-if="catchItem.weight_kg">무게: {{ catchItem.weight_kg }}kg</p>
-                                <p v-if="catchItem.length_cm">길이: {{ catchItem.length_cm }}cm</p>
+                            </h3>
+                            <div class="flex gap-2">
+                                <button 
+                                    @click="openEditModal(catchItem)"
+                                    class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                                >
+                                    <Edit class="w-4 h-4 text-blue-500" />
+                                </button>
+                                <button 
+                                    @click="confirmDelete(catchItem.id)"
+                                    class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                                >
+                                    <Trash class="w-4 h-4 text-red-500" />
+                                </button>
                             </div>
-                            <div v-if="catchItem.memo" class="text-xs text-gray-600 mt-1">
-                                <p class="truncate">메모: {{ catchItem.memo }}</p>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <Calendar class="w-4 h-4 mr-2" />
+                                {{ catchItem.catch_date }}
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <Target class="w-4 h-4 mr-2" />
+                                신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%
+                            </div>
+                            <div v-if="catchItem.weight_kg || catchItem.length_cm" class="flex items-center text-sm text-gray-600">
+                                <Scale class="w-4 h-4 mr-2" />
+                                <span v-if="catchItem.weight_kg">{{ catchItem.weight_kg }}kg</span>
+                                <span v-if="catchItem.weight_kg && catchItem.length_cm" class="mx-2">|</span>
+                                <span v-if="catchItem.length_cm">{{ catchItem.length_cm }}cm</span>
+                            </div>
+                            <div v-if="catchItem.memo" class="flex items-start text-sm text-gray-600">
+                                <FileText class="w-4 h-4 mr-2 mt-0.5" />
+                                <p class="line-clamp-2">{{ catchItem.memo }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div v-else-if="!loading" class="text-gray-500 text-center">아직 잡은 물고기가 없습니다.</div>
-                <div v-if="loading" class="text-center text-gray-500 mt-4">Loading...</div>
-                <div ref="loadMoreTrigger" class="text-center text-gray-500 mt-4"></div>
-                <EditFishModal
-                    v-if="showEditModal"
-                    :isVisible="showEditModal"
-                    :catchData="selectedCatch"
-                    @close="showEditModal = false"
-                    @save="handleFishDataSave"
+            </div>
+
+            <!-- 더 보기 트리거 -->
+            <div ref="loadMoreTrigger" class="h-10 mt-6"></div>
+        </main>
+
+        <!-- 모달 컴포넌트들 -->
+        <EditFishModal
+            v-if="showEditModal"
+            :isVisible="showEditModal"
+            :catchData="selectedCatch"
+            @close="showEditModal = false"
+            @save="handleFishDataSave"
+        />
+
+        <!-- 이미지 팝업 -->
+        <div v-if="isImagePopupVisible"
+            class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
+            @click="isImagePopupVisible = false"
+        >
+            <div class="relative max-w-4xl w-full mx-4" @click.stop>
+                <img 
+                    :src="popupImageUrl" 
+                    alt="Popup Image"
+                    class="w-full h-auto rounded-lg shadow-xl"
                 />
-                <div v-if="isImagePopupVisible"
-                    class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
-                    @click="isImagePopupVisible = false">
-                    <div class="relative flex justify-center items-center max-w-full max-h-full" @click.stop>
-                        <img :src="popupImageUrl" alt="Popup Image"
-                            class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-                        <button @click="isImagePopupVisible = false"
-                            class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
-                            &times;
-                        </button>
-                    </div>
-                </div>
-            </main>
+                <button 
+                    @click="isImagePopupVisible = false"
+                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                >
+                    <X class="w-5 h-5" />
+                </button>
+            </div>
         </div>
     </div>
 </template>
@@ -69,7 +140,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
-import { Edit, Trash } from 'lucide-vue-next';
+import { Edit, Trash, Search, Fish, Calendar, Target, Scale, FileText, X } from 'lucide-vue-next';
 import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
@@ -203,27 +274,10 @@ function deleteCatch(catchId) {
 </script>
 
 <style scoped>
-.grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-/* Optional: style the edit icon if needed */
-.cursor-pointer:hover svg {
-    stroke: #3b82f6;
-}
-
-.fixed {
-    position: fixed;
-}
-
-.absolute {
-    position: absolute;
-}
-
-/* Ensure pop-up images are displayed correctly */
-.object-contain {
-    object-fit: contain;
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 </style>
