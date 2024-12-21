@@ -155,17 +155,22 @@
     </div>
 
     <!-- 이미지 팝업 -->
-    <div v-if="isImagePopupVisible && !isLoading" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[50] max-w-md mx-auto"
-      @click="isImagePopupVisible = false">
-      <div class="relative max-w-full max-h-full" @click.stop>
-        <img :src="popupImageUrl" alt="Popup Image"
-          class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-        <button @click="isImagePopupVisible = false"
-          class="absolute top-2 right-2"
-          :disabled="isLoading">
-          &times;
-        </button>
-      </div>
+    <div v-if="isImagePopupVisible"
+        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
+        @click="isImagePopupVisible = false">
+        <div class="relative max-w-4xl w-full mx-4" @click.stop>
+            <img 
+                :src="popupImageUrl" 
+                alt="Popup Image"
+                class="w-full h-auto rounded-lg shadow-xl"
+            />
+            <button 
+                @click="isImagePopupVisible = false"
+                class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+            >
+                <X class="w-5 h-5" />
+            </button>
+        </div>
     </div>
 
     <!-- Add consent modal -->
@@ -192,7 +197,7 @@ import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import html2canvas from 'html2canvas';
-import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit } from 'lucide-vue-next';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';

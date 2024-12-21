@@ -138,18 +138,23 @@
         </div>
       </main>
 
-      <!-- 이미지 팝업 모달 -->
-      <div
-        v-if="isImagePopupVisible"
-        class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30"
-        @click="closeImagePopup"
-      >
-        <div class="bg-white p-4 rounded-lg relative" @click.stop>
-          <button class="absolute top-2 right-2" @click="closeImagePopup">
-            &times;
-          </button>
-          <img :src="popupImageUrl" alt="확대된 미지" class="max-w-full max-h-full" />
-        </div>
+      <!-- 이미지 팝업 -->
+      <div v-if="isImagePopupVisible"
+          class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
+          @click="isImagePopupVisible = false">
+          <div class="relative max-w-4xl w-full mx-4" @click.stop>
+              <img 
+                  :src="popupImageUrl" 
+                  alt="Popup Image"
+                  class="w-full h-auto rounded-lg shadow-xl"
+              />
+              <button 
+                  @click="isImagePopupVisible = false"
+                  class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+              >
+                  <X class="w-5 h-5" />
+              </button>
+          </div>
       </div>
 
       <!-- 공유 모달 -->
@@ -189,7 +194,7 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon, Edit } from 'lucide-vue-next';
+import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
@@ -240,36 +245,14 @@ const imageSource = computed(() => {
   return '/placeholder.svg';
 });
 
-// 이미지 팝업 상태
-const popupImageUrl = ref('');
+// 이미지 팝업 관련 상태
 const isImagePopupVisible = ref(false);
-
-// 이미지 클릭 핸들러
-const handleImageClick = () => {
-  if (imageSource.value === '/placeholder.svg') {
-    alert('이미지를 불러올 수 없습니다.');
-    return;
-  }
-  openImagePopup(imageSource.value);
-};
+const popupImageUrl = ref('');
 
 // 이미지 팝업 열기
 function openImagePopup(imageSrc) {
-  if (
-    imageSrc.startsWith('data:image/') ||
-    imageSrc.startsWith('http://') ||
-    imageSrc.startsWith('https://')
-  ) {
-    popupImageUrl.value = imageSrc;
-  } else {
-    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
-  }
-  isImagePopupVisible.value = true;
-}
-
-// 이미지 팝업 닫기
-function closeImagePopup() {
-  isImagePopupVisible.value = false;
+    popupImageUrl.value = imageSrc.startsWith('http') ? imageSrc : `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
+    isImagePopupVisible.value = true;
 }
 
 // 내가 잡은 물고기 페이지로 이동
@@ -473,6 +456,15 @@ const handleConsent = async (consented) => {
     router.push('/');
     return;
   }
+};
+
+// 이미지 클릭 핸들러 추가
+const handleImageClick = () => {
+  if (imageSource.value === '/placeholder.svg') {
+    alert('이미지를 불러올 수 없습니다.');
+    return;
+  }
+  openImagePopup(imageSource.value);
 };
 </script>
 

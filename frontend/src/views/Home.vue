@@ -93,14 +93,20 @@
             </main>
         </div>
     </div>
-    <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+    <div v-if="isImagePopupVisible"
+        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
         @click="isImagePopupVisible = false">
-        <div class="relative flex justify-center items-center" @click.stop>
-            <img :src="popupImageUrl" alt="Popup Image"
-                class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-            <button @click="isImagePopupVisible = false"
-                class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
-                &times;
+        <div class="relative max-w-4xl w-full mx-4" @click.stop>
+            <img 
+                :src="popupImageUrl" 
+                alt="Popup Image"
+                class="w-full h-auto rounded-lg shadow-xl"
+            />
+            <button 
+                @click="isImagePopupVisible = false"
+                class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+            >
+                <X class="w-5 h-5" />
             </button>
         </div>
     </div>
@@ -111,6 +117,7 @@ import {
     ChevronRightIcon,
     ImageIcon,
     ClockIcon,
+    X,
 } from 'lucide-vue-next'
 import { onMounted, computed, ref, watch, onUnmounted } from "vue";
 import { useStore } from "vuex";
