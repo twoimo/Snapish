@@ -28,7 +28,7 @@
 
         <!-- 메인 콘텐츠 영역 -->
         <main class="max-w-4xl mx-auto px-4 py-6">
-            <!-- 로딩 상태 -->
+            <!-- 초기 로딩 상태 -->
             <div v-if="loading" class="flex justify-center items-center py-12">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
@@ -41,69 +41,82 @@
             </div>
 
             <!-- 물고기 목록 -->
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div v-for="catchItem in filteredCatches" 
-                    :key="catchItem.id"
-                    class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
-                >
-                    <!-- 이미지 섹션 -->
-                    <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
-                        <img 
-                            :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
-                            alt="Catch Image"
-                            class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                            @click="openImagePopup(catchItem.imageUrl)"
-                        />
-                    </div>
-
-                    <!-- 정보 섹션 -->
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-semibold text-gray-800">
-                                {{ catchItem.detections[0].label }}
-                            </h3>
-                            <div class="flex gap-2">
-                                <button 
-                                    @click="openEditModal(catchItem)"
-                                    class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                                >
-                                    <Edit class="w-4 h-4 text-blue-500" />
-                                </button>
-                                <button 
-                                    @click="confirmDelete(catchItem.id)"
-                                    class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                                >
-                                    <Trash class="w-4 h-4 text-red-500" />
-                                </button>
-                            </div>
+            <div v-else>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div v-for="catchItem in filteredCatches" 
+                        :key="catchItem.id"
+                        class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
+                    >
+                        <!-- 이미지 섹션 -->
+                        <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                            <img 
+                                :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
+                                alt="Catch Image"
+                                class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                                @click="openImagePopup(catchItem.imageUrl)"
+                            />
                         </div>
 
-                        <div class="space-y-1.5">
-                            <div class="flex items-center text-sm text-gray-600">
-                                <Calendar class="w-4 h-4 mr-2" />
-                                {{ catchItem.catch_date }}
+                        <!-- 정보 섹션 -->
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    {{ catchItem.detections[0].label }}
+                                </h3>
+                                <div class="flex gap-2">
+                                    <button 
+                                        @click="openEditModal(catchItem)"
+                                        class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                                    >
+                                        <Edit class="w-4 h-4 text-blue-500" />
+                                    </button>
+                                    <button 
+                                        @click="confirmDelete(catchItem.id)"
+                                        class="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                                    >
+                                        <Trash class="w-4 h-4 text-red-500" />
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <Target class="w-4 h-4 mr-2" />
-                                신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%
-                            </div>
-                            <div v-if="catchItem.weight_kg || catchItem.length_cm" class="flex items-center text-sm text-gray-600">
-                                <Scale class="w-4 h-4 mr-2" />
-                                <span v-if="catchItem.weight_kg">{{ catchItem.weight_kg }}kg</span>
-                                <span v-if="catchItem.weight_kg && catchItem.length_cm" class="mx-2">|</span>
-                                <span v-if="catchItem.length_cm">{{ catchItem.length_cm }}cm</span>
-                            </div>
-                            <div v-if="catchItem.memo" class="flex items-start text-sm text-gray-600">
-                                <FileText class="w-4 h-4 mr-2 mt-0.5" />
-                                <p class="line-clamp-2">{{ catchItem.memo }}</p>
+
+                            <div class="space-y-1.5">
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <Calendar class="w-4 h-4 mr-2" />
+                                    {{ catchItem.catch_date }}
+                                </div>
+                                <div class="flex items-center text-sm text-gray-600">
+                                    <Target class="w-4 h-4 mr-2" />
+                                    신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%
+                                </div>
+                                <div v-if="catchItem.weight_kg || catchItem.length_cm" class="flex items-center text-sm text-gray-600">
+                                    <Scale class="w-4 h-4 mr-2" />
+                                    <span v-if="catchItem.weight_kg">{{ catchItem.weight_kg }}kg</span>
+                                    <span v-if="catchItem.weight_kg && catchItem.length_cm" class="mx-2">|</span>
+                                    <span v-if="catchItem.length_cm">{{ catchItem.length_cm }}cm</span>
+                                </div>
+                                <div v-if="catchItem.memo" class="flex items-start text-sm text-gray-600">
+                                    <FileText class="w-4 h-4 mr-2 mt-0.5" />
+                                    <p class="line-clamp-2">{{ catchItem.memo }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 더 보기 트리거 -->
-            <div ref="loadMoreTrigger" class="h-10 mt-6"></div>
+                <!-- 추가 로딩 인디케이터 -->
+                <div v-if="isLoadingMore && hasMore" class="flex justify-center items-center py-8">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                    <span class="ml-2 text-gray-600">더 많은 물고기 불러오는 중...</span>
+                </div>
+
+                <!-- 더 이상 데이터가 없을 때 메시지 -->
+                <div v-if="!hasMore && displayedCatches.length > 0" class="text-center text-gray-500 py-8">
+                    모든 물고기를 불러왔습니다.
+                </div>
+
+                <!-- 더 보기 트리거 -->
+                <div v-if="hasMore" ref="loadMoreTrigger" class="h-10 mt-6"></div>
+            </div>
         </main>
 
         <!-- 모달 컴포넌트들 -->
@@ -149,23 +162,32 @@ const loading = ref(true);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const displayedCatches = ref([]);
-const itemsToLoad = 8;
+const itemsToLoad = 6;
+const initialLoad = 6;
 const loadMoreTrigger = ref(null);
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
 const searchQuery = ref('');
 const sortOption = ref('latest');
+const isLoadingMore = ref(false);
+const hasMore = computed(() => displayedCatches.value.length < catches.value.length);
 
 const filteredCatches = computed(() => {
-    const catchesFiltered = displayedCatches.value.filter(catchItem => {
+    // 전체 catches에서 필터링
+    const allCatches = catches.value || [];
+    const catchesFiltered = allCatches.filter(catchItem => {
         return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
     });
 
+    // 정렬
     if (sortOption.value === 'latest') {
-        return catchesFiltered.sort((a, b) => b.id - a.id);
+        catchesFiltered.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
     } else {
-        return catchesFiltered.sort((a, b) => a.id - b.id);
+        catchesFiltered.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
     }
+
+    // 현재 표시할 개수만큼만 반환
+    return catchesFiltered.slice(0, displayedCatches.value.length);
 });
 
 // Define backend base URL
@@ -178,7 +200,10 @@ onMounted(async () => {
             const sortedCatches = store.getters.catches
                 .slice()
                 .sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
-            displayedCatches.value = sortedCatches;
+            displayedCatches.value = sortedCatches.slice(0, initialLoad);
+
+            // Intersection Observer 설정
+            setupIntersectionObserver();
         } catch (error) {
             console.error('Error fetching catches:', error);
         } finally {
@@ -186,20 +211,6 @@ onMounted(async () => {
         }
     } else {
         loading.value = false;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && !loading.value) {
-            loadMoreCatches();
-        }
-    }, {
-        root: null,
-        rootMargin: '0px',
-        threshold: 1.0
-    });
-
-    if (loadMoreTrigger.value) {
-        observer.observe(loadMoreTrigger.value);
     }
 });
 
@@ -211,18 +222,53 @@ function updateDisplayedCatches() {
     const sortedCatches = [...catches.value].sort((a, b) => 
         new Date(b.catch_date) - new Date(a.catch_date)
     );
-    displayedCatches.value = sortedCatches;
+    displayedCatches.value = sortedCatches.slice(0, displayedCatches.value.length);
+}
+
+function setupIntersectionObserver() {
+    if (loadMoreTrigger.value) {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const target = entries[0];
+                if (target.isIntersecting && !isLoadingMore.value && hasMore.value) {
+                    loadMoreCatches();
+                }
+            },
+            {
+                root: null,
+                rootMargin: '100px',
+                threshold: 0.1
+            }
+        );
+        observer.observe(loadMoreTrigger.value);
+    }
 }
 
 function loadMoreCatches() {
-    loading.value = true;
+    if (isLoadingMore.value || !hasMore.value) return;
+    
+    isLoadingMore.value = true;
+    console.log('Loading more catches...'); // 디버깅용
+
     setTimeout(() => {
-        const currentLength = displayedCatches.value.length;
-        const sortedCatches = catches.value.slice().sort((a, b) => b.id - a.id);
-        const moreCatches = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
-        displayedCatches.value = [...displayedCatches.value, ...moreCatches];
-        loading.value = false;
-    }, 1000);
+        try {
+            const currentLength = displayedCatches.value.length;
+            const sortedCatches = [...catches.value].sort((a, b) => 
+                new Date(b.catch_date) - new Date(a.catch_date)
+            );
+            
+            // 다음 페이지 데이터 추가
+            const nextItems = sortedCatches.slice(currentLength, currentLength + itemsToLoad);
+            if (nextItems.length > 0) {
+                displayedCatches.value = [...displayedCatches.value, ...nextItems];
+                console.log('Added new items:', nextItems.length); // 디버깅용
+            }
+        } catch (error) {
+            console.error('Error loading more catches:', error);
+        } finally {
+            isLoadingMore.value = false;
+        }
+    }, 500);
 }
 
 function openEditModal(catchItem) {
@@ -258,7 +304,7 @@ function openImagePopup(imageUrl) {
 }
 
 function confirmDelete(catchId) {
-    if (confirm('정말로 이 항목을 삭제하시겠습니까?')) {
+    if (confirm('정말로 항목을 삭제하시겠습니까?')) {
         deleteCatch(catchId);
     }
 }
