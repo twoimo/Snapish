@@ -3,6 +3,10 @@
     <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4">
       <h2 class="text-xl font-bold mb-4">물고기 정보 수정</h2>
       
+      <div v-if="errorMessage" class="mb-4 p-3 bg-red-100 text-red-700 rounded">
+        {{ errorMessage }}
+      </div>
+      
       <form @submit.prevent="saveFishData" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">물고기 이름</label>
@@ -19,7 +23,9 @@
             <input 
               v-model="fishData.weight_kg" 
               type="number" 
-              step="0.01"
+              step="0.001"
+              min="0"
+              max="999.999"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -28,7 +34,9 @@
             <input 
               v-model="fishData.length_cm" 
               type="number" 
-              step="0.1"
+              step="0.01"
+              min="0"
+              max="999.99"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -41,6 +49,8 @@
               v-model="fishData.latitude" 
               type="number" 
               step="0.000001"
+              min="-90"
+              max="90"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -50,6 +60,8 @@
               v-model="fishData.longitude" 
               type="number" 
               step="0.000001"
+              min="-180"
+              max="180"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
@@ -87,7 +99,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
 
 const props = defineProps({
   isVisible: {
@@ -102,7 +113,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 const store = useStore();
-const router = useRouter();
+const errorMessage = ref('');
 
 const fishData = ref({
   name: '',
@@ -128,9 +139,28 @@ onMounted(() => {
 
 const saveFishData = async () => {
   try {
+    errorMessage.value = '';
+
     if (!props.catchData || !props.catchData.id) {
       console.error('Invalid catch data:', props.catchData);
-      alert('물고기 정보가 올바르지 않습니다.');
+      errorMessage.value = '물고기 정보가 올바르지 않습니다.';
+      return;
+    }
+
+    if (fishData.value.weight_kg && (fishData.value.weight_kg < 0 || fishData.value.weight_kg > 999.999)) {
+      errorMessage.value = '무게는 0에서 999.999kg 사이여야 합니다.';
+      return;
+    }
+    if (fishData.value.length_cm && (fishData.value.length_cm < 0 || fishData.value.length_cm > 999.99)) {
+      errorMessage.value = '길이는 0에서 999.99cm 사이여야 합니다.';
+      return;
+    }
+    if (fishData.value.latitude && (fishData.value.latitude < -90 || fishData.value.latitude > 90)) {
+      errorMessage.value = '위도는 -90에서 90도 사이여야 합니다.';
+      return;
+    }
+    if (fishData.value.longitude && (fishData.value.longitude < -180 || fishData.value.longitude > 180)) {
+      errorMessage.value = '경도는 -180에서 180도 사이여야 합니다.';
       return;
     }
 
@@ -156,7 +186,7 @@ const saveFishData = async () => {
     emit('close');
   } catch (error) {
     console.error('Error saving fish data:', error);
-    alert('물고기 정보 저장에 실패했습니다.');
+    errorMessage.value = error.response?.data?.error || '물고기 정보 저장에 실패했습니다.';
   }
 };
 </script> 

@@ -230,21 +230,27 @@ export default createStore({
 
     async fetchCatches({ commit, state }) {
       if (state.isAuthenticated) {
-        // Fetch catches from the database for authenticated users
         try {
           const response = await axios.get("/catches", {
             headers: {
               Authorization: `Bearer ${state.token}`,
             },
           });
-          commit("setCatches", response.data);
+          const formattedCatches = response.data.map(item => ({
+            ...item,
+            catch_date: item.catch_date || new Date().toISOString().split('T')[0],
+            weight_kg: item.weight_kg || null,
+            length_cm: item.length_cm || null,
+            latitude: item.latitude || null,
+            longitude: item.longitude || null,
+            memo: item.memo || ''
+          }));
+          commit("setCatches", formattedCatches);
         } catch (error) {
           commit("setError", error);
         }
       } else {
-        // Handle catches for unauthenticated users if necessary
-        // For example, you might fetch from local storage or handle differently
-        commit("setCatches", []); // Or appropriate handling
+        commit("setCatches", []);
       }
     },
     async addCatch({ commit }, newCatch) {

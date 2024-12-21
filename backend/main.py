@@ -144,8 +144,8 @@ class Catch(Base):
     fish_size_cm = Column(DECIMAL(5, 2))
     photo_url = Column(String(255))
     exif_data = Column(JSON)
-    weight_kg = Column(DECIMAL(5, 2), nullable=True)  # 무게(kg)
-    length_cm = Column(DECIMAL(5, 2), nullable=True)  # 길이(cm)
+    weight_kg = Column(DECIMAL(10, 3), nullable=True)  # 무게(kg)
+    length_cm = Column(DECIMAL(10, 2), nullable=True)  # 길이(cm)
     latitude = Column(DECIMAL(10, 8), nullable=True)  # 위도
     longitude = Column(DECIMAL(11, 8), nullable=True)  # 경도
     memo = Column(Text, nullable=True)  # 메모
@@ -504,7 +504,7 @@ def predict():
         detections.sort(key=lambda x: x['confidence'], reverse=True)
         if not detections:
             detections.append({
-                'label': '알 수 없음',
+                'label': '알 수 ��음',
                 'confidence': 0.0
             })
 
@@ -660,20 +660,29 @@ def create_catch(user_id):
 @token_required
 def get_catches(user_id):
     session = Session()
-    current_user = session.query(User).filter_by(user_id=user_id).first()
-    if not current_user:
+    try:
+        current_user = session.query(User).filter_by(user_id=user_id).first()
+        if not current_user:
+            return jsonify({'message': 'User not found'}), 404
+
+        catches = session.query(Catch).filter_by(user_id=current_user.user_id).all()
+        
+        # 모든 필요한 데이터를 포함하여 반환
+        return jsonify([{
+            'id': catch.catch_id,
+            'imageUrl': catch.photo_url,
+            'detections': catch.exif_data,
+            'catch_date': catch.catch_date.strftime('%Y-%m-%d'),
+            'weight_kg': float(catch.weight_kg) if catch.weight_kg else None,
+            'length_cm': float(catch.length_cm) if catch.length_cm else None,
+            'latitude': float(catch.latitude) if catch.latitude else None,
+            'longitude': float(catch.longitude) if catch.longitude else None,
+            'memo': catch.memo
+        } for catch in catches])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
         session.close()
-        return jsonify({'message': 'User not found'}), 404
-
-    catches = session.query(Catch).filter_by(user_id=current_user.user_id).all()
-    session.close()
-
-    return jsonify([{
-        'id': catch.catch_id,  # Added 'id' field
-        'imageUrl': catch.photo_url,
-        'detections': catch.exif_data,
-        'catch_date': catch.catch_date.strftime('%Y-%m-%d')
-    } for catch in catches])
 
 @app.route('/catches/<int:catch_id>', methods=['PUT'])
 @token_required
@@ -686,21 +695,39 @@ def update_catch(user_id, catch_id):
             session.close()
             return jsonify({'error': 'Catch not found'}), 404
 
+        # 데이터 유효성 검사
+        try:
+            if 'weight_kg' in data:
+                weight = float(data['weight_kg']) if data['weight_kg'] is not None else None
+                if weight is not None and (weight < 0 or weight > 999.999):
+                    return jsonify({'error': 'Weight must be between 0 and 999.999 kg'}), 400
+                catch.weight_kg = weight
+
+            if 'length_cm' in data:
+                length = float(data['length_cm']) if data['length_cm'] is not None else None
+                if length is not None and (length < 0 or length > 999.99):
+                    return jsonify({'error': 'Length must be between 0 and 999.99 cm'}), 400
+                catch.length_cm = length
+
+            if 'latitude' in data:
+                lat = float(data['latitude']) if data['latitude'] is not None else None
+                if lat is not None and (lat < -90 or lat > 90):
+                    return jsonify({'error': 'Latitude must be between -90 and 90'}), 400
+                catch.latitude = lat
+
+            if 'longitude' in data:
+                lon = float(data['longitude']) if data['longitude'] is not None else None
+                if lon is not None and (lon < -180 or lon > 180):
+                    return jsonify({'error': 'Longitude must be between -180 and 180'}), 400
+                catch.longitude = lon
+        except ValueError:
+            return jsonify({'error': 'Invalid numeric value provided'}), 400
+
         # Update existing fields
         if 'detections' in data:
             catch.exif_data = data['detections']
         if 'catch_date' in data:
             catch.catch_date = datetime.strptime(data['catch_date'], '%Y-%m-%d')
-            
-        # Update new fields
-        if 'weight_kg' in data:
-            catch.weight_kg = data['weight_kg']
-        if 'length_cm' in data:
-            catch.length_cm = data['length_cm']
-        if 'latitude' in data:
-            catch.latitude = data['latitude']
-        if 'longitude' in data:
-            catch.longitude = data['longitude']
         if 'memo' in data:
             catch.memo = data['memo']
 
@@ -718,6 +745,7 @@ def update_catch(user_id, catch_id):
         })
     except Exception as e:
         session.rollback()
+        logging.error(f"Error updating catch: {str(e)}")
         return jsonify({'error': str(e)}), 500
     finally:
         session.close()
@@ -847,7 +875,7 @@ def upload_avatar(user_id):
     else:
         return jsonify({'error': 'Invalid file type'}), 400
     
-# 요청 위치 기준 가장 가까운 관���소 위치 반환 
+# 요청 위치 기준 가장 가까운 관소 위치 반환 
 @app.route('/backend/closest-sealoc', methods=['POST'])
 def get_closest_sealoc():
     user_lat = request.form.get('lat')
@@ -884,7 +912,7 @@ def get_closest_sealoc():
     """)
 
     try:
-        # 두 개��� 쿼리 실행
+        # 두 개 쿼리 실행
         result_obsrecent = session.execute(query_obsrecent, {'lat': user_lat, 'lon': user_lon}).fetchone()
         result_obspretab = session.execute(query_obspretab, {'lat': user_lat, 'lon': user_lon}).fetchone()
 

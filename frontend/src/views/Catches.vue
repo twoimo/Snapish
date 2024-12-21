@@ -15,20 +15,28 @@
                         <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" alt="Catch Image"
                             class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             @click="openImagePopup(catchItem.imageUrl)" />
-                        <p class="text-gray-800 text-sm text-center flex justify-center items-center">
-                            {{ catchItem.detections[0].label }}
-                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                @click="openEditModal(catchItem)">
-                                <Edit class="h-4 w-4 text-blue-500" />
-                            </span>
-                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                @click="confirmDelete(catchItem.id)">
-                                <Trash class="h-4 w-4 text-red-500" />
-                            </span>
-                        </p>
-                        <p class="text-gray-600 text-xs text-center">{{ catchItem.catch_date }}</p>
-                        <p class="text-gray-600 text-xs text-center">신뢰도: {{
-                            (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
+                        <div class="text-center">
+                            <p class="text-gray-800 text-sm flex justify-center items-center">
+                                {{ catchItem.detections[0].label }}
+                                <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                    @click="openEditModal(catchItem)">
+                                    <Edit class="h-4 w-4 text-blue-500" />
+                                </span>
+                                <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                    @click="confirmDelete(catchItem.id)">
+                                    <Trash class="h-4 w-4 text-red-500" />
+                                </span>
+                            </p>
+                            <p class="text-gray-600 text-xs">{{ catchItem.catch_date }}</p>
+                            <p class="text-gray-600 text-xs">신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
+                            <div v-if="catchItem.weight_kg || catchItem.length_cm" class="text-xs text-gray-600 mt-1">
+                                <p v-if="catchItem.weight_kg">무게: {{ catchItem.weight_kg }}kg</p>
+                                <p v-if="catchItem.length_cm">길이: {{ catchItem.length_cm }}cm</p>
+                            </div>
+                            <div v-if="catchItem.memo" class="text-xs text-gray-600 mt-1">
+                                <p class="truncate">메모: {{ catchItem.memo }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div v-else-if="!loading" class="text-gray-500 text-center">아직 잡은 물고기가 없습니다.</div>
