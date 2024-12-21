@@ -847,7 +847,7 @@ def upload_avatar(user_id):
     else:
         return jsonify({'error': 'Invalid file type'}), 400
     
-# 요청 위치 기준 가장 가까운 관측소 위치 반환 
+# 요청 위치 기준 가장 가까운 관���소 위치 반환 
 @app.route('/backend/closest-sealoc', methods=['POST'])
 def get_closest_sealoc():
     user_lat = request.form.get('lat')
@@ -884,7 +884,7 @@ def get_closest_sealoc():
     """)
 
     try:
-        # 두 개의 쿼리 실행
+        # 두 개��� 쿼리 실행
         result_obsrecent = session.execute(query_obsrecent, {'lat': user_lat, 'lon': user_lon}).fetchone()
         result_obspretab = session.execute(query_obspretab, {'lat': user_lat, 'lon': user_lon}).fetchone()
 

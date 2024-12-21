@@ -15,32 +15,20 @@
                         <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" alt="Catch Image"
                             class="w-full h-32 object-cover rounded-lg mb-2 cursor-pointer border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             @click="openImagePopup(catchItem.imageUrl)" />
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <p class="text-gray-800 font-medium">
-                                    {{ catchItem.detections[0].label }}
-                                </p>
-                                <div class="flex gap-2">
-                                    <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                        @click="openEditModal(catchItem)">
-                                        <Edit class="h-4 w-4 text-blue-500" />
-                                    </span>
-                                    <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
-                                        @click="confirmDelete(catchItem.id)">
-                                        <Trash class="h-4 w-4 text-red-500" />
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="text-sm text-gray-600">
-                                <p>날짜: {{ catchItem.catch_date }}</p>
-                                <p>신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
-                                <p v-if="catchItem.weight_kg">무게: {{ catchItem.weight_kg }}kg</p>
-                                <p v-if="catchItem.length_cm">길이: {{ catchItem.length_cm }}cm</p>
-                                <p v-if="catchItem.memo" class="text-gray-500 text-xs mt-1">
-                                    {{ catchItem.memo }}
-                                </p>
-                            </div>
-                        </div>
+                        <p class="text-gray-800 text-sm text-center flex justify-center items-center">
+                            {{ catchItem.detections[0].label }}
+                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                @click="openEditModal(catchItem)">
+                                <Edit class="h-4 w-4 text-blue-500" />
+                            </span>
+                            <span v-if="catchItem.detections[0].label" class="ml-2 cursor-pointer"
+                                @click="confirmDelete(catchItem.id)">
+                                <Trash class="h-4 w-4 text-red-500" />
+                            </span>
+                        </p>
+                        <p class="text-gray-600 text-xs text-center">{{ catchItem.catch_date }}</p>
+                        <p class="text-gray-600 text-xs text-center">신뢰도: {{
+                            (catchItem.detections[0].confidence * 100).toFixed(2) }}%</p>
                     </div>
                 </div>
                 <div v-else-if="!loading" class="text-gray-500 text-center">아직 잡은 물고기가 없습니다.</div>
@@ -104,15 +92,19 @@ const filteredCatches = computed(() => {
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
 
-onMounted(() => {
+onMounted(async () => {
     if (store.getters.isAuthenticated) {
-        store.dispatch('fetchCatches').then(() => {
-            const sortedCatches = store.getters.catches.slice().sort((a, b) => b.id - a.id);
+        try {
+            await store.dispatch('fetchCatches');
+            const sortedCatches = store.getters.catches
+                .slice()
+                .sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date));
             displayedCatches.value = sortedCatches;
+        } catch (error) {
+            console.error('Error fetching catches:', error);
+        } finally {
             loading.value = false;
-        }).catch(() => {
-            loading.value = false;
-        });
+        }
     } else {
         loading.value = false;
     }
@@ -168,14 +160,18 @@ function openEditModal(catchItem) {
 
 const handleFishDataSave = async (updatedData) => {
     try {
-        await store.dispatch('updateCatch', updatedData);
+        const response = await store.dispatch('updateCatch', updatedData);
         showEditModal.value = false;
-        updateDisplayedCatches();
+        const index = displayedCatches.value.findIndex(c => c.id === response.id);
+        if (index !== -1) {
+            displayedCatches.value[index] = response;
+        }
+        displayedCatches.value = [...displayedCatches.value];
     } catch (error) {
         console.error('Error saving fish data:', error);
         alert('물고기 정보 저장에 실패했습니다.');
     }
-}
+};
 
 function openImagePopup(imageUrl) {
     popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`;

@@ -13,15 +13,6 @@
           />
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700">날짜</label>
-          <input 
-            v-model="fishData.catch_date" 
-            type="date" 
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">무게 (kg)</label>
@@ -143,7 +134,8 @@ const saveFishData = async () => {
       return;
     }
 
-    console.log('Saving fish data with ID:', props.catchData.id);
+    const catch_date = props.catchData.catch_date || new Date().toISOString().split('T')[0];
+
     const updatedData = {
       id: props.catchData.id,
       ...props.catchData,
@@ -151,6 +143,7 @@ const saveFishData = async () => {
         ...props.catchData.detections[0],
         label: fishData.value.name
       }],
+      catch_date,
       weight_kg: fishData.value.weight_kg,
       length_cm: fishData.value.length_cm,
       latitude: fishData.value.latitude,
@@ -158,11 +151,9 @@ const saveFishData = async () => {
       memo: fishData.value.memo
     };
 
-    console.log('Updating catch with data:', updatedData);
-    await store.dispatch('updateCatch', updatedData);
-    emit('save', updatedData);
+    const response = await store.dispatch('updateCatch', updatedData);
+    emit('save', response);
     emit('close');
-    router.push('/catches');
   } catch (error) {
     console.error('Error saving fish data:', error);
     alert('물고기 정보 저장에 실패했습니다.');

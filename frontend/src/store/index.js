@@ -261,7 +261,6 @@ export default createStore({
           throw new Error('Catch ID is required');
         }
         const token = localStorage.getItem("token");
-        console.log('Sending update request for catch:', updatedCatch.id);  // 디버깅용 로그 추가
         const response = await axios.put(
           `/catches/${updatedCatch.id}`,
           updatedCatch,
