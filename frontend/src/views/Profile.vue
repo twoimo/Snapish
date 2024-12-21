@@ -178,6 +178,9 @@ function getServiceIcon(serviceName) {
         '커뮤니티': Users,
     };
     return iconMap[serviceName] || Settings;
+}
+</script>
+
 <style scoped>
 /* 미세 조정 */
 @media (min-width: 768px) {
