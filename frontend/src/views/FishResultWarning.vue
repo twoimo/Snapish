@@ -140,20 +140,22 @@
 
       <!-- 이미지 팝업 -->
       <div v-if="isImagePopupVisible"
-          class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
+          class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
           @click="isImagePopupVisible = false">
-          <div class="relative max-w-4xl w-full mx-4" @click.stop>
-              <img 
-                  :src="popupImageUrl" 
-                  alt="Popup Image"
-                  class="w-full h-auto rounded-lg shadow-xl"
-              />
-              <button 
-                  @click="isImagePopupVisible = false"
-                  class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
-              >
-                  <X class="w-5 h-5" />
-              </button>
+          <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+              <div class="relative">
+                  <img 
+                      :src="popupImageUrl" 
+                      alt="Popup Image"
+                      class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
+                  />
+                  <button 
+                      @click="isImagePopupVisible = false"
+                      class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+                  >
+                      <X class="w-5 h-5 text-gray-600" />
+                  </button>
+              </div>
           </div>
       </div>
 
@@ -372,7 +374,7 @@ onUnmounted(() => {
 
 // bbox 업데이트 함수
 const updateBoundingBoxes = () => {
-  // 강제 Vue가 bbox를 다시 계산하도록 함
+  // 강제 Vue가 bbox를 다��� 계산하도록 함
   imageDimensions.value = { ...imageDimensions.value };
 };
 
