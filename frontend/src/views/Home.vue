@@ -2,6 +2,14 @@
     <div class="min-h-screen bg-gray-100 flex justify-center">
         <div class="w-full max-w-4xl bg-white shadow-lg overflow-hidden rounded-lg">
             <main class="pb-20 px-4">
+                <!-- 로딩 상태 -->
+                <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+                        <span class="text-sm text-gray-500">로딩중...</span>
+                    </div>
+                </div>
+
                 <!-- 오늘의 물때 섹션 -->
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
@@ -70,22 +78,29 @@
                         </router-link>
                     </div>
                     <div class="space-y-3">
-                        <article v-for="i in 5" :key="i"
-                            class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition">
+                        <article v-for="issue in hotIssues" :key="issue.id"
+                            class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition cursor-pointer">
                             <div class="flex gap-3">
                                 <div
-                                    class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                                    <ImageIcon class="w-8 h-8 text-gray-400" />
+                                    class="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img 
+                                        :src="issue.imageUrl" 
+                                        :alt="issue.title"
+                                        class="w-full h-full object-cover"
+                                        @error="$event.target.src = DEFAULT_IMAGE"
+                                    />
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-medium mb-1">게시물 제목</h3>
-                                    <p class="text-sm text-gray-600 mb-2">게시물 내용 미리보기입니다. 여기에 간단한 설명이 들어갑니다.</p>
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <ClockIcon class="w-4 h-4 mr-1" />
-                                        <span>오늘 • 23분 전</span>
+                                    <h3 class="font-medium mb-1 text-blue-900">{{ issue.title }}</h3>
+                                    <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
+                                    <div class="flex items-center justify-between text-sm text-gray-500">
+                                        <span class="font-medium text-gray-600">{{ issue.author }}</span>
+                                        <div class="flex items-center">
+                                            <ClockIcon class="w-4 h-4 mr-1" />
+                                            <span>{{ formatTimestamp(issue.timestamp) }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <ChevronRightIcon class="w-5 h-5 text-gray-400" />
                             </div>
                         </article>
                     </div>
@@ -93,15 +108,23 @@
             </main>
         </div>
     </div>
-    <div v-if="isImagePopupVisible" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-30"
+    <div v-if="isImagePopupVisible"
+        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
         @click="isImagePopupVisible = false">
-        <div class="relative flex justify-center items-center" @click.stop>
-            <img :src="popupImageUrl" alt="Popup Image"
-                class="max-w-full max-h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-            <button @click="isImagePopupVisible = false"
-                class="absolute top-2 right-2 bg-white text-black rounded-full p-1 hover:bg-gray-200 transition-colors duration-300">
-                &times;
-            </button>
+        <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+            <div class="relative">
+                <img 
+                    :src="popupImageUrl" 
+                    alt="Popup Image"
+                    class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
+                />
+                <button 
+                    @click="isImagePopupVisible = false"
+                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+                >
+                    <X class="w-5 h-5 text-gray-600" />
+                </button>
+            </div>
         </div>
     </div>
 </template>
@@ -109,8 +132,8 @@
 <script setup>
 import {
     ChevronRightIcon,
-    ImageIcon,
     ClockIcon,
+    X,
 } from 'lucide-vue-next'
 import { onMounted, computed, ref, watch, onUnmounted } from "vue";
 import { useStore } from "vuex";
@@ -122,17 +145,23 @@ const store = useStore();
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
 
-const isLoadingCatches = ref(false); // Add loading state
-
-const isAuthenticated = computed(() => store.getters.isAuthenticated); // Use computed property for authentication status
+const loading = ref(true);
+const isLoadingCatches = ref(false);
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(async () => {
-    await store.dispatch('fetchInitialData');
-    // 인증된 사용자의 경우 catches 데이터 업데이트
-    if (isAuthenticated.value && catches.value.length > 0) {
-        updateDisplayedCatches();
-        startAutoSlide();
+    try {
+        loading.value = true;
+        await store.dispatch('fetchInitialData');
+        if (isAuthenticated.value && catches.value.length > 0) {
+            updateDisplayedCatches();
+            startAutoSlide();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        loading.value = false;
     }
 });
 
@@ -225,6 +254,28 @@ function scrollRight() {
         });
     }
 }
+
+// Vuex store에서 핫이슈 데이터 가져오기
+const hotIssues = computed(() => store.getters.hotIssues);
+
+// 타임스탬프 포맷팅 함수
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+        return `${diffInMinutes}분 전`;
+    } else if (diffInMinutes < 1440) {
+        return `${Math.floor(diffInMinutes / 60)}시간 전`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}
+
+// 기본 이미지 (Community.vue와 동일한 DEFAULT_IMAGE 사용)
+const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7snbTrr7jsp4Ag7JeG7J2EPC90ZXh0Pjwvc3ZnPg==';
 
 </script>
 

@@ -23,8 +23,11 @@
     <!-- 메인 콘텐츠 -->
     <main class="flex-1 pb-20 px-4 overflow-auto max-w-md mx-auto">
       <!-- 로딩 상태 -->
-      <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <span class="text-gray-500">Loading...</span>
+      <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+        <div class="flex flex-col items-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+          <span class="text-sm text-gray-500">로딩중...</span>
+        </div>
       </div>
 
       <!-- 에러 메시지 -->
@@ -109,11 +112,22 @@
       </div>
 
       <!-- 공유하기 버튼 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-6">
+      <div v-if="!isLoading && !errorMessage" class="mt-4">
         <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
           @click="shareResult" :disabled="isLoading">
           <Share2Icon class="w-5 h-5 mr-2" />
           <span>공유하기</span>
+        </button>
+      </div>
+
+      <!-- 물고기 정보 수정 버튼 -->
+      <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
+        <button 
+          class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="openEditModal"
+        >
+          <Edit class="w-5 h-5 mr-2" />
+          <span>물고기 정보 수정</span>
         </button>
       </div>
 
@@ -124,6 +138,30 @@
           <InfoIcon class="w-5 h-5 mr-2" />
           <span>내가 잡은 물고기 리스트 보기</span>
         </button>
+      </div>
+
+      <!-- AI 모델 경고 문구 추가 -->
+      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center justify-center gap-2 text-yellow-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="font-semibold">AI 판별 주의사항</span>
+          </div>
+          <p class="text-sm text-gray-600 text-center leading-relaxed">
+            인공지능 모델의 판별 결과는 참고용입니다.<br>
+            실제 상황과 법적 규제를 반드시 확인하세요.
+          </p>
+        </div>
+      </div>
+
+      <!-- 추가 로딩 인디케이터 -->
+      <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
+        <div class="flex flex-col items-center">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
+          <span class="text-sm text-gray-500">데이터를 불러오는 중...</span>
+        </div>
       </div>
     </main>
 
@@ -144,28 +182,54 @@
     </div>
 
     <!-- 이미지 팝업 -->
-    <div v-if="isImagePopupVisible && !isLoading" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[50] max-w-md mx-auto"
-      @click="isImagePopupVisible = false">
-      <div class="relative max-w-full max-h-full" @click.stop>
-        <img :src="popupImageUrl" alt="Popup Image"
-          class="w-full h-full object-contain rounded-lg border border-gray-200 shadow-lg" />
-        <button @click="isImagePopupVisible = false"
-          class="absolute top-2 right-2"
-          :disabled="isLoading">
-          &times;
-        </button>
-      </div>
+    <div v-if="isImagePopupVisible"
+        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
+        @click="isImagePopupVisible = false">
+        <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+            <div class="relative">
+                <img 
+                    :src="popupImageUrl" 
+                    alt="Popup Image"
+                    class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
+                />
+                <button 
+                    @click="isImagePopupVisible = false"
+                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+                >
+                    <X class="w-5 h-5 text-gray-600" />
+                </button>
+            </div>
+        </div>
     </div>
+
+    <!-- Add consent modal -->
+    <ConsentModal 
+      v-if="showConsentModal"
+      :isVisible="showConsentModal"
+      @close="handleConsentClose"
+      @consent="handleConsent"
+    />
+
+    <!-- Add edit fish modal -->
+    <EditFishModal
+      v-if="showEditModal"
+      :isVisible="showEditModal"
+      :catchData="selectedCatch"
+      @close="showEditModal = false"
+      @save="handleFishDataSave"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from '../axios';
+import axios from 'axios';
 import html2canvas from 'html2canvas';
-import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon } from 'lucide-vue-next';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
+import ConsentModal from '../components/ConsentModal.vue';
+import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
 const route = useRoute();
@@ -182,6 +246,10 @@ const popupImageUrl = ref('');
 const isImagePopupVisible = ref(false);
 const fishImage = ref(null);
 const imageDimensions = ref({ width: 0, height: 0 });
+const showConsentModal = ref(false);
+const showEditModal = ref(false);
+const selectedCatch = ref(null);
+const loading = ref(true);
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
@@ -226,8 +294,29 @@ const fetchDetections = async () => {
   }
 };
 
-onMounted(() => {
-  fetchDetections();
+onMounted(async () => {
+  try {
+    loading.value = true;
+    await store.dispatch('fetchInitialData');
+    if (store.state.isAuthenticated) {
+      console.log('Checking consent status...');
+      try {
+        const consentStatus = await store.dispatch('checkConsent');
+        console.log('Consent status:', consentStatus);
+        if (!consentStatus.hasConsent) {
+          console.log('Showing consent modal...');
+          showConsentModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error checking consent:', error);
+      }
+    }
+    fetchDetections();
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    loading.value = false;
+  }
 });
 
 watch(route, () => {
@@ -383,6 +472,81 @@ onUnmounted(() => {
 const updateBoundingBoxes = () => {
   // 강제로 Vue가 bbox를 다시 계산하도록 함
   imageDimensions.value = { ...imageDimensions.value };
+};
+
+const handleConsentClose = () => {
+  showConsentModal.value = false;
+};
+
+const handleConsent = async (consented) => {
+  if (!consented) {
+    router.push('/');
+    return;
+  }
+};
+
+const handleFishDataSave = async (updatedData) => {
+  try {
+    await store.dispatch('updateCatch', updatedData);
+    showEditModal.value = false;
+    router.push('/catches');
+  } catch (error) {
+    console.error('Error saving fish data:', error);
+  }
+};
+
+const openEditModal = () => {
+  // 새로운 catch 생성을 위한 POST 요청
+  const createNewCatch = async () => {
+    try {
+      const response = await axios.post('/catches', {
+        detections: parsedDetections.value,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log('Created new catch:', response.data);
+      if (!response.data.id) {
+        throw new Error('Invalid response from server: missing catch ID');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error creating new catch:', error);
+      alert('새로운 캐치 생성에 실패했습니다.');
+      throw error;
+    }
+  };
+
+  // 새로운 catch 생성 후 수정 모달 열기
+  const initEditModal = async () => {
+    try {
+      const newCatch = await createNewCatch();
+      if (!newCatch.id) {
+        throw new Error('No catch ID received from server');
+      }
+      selectedCatch.value = {
+        id: newCatch.id,
+        detections: parsedDetections.value,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0],
+        weight_kg: null,
+        length_cm: null,
+        latitude: null,
+        longitude: null,
+        memo: ''
+      };
+      console.log('Opening edit modal with catch:', selectedCatch.value);  // 디버깅용 로그
+      showEditModal.value = true;
+    } catch (error) {
+      console.error('Error initializing edit modal:', error);
+      alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
+    }
+  };
+
+  initEditModal();
 };
 </script>
 
