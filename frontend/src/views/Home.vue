@@ -2,6 +2,14 @@
     <div class="min-h-screen bg-gray-100 flex justify-center">
         <div class="w-full max-w-4xl bg-white shadow-lg overflow-hidden rounded-lg">
             <main class="pb-20 px-4">
+                <!-- 로딩 상태 -->
+                <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+                        <span class="text-sm text-gray-500">로딩중...</span>
+                    </div>
+                </div>
+
                 <!-- 오늘의 물때 섹션 -->
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
@@ -131,17 +139,23 @@ const store = useStore();
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
 
-const isLoadingCatches = ref(false); // Add loading state
-
-const isAuthenticated = computed(() => store.getters.isAuthenticated); // Use computed property for authentication status
+const loading = ref(true);
+const isLoadingCatches = ref(false);
+const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(async () => {
-    await store.dispatch('fetchInitialData');
-    // 인증된 사용자의 경우 catches 데이터 업데이트
-    if (isAuthenticated.value && catches.value.length > 0) {
-        updateDisplayedCatches();
-        startAutoSlide();
+    try {
+        loading.value = true;
+        await store.dispatch('fetchInitialData');
+        if (isAuthenticated.value && catches.value.length > 0) {
+            updateDisplayedCatches();
+            startAutoSlide();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        loading.value = false;
     }
 });
 

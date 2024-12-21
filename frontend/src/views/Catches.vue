@@ -29,8 +29,11 @@
         <!-- 메인 콘텐츠 영역 -->
         <main class="max-w-4xl mx-auto px-4 py-6">
             <!-- 초기 로딩 상태 -->
-            <div v-if="loading" class="flex justify-center items-center py-12">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+                    <span class="text-sm text-gray-500">로딩중...</span>
+                </div>
             </div>
 
             <!-- 데이터 없음 상태 -->
@@ -104,10 +107,10 @@
                 </div>
 
                 <!-- 추가 로딩 인디케이터 -->
-                <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
+                <div v-if="isLoadingMore" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
                     <div class="flex flex-col items-center">
                         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
-                        <span class="text-sm text-gray-500">물고기 불러오는 중...</span>
+                        <span class="text-sm text-gray-500">물이터를 불러오는 중...</span>
                     </div>
                 </div>
 
@@ -205,6 +208,7 @@ const filteredCatches = computed(() => {
 onMounted(async () => {
     if (store.getters.isAuthenticated) {
         try {
+            loading.value = true;
             await store.dispatch('fetchCatches');
             displayCount.value = initialLoad;
             nextTick(() => {

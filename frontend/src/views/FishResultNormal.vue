@@ -23,8 +23,11 @@
     <!-- 메인 콘텐츠 -->
     <main class="flex-1 pb-20 px-4 overflow-auto max-w-md mx-auto">
       <!-- 로딩 상태 -->
-      <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <span class="text-gray-500">Loading...</span>
+      <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+        <div class="flex flex-col items-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+          <span class="text-sm text-gray-500">로딩중...</span>
+        </div>
       </div>
 
       <!-- 에러 메시지 -->
@@ -136,6 +139,14 @@
           <span>내가 잡은 물고기 리스트 보기</span>
         </button>
       </div>
+
+      <!-- 추가 로딩 인디케이터 -->
+      <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
+        <div class="flex flex-col items-center">
+          <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
+          <span class="text-sm text-gray-500">데이터를 불러오는 중...</span>
+        </div>
+      </div>
     </main>
 
     <!-- 포토카드 모달 -->
@@ -222,6 +233,7 @@ const imageDimensions = ref({ width: 0, height: 0 });
 const showConsentModal = ref(false);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
+const loading = ref(true);
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
@@ -267,20 +279,28 @@ const fetchDetections = async () => {
 };
 
 onMounted(async () => {
-  if (store.state.isAuthenticated) {
-    console.log('Checking consent status...');
-    try {
-      const consentStatus = await store.dispatch('checkConsent');
-      console.log('Consent status:', consentStatus);
-      if (!consentStatus.hasConsent) {
-        console.log('Showing consent modal...');
-        showConsentModal.value = true;
+  try {
+    loading.value = true;
+    await store.dispatch('fetchInitialData');
+    if (store.state.isAuthenticated) {
+      console.log('Checking consent status...');
+      try {
+        const consentStatus = await store.dispatch('checkConsent');
+        console.log('Consent status:', consentStatus);
+        if (!consentStatus.hasConsent) {
+          console.log('Showing consent modal...');
+          showConsentModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error checking consent:', error);
       }
-    } catch (error) {
-      console.error('Error checking consent:', error);
     }
+    fetchDetections();
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    loading.value = false;
   }
-  fetchDetections();
 });
 
 watch(route, () => {

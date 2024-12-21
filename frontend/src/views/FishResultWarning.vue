@@ -20,8 +20,19 @@
 
       <main class="pb-20 px-4">
         <!-- 로딩 상태 -->
-        <div v-if="isLoading" class="flex justify-center items-center h-64">
-          <span class="text-gray-500">Loading...</span>
+        <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+          <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+            <span class="text-sm text-gray-500">로딩중...</span>
+          </div>
+        </div>
+
+        <!-- 추가 로딩 인디케이터 -->
+        <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
+          <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mb-2"></div>
+            <span class="text-sm text-gray-500">데이터를 불러오는 중...</span>
+          </div>
         </div>
 
         <!-- 에러 메시지 -->
@@ -30,7 +41,7 @@
         </div>
 
         <!-- 업로드된 물고기 이미지 표시 -->
-        <div v-if="!isLoading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
+        <div v-if="!loading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
           <div class="image-container" :style="imageContainerStyle">
             <div class="image-wrapper">
               <div class="detection-area">
@@ -57,7 +68,7 @@
         </div>
         
         <!-- AI 판별 결과 -->
-        <div v-if="!isLoading && fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
+        <div v-if="!loading && fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
             <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
@@ -95,13 +106,13 @@
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
 
-        <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
+        <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
           <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
           <p class="text-gray-600">학명: {{ scientificName }}</p>
           <p class="mt-2 text-gray-700">{{ fishDescription }}</p>
         </div>
 
-        <div v-if="!isLoading && !errorMessage" class="mt-6 bg-yellow-50 rounded-lg p-4">
+        <div v-if="!loading && !errorMessage" class="mt-6 bg-yellow-50 rounded-lg p-4">
           <h3 class="font-bold text-yellow-700 mb-2">포획 제한 이유</h3>
           <ul class="list-disc list-inside text-yellow-800">
             <li>ChatGPT로 생성된 포획 제한 이유</li>
@@ -109,7 +120,7 @@
         </div>
 
         <!-- 공유하기 버튼 -->
-        <div v-if="!isLoading && !errorMessage" class="mt-4">
+        <div v-if="!loading && !errorMessage" class="mt-4">
           <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
             @click="shareResult">
             <Share2Icon class="w-5 h-5 mr-2" />
@@ -118,7 +129,7 @@
         </div>
 
         <!-- 물고기 정보 수정 버튼 -->
-        <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
+        <div v-if="!loading && !errorMessage && store.state.isAuthenticated" class="mt-4">
           <button 
             class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
             @click="openEditModal"
@@ -129,7 +140,7 @@
         </div>
 
         <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
-        <div v-if="!isLoading && !errorMessage" class="mt-4">
+        <div v-if="!loading && !errorMessage" class="mt-4">
           <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
             @click="navigateToCatches">
             <InfoIcon class="w-5 h-5 mr-2" />
@@ -219,7 +230,8 @@ const fishName = computed(() => {
 const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
 const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
-const isLoading = ref(true);
+const loading = ref(true);
+const isLoadingMore = ref(false);
 const errorMessage = ref('');
 const imageUrl = ref('');
 const imageBase64 = ref('');
@@ -237,7 +249,7 @@ const shareResult = () => {
   showModal.value = true;
 };
 
-// 이미지 소스 계산
+// ��미지 소스 계산
 const imageSource = computed(() => {
   if (imageBase64.value) {
     return `data:image/jpeg;base64,${imageBase64.value}`;
@@ -273,10 +285,10 @@ onMounted(async () => {
   const img = new Image();
   img.src = imageSource.value;
   img.onload = () => {
-    isLoading.value = false;
+    loading.value = false;
   };
   img.onerror = () => {
-    isLoading.value = false;
+    loading.value = false;
     if (imageSource.value === '/placeholder.svg') {
       errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
     }
@@ -374,7 +386,7 @@ onUnmounted(() => {
 
 // bbox 업데이트 함수
 const updateBoundingBoxes = () => {
-  // 강제 Vue가 bbox를 다��� 계산하도록 함
+  // 강제 Vue가 bbox를 다 계산하도록 함
   imageDimensions.value = { ...imageDimensions.value };
 };
 
