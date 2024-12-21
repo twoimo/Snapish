@@ -109,11 +109,22 @@
         </div>
 
         <!-- 공유하기 버튼 -->
-        <div v-if="!isLoading && !errorMessage" class="mt-6">
+        <div v-if="!isLoading && !errorMessage" class="mt-4">
           <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
             @click="shareResult">
             <Share2Icon class="w-5 h-5 mr-2" />
             <span>공유하기</span>
+          </button>
+        </div>
+
+        <!-- 물고기 정보 수정 버튼 -->
+        <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
+          <button 
+            class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+            @click="openEditModal"
+          >
+            <Edit class="w-5 h-5 mr-2" />
+            <span>물고기 정보 수정</span>
           </button>
         </div>
 
@@ -137,7 +148,7 @@
           <button class="absolute top-2 right-2" @click="closeImagePopup">
             &times;
           </button>
-          <img :src="popupImageUrl" alt="확대된 이미지" class="max-w-full max-h-full" />
+          <img :src="popupImageUrl" alt="확대된 미지" class="max-w-full max-h-full" />
         </div>
       </div>
 
@@ -154,6 +165,23 @@
           <button class="w-full bg-green-500 text-white py-2 px-4 rounded-lg">링크 복사</button>
         </div>
       </div>
+
+      <!-- Add edit fish modal -->
+      <EditFishModal
+        v-if="showEditModal"
+        :isVisible="showEditModal"
+        :catchData="selectedCatch"
+        @close="showEditModal = false"
+        @save="handleFishDataSave"
+      />
+
+      <!-- Add consent modal -->
+      <ConsentModal 
+        v-if="showConsentModal"
+        :isVisible="showConsentModal"
+        @close="handleConsentClose"
+        @consent="handleConsent"
+      />
     </div>
   </div>
 </template>
@@ -161,13 +189,18 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon } from 'lucide-vue-next';
+import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon, Edit } from 'lucide-vue-next';
 import { useStore } from 'vuex';
+import ConsentModal from '../components/ConsentModal.vue';
+import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
+const showEditModal = ref(false);
+const selectedCatch = ref(null);
+const showConsentModal = ref(false);
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
 const fishName = computed(() => {
   if (detections.length > 0 && detections[0].label !== '알 수 없음') {
@@ -244,8 +277,8 @@ function navigateToCatches() {
 }
 
 // 컴포넌트 마운트 시 초기화
-onMounted(() => {
-  console.log('컴포넌트가 마운트되었습니다.');
+onMounted(async () => {
+  console.log('���포넌트가 마운트되었습니다.');
   
   imageUrl.value = route.query.imageUrl || '';
   imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
@@ -262,6 +295,17 @@ onMounted(() => {
       errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
     }
   };
+
+  if (store.state.isAuthenticated) {
+    try {
+      const consentStatus = await store.dispatch('checkConsent');
+      if (!consentStatus.hasConsent) {
+        showConsentModal.value = true;
+      }
+    } catch (error) {
+      console.error('Error checking consent:', error);
+    }
+  }
 });
 
 const fishImage = ref(null);
@@ -329,7 +373,7 @@ const imageContainerStyle = computed(() => {
   if (aspectRatio < 1) {
     style.padding = '2rem 1rem';
   }
-  // 가로로 긴 이미지나 작은 이미지일 경우 패딩 조정
+  // 가로로 긴 이미지�� 작은 이미지일 경우 패딩 조정
   else if (aspectRatio > 1.5 || imageDimensions.value.height < 500) {
     style.padding = '0.5rem';
   }
@@ -344,7 +388,7 @@ onUnmounted(() => {
 
 // bbox 업데이트 함수
 const updateBoundingBoxes = () => {
-  // 강제로 Vue가 bbox를 다시 계산하도록 함
+  // 강제 Vue가 bbox를 다시 계산하도록 함
   imageDimensions.value = { ...imageDimensions.value };
 };
 
@@ -353,6 +397,42 @@ const getConfidenceColor = (confidence) => {
   if (confidence >= 0.8) return 'text-red-600';
   if (confidence >= 0.5) return 'text-red-400';
   return 'text-red-300';
+};
+
+const openEditModal = () => {
+  selectedCatch.value = {
+    id: route.query.id,
+    detections: detections,
+    imageUrl: imageUrl.value,
+    catch_date: new Date().toISOString().split('T')[0],
+    weight_kg: null,
+    length_cm: null,
+    latitude: null,
+    longitude: null,
+    memo: ''
+  };
+  showEditModal.value = true;
+};
+
+const handleFishDataSave = async (updatedData) => {
+  try {
+    await store.dispatch('updateCatch', updatedData);
+    showEditModal.value = false;
+    router.push('/catches');
+  } catch (error) {
+    console.error('Error saving fish data:', error);
+  }
+};
+
+const handleConsentClose = () => {
+  showConsentModal.value = false;
+};
+
+const handleConsent = async (consented) => {
+  if (!consented) {
+    router.push('/');
+    return;
+  }
 };
 </script>
 

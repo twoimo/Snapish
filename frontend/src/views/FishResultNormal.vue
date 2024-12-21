@@ -109,11 +109,22 @@
       </div>
 
       <!-- 공유하기 버튼 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-6">
+      <div v-if="!isLoading && !errorMessage" class="mt-4">
         <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
           @click="shareResult" :disabled="isLoading">
           <Share2Icon class="w-5 h-5 mr-2" />
           <span>공유하기</span>
+        </button>
+      </div>
+
+      <!-- 물고기 정보 수정 버튼 -->
+      <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
+        <button 
+          class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="openEditModal"
+        >
+          <Edit class="w-5 h-5 mr-2" />
+          <span>물고기 정보 수정</span>
         </button>
       </div>
 
@@ -156,6 +167,23 @@
         </button>
       </div>
     </div>
+
+    <!-- Add consent modal -->
+    <ConsentModal 
+      v-if="showConsentModal"
+      :isVisible="showConsentModal"
+      @close="handleConsentClose"
+      @consent="handleConsent"
+    />
+
+    <!-- Add edit fish modal -->
+    <EditFishModal
+      v-if="showEditModal"
+      :isVisible="showEditModal"
+      :catchData="selectedCatch"
+      @close="showEditModal = false"
+      @save="handleFishDataSave"
+    />
   </div>
 </template>
 
@@ -164,8 +192,10 @@ import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../axios';
 import html2canvas from 'html2canvas';
-import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon } from 'lucide-vue-next';
+import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit } from 'lucide-vue-next';
 import { useStore } from 'vuex';
+import ConsentModal from '../components/ConsentModal.vue';
+import EditFishModal from '../components/EditFishModal.vue';
 
 const store = useStore();
 const route = useRoute();
@@ -182,6 +212,9 @@ const popupImageUrl = ref('');
 const isImagePopupVisible = ref(false);
 const fishImage = ref(null);
 const imageDimensions = ref({ width: 0, height: 0 });
+const showConsentModal = ref(false);
+const showEditModal = ref(false);
+const selectedCatch = ref(null);
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://localhost:5000';
@@ -226,7 +259,20 @@ const fetchDetections = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
+  if (store.state.isAuthenticated) {
+    console.log('Checking consent status...');
+    try {
+      const consentStatus = await store.dispatch('checkConsent');
+      console.log('Consent status:', consentStatus);
+      if (!consentStatus.hasConsent) {
+        console.log('Showing consent modal...');
+        showConsentModal.value = true;
+      }
+    } catch (error) {
+      console.error('Error checking consent:', error);
+    }
+  }
   fetchDetections();
 });
 
@@ -383,6 +429,42 @@ onUnmounted(() => {
 const updateBoundingBoxes = () => {
   // 강제로 Vue가 bbox를 다시 계산하도록 함
   imageDimensions.value = { ...imageDimensions.value };
+};
+
+const handleConsentClose = () => {
+  showConsentModal.value = false;
+};
+
+const handleConsent = async (consented) => {
+  if (!consented) {
+    router.push('/');
+    return;
+  }
+};
+
+const handleFishDataSave = async (updatedData) => {
+  try {
+    await store.dispatch('updateCatch', updatedData);
+    showEditModal.value = false;
+    router.push('/catches');
+  } catch (error) {
+    console.error('Error saving fish data:', error);
+  }
+};
+
+const openEditModal = () => {
+  selectedCatch.value = {
+    id: route.query.id, // 만약 ID가 있다면
+    detections: parsedDetections.value,
+    imageUrl: imageUrl.value,
+    catch_date: new Date().toISOString().split('T')[0],
+    weight_kg: null,
+    length_cm: null,
+    latitude: null,
+    longitude: null,
+    memo: ''
+  };
+  showEditModal.value = true;
 };
 </script>
 

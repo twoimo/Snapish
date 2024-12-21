@@ -144,6 +144,11 @@ class Catch(Base):
     fish_size_cm = Column(DECIMAL(5, 2))
     photo_url = Column(String(255))
     exif_data = Column(JSON)
+    weight_kg = Column(DECIMAL(5, 2), nullable=True)  # 무게(kg)
+    length_cm = Column(DECIMAL(5, 2), nullable=True)  # 길이(cm)
+    latitude = Column(DECIMAL(10, 8), nullable=True)  # 위도
+    longitude = Column(DECIMAL(11, 8), nullable=True)  # 경도
+    memo = Column(Text, nullable=True)  # 메모
 
     user = relationship('User', back_populates='catches')
     location = relationship('Location', back_populates='catches')  # Existing line
@@ -156,8 +161,10 @@ class AIConsent(Base):
     __tablename__ = 'AIConsent'
 
     consent_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'), unique=True)
+    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
     consent_given = Column(Boolean, default=False)
+    consent_date = Column(DateTime, default=datetime.utcnow)  # 동의 날짜 추가
+    consent_type = Column(String(50))  # 동의 유형 추가 (예: 'fish_data', 'privacy')
     created_at = Column(DateTime, default=datetime.utcnow)
     last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -381,7 +388,7 @@ def token_required(f):
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             user_id = data['user_id']
         except jwt.ExpiredSignatureError:
-            return jsonify({'message': '토큰이 만료되었습니다.'}), 401
+            return jsonify({'message': '토��이 만료되었습니다.'}), 401
         except Exception:
             return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
 
@@ -663,43 +670,48 @@ def get_catches(user_id):
 @token_required
 def update_catch(user_id, catch_id):
     data = request.get_json()
-    if not data:
-        logging.error("Invalid input: No data provided")
-        return jsonify({"error": "Invalid input"}), 400
-
     session = Session()
-    current_user = session.query(User).filter_by(user_id=user_id).first()
-    if not current_user:
-        session.close()
-        return jsonify({'message': 'User not found'}), 404
-
-    catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
-    if not catch:
-        logging.error(f"Catch not found: catch_id={catch_id}, user_id={current_user.user_id}")
-        session.close()
-        return jsonify({"error": "Catch not found"}), 404
-
     try:
-        logging.info(f"Updating catch: {catch_id} for user: {current_user.user_id}")
-        catch.photo_url = data.get('imageUrl', catch.photo_url)
-        catch.exif_data = data.get('detections', catch.exif_data)
+        catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=user_id).first()
+        if not catch:
+            session.close()
+            return jsonify({'error': 'Catch not found'}), 404
+
+        # Update existing fields
+        if 'detections' in data:
+            catch.exif_data = data['detections']
         if 'catch_date' in data:
             catch.catch_date = datetime.strptime(data['catch_date'], '%Y-%m-%d')
+            
+        # Update new fields
+        if 'weight_kg' in data:
+            catch.weight_kg = data['weight_kg']
+        if 'length_cm' in data:
+            catch.length_cm = data['length_cm']
+        if 'latitude' in data:
+            catch.latitude = data['latitude']
+        if 'longitude' in data:
+            catch.longitude = data['longitude']
+        if 'memo' in data:
+            catch.memo = data['memo']
+
         session.commit()
-        updated_catch = {
+        return jsonify({
             'id': catch.catch_id,
             'imageUrl': catch.photo_url,
             'detections': catch.exif_data,
-            'catch_date': catch.catch_date.strftime('%Y-%m-%d')
-        }
-        logging.info(f"Catch updated successfully: {updated_catch}")
-        session.close()
-        return jsonify(updated_catch), 200
+            'catch_date': catch.catch_date.strftime('%Y-%m-%d'),
+            'weight_kg': float(catch.weight_kg) if catch.weight_kg else None,
+            'length_cm': float(catch.length_cm) if catch.length_cm else None,
+            'latitude': float(catch.latitude) if catch.latitude else None,
+            'longitude': float(catch.longitude) if catch.longitude else None,
+            'memo': catch.memo
+        })
     except Exception as e:
-        logging.error(f"Error updating catch: {e}")
         session.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
         session.close()
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/catches/<int:catch_id>', methods=['DELETE'])
 @token_required
@@ -952,3 +964,40 @@ def remove_session(exception=None):
 # Ensure the backend server is running on port 5000
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
+
+@app.route('/api/consent/check', methods=['GET'])
+@token_required
+def check_consent(user_id):
+    session = Session()
+    try:
+        consent = session.query(AIConsent).filter_by(user_id=user_id).first()
+        return jsonify({
+            'hasConsent': bool(consent and consent.consent_given),
+            'lastConsentDate': consent.consent_date.isoformat() if consent else None
+        })
+    finally:
+        session.close()
+
+@app.route('/api/consent', methods=['POST'])
+@token_required
+def update_consent(user_id):
+    data = request.get_json()
+    consent_given = data.get('consent', False)
+    
+    session = Session()
+    try:
+        consent = session.query(AIConsent).filter_by(user_id=user_id).first()
+        if consent:
+            consent.consent_given = consent_given
+            consent.consent_date = datetime.utcnow()
+        else:
+            consent = AIConsent(
+                user_id=user_id,
+                consent_given=consent_given,
+                consent_date=datetime.utcnow()
+            )
+            session.add(consent)
+        session.commit()
+        return jsonify({'message': 'Consent updated successfully'})
+    finally:
+        session.close()

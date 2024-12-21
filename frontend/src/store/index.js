@@ -19,6 +19,11 @@ export default createStore({
 
     catches: JSON.parse(localStorage.getItem('catches')) || [], // Add catches state
     hotIssues: JSON.parse(localStorage.getItem('hotIssues')) || [],
+
+    consent: {
+      hasConsent: false,
+      lastConsentDate: null
+    }
   },
   mutations: {
     // Existing mutations
@@ -79,6 +84,9 @@ export default createStore({
       state.hotIssues = issues;
       localStorage.setItem('hotIssues', JSON.stringify(issues));
     },
+    SET_CONSENT(state, { hasConsent, lastConsentDate }) {
+      state.consent = { hasConsent, lastConsentDate };
+    }
   },
   actions: {
     // Existing actions
@@ -312,6 +320,43 @@ export default createStore({
         console.error('Error fetching initial data:', error);
       }
     },
+    async checkConsent({ commit }) {
+      try {
+        console.log('Checking consent from backend...');
+        const response = await axios.get('/api/consent/check', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        console.log('Consent response:', response.data);
+        commit('SET_CONSENT', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error checking consent:', error);
+        throw error;
+      }
+    },
+
+    async updateConsent({ commit }, consentGiven) {
+      try {
+        const response = await axios.post('/api/consent', 
+          { consent: consentGiven },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        commit('SET_CONSENT', {
+          hasConsent: consentGiven,
+          lastConsentDate: new Date().toISOString()
+        });
+        return response.data;
+      } catch (error) {
+        console.error('Error updating consent:', error);
+        throw error;
+      }
+    }
   },
   getters: {
     // Existing getters
