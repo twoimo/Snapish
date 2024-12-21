@@ -78,7 +78,7 @@
                         </router-link>
                     </div>
                     <div class="space-y-3">
-                        <article v-for="i in 5" :key="i"
+                        <article v-for="issue in hotIssues" :key="issue.id"
                             class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition">
                             <div class="flex gap-3">
                                 <div
@@ -86,11 +86,11 @@
                                     <ImageIcon class="w-8 h-8 text-gray-400" />
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-medium mb-1">게시물 제목</h3>
-                                    <p class="text-sm text-gray-600 mb-2">게시물 내용 미리보기입니다. 여기에 간단한 설명이 들어갑니다.</p>
+                                    <h3 class="font-medium mb-1">{{ issue.title }}</h3>
+                                    <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
                                     <div class="flex items-center text-sm text-gray-500">
                                         <ClockIcon class="w-4 h-4 mr-1" />
-                                        <span>오늘 • 23분 전</span>
+                                        <span>{{ formatTimestamp(issue.timestamp) }}</span>
                                     </div>
                                 </div>
                                 <ChevronRightIcon class="w-5 h-5 text-gray-400" />
@@ -246,6 +246,25 @@ function scrollRight() {
             left: scrollContainer.value.scrollLeft + 320,
             behavior: 'smooth'
         });
+    }
+}
+
+// Vuex store에서 핫이슈 데이터 가져오기
+const hotIssues = computed(() => store.getters.hotIssues);
+
+// 타임스탬프 포맷팅 함수
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+        return `${diffInMinutes}분 전`;
+    } else if (diffInMinutes < 1440) {
+        return `${Math.floor(diffInMinutes / 60)}시간 전`;
+    } else {
+        return date.toLocaleDateString();
     }
 }
 

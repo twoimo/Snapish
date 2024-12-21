@@ -25,6 +25,7 @@ export default createStore({
       lastConsentDate: null
     },
     globalLoading: false,
+    services: [],
   },
   mutations: {
     // Existing mutations
@@ -90,7 +91,13 @@ export default createStore({
     },
     SET_GLOBAL_LOADING(state, isLoading) {
       state.globalLoading = isLoading;
-    }
+    },
+    SET_HOT_ISSUES(state, issues) {
+      state.hotIssues = issues;
+    },
+    SET_SERVICES(state, services) {
+      state.services = services;
+    },
   },
   actions: {
     // Existing actions
@@ -121,7 +128,7 @@ export default createStore({
             );
           }
 
-          // 물때 정�� API 호출
+          // 물때 정 API 호출
           const mulddaeData = await fetchMulddae(today);
           commit("setMulddae", mulddaeData);
 
@@ -311,14 +318,41 @@ export default createStore({
     updateAvatar({ commit }, avatarUrl) {
       commit("SET_AVATAR", avatarUrl);
     },
-    fetchServices({ commit }) {
-      // Define the fetchServices action
-      // Example implementation:
-      return fetch("http://localhost:5000/api/services")
-        .then((response) => response.json())
-        .then((data) => {
-          commit("setServices", data);
-        });
+    async fetchServices({ commit }) {
+      try {
+        const response = await axios.get('/api/services');
+        commit('SET_SERVICES', response.data);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        // 기본 서비스 목록 사용
+        const defaultServices = [
+          {
+            id: 1,
+            name: "물때 정보",
+            icon: "/icons/tide.png",
+            route: "/map-location-service"
+          },
+          {
+            id: 2,
+            name: "날씨 정보",
+            icon: "/icons/weather.png",
+            route: "/map-location-service"
+          },
+          {
+            id: 3,
+            name: "내 기록",
+            icon: "/icons/record.png",
+            route: "/catches"
+          },
+          {
+            id: 4,
+            name: "커뮤니티",
+            icon: "/icons/community.png",
+            route: "/community"
+          }
+        ];
+        commit('SET_SERVICES', defaultServices);
+      }
     },
     updateUser({ commit }, userData) {
       commit('SET_USER', userData);
@@ -387,7 +421,40 @@ export default createStore({
     },
     setGlobalLoading({ commit }, isLoading) {
       commit('SET_GLOBAL_LOADING', isLoading);
-    }
+    },
+    async fetchHotIssues({ commit }) {
+      try {
+        // 임시 데이터 사용 (실제 API 연동 전까지)
+        const tempHotIssues = [
+          {
+            id: 1,
+            title: '오늘의 조황 정보',
+            content: '서해안 조황 정보입니다.',
+            timestamp: new Date(),
+            author: '낚시꾼1',
+            imageUrl: null
+          },
+          {
+            id: 2,
+            title: '주말 날씨 전망',
+            content: '주말 낚시하기 좋은 날씨입니다.',
+            timestamp: new Date(),
+            author: '기상전문가',
+            imageUrl: null
+          },
+          // 추가 더미 데이터...
+        ];
+
+        commit('SET_HOT_ISSUES', tempHotIssues);
+        
+        // 실제 API 연동 시 아래 코드 사용
+        // const response = await axios.get('/backend/hot-issues');
+        // commit('SET_HOT_ISSUES', response.data);
+      } catch (error) {
+        console.error('Error fetching hot issues:', error);
+        throw error;
+      }
+    },
   },
   getters: {
     // Existing getters
@@ -401,6 +468,8 @@ export default createStore({
     catches(state) {
       return state.catches;
     },
-    isGlobalLoading: state => state.globalLoading
+    isGlobalLoading: state => state.globalLoading,
+    hotIssues: state => state.hotIssues,
+    services: state => state.services,
   },
 });

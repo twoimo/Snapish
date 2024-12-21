@@ -472,23 +472,53 @@ def login():
     finally:
         session.close()
 
+# 이미지 최적화 함수 추가
+def optimize_image(image, max_size=1024):
+    """Optimize image size and quality for mobile"""
+    if max(image.size) > max_size:
+        ratio = max_size / max(image.size)
+        new_size = tuple(int(dim * ratio) for dim in image.size)
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
+    
+    # Convert to RGB if necessary
+    if image.mode in ('RGBA', 'P'):
+        image = image.convert('RGB')
+    
+    # Optimize
+    buffer = io.BytesIO()
+    image.save(buffer, format='JPEG', quality=85, optimize=True)
+    buffer.seek(0)
+    return buffer
+
+# predict 라우트 수정
 @app.route('/backend/predict', methods=['POST'])
 def predict():
-    # Get the image either from 'image' file or 'image_base64' in JSON
-    if 'image' in request.files:
-        file = request.files['image']
-        if not allowed_file(file.filename):
-            return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
-        img = Image.open(file.stream).convert('RGB')
-    else:
-        data = request.get_json()
-        image_base64 = data.get('image_base64')
-        if not image_base64:
-            return jsonify({'error': '유효한 이미지 데이터를 업로드해주세요.'}), 400
-        image_data = base64.b64decode(image_base64)
-        img = Image.open(io.BytesIO(image_data)).convert('RGB')
-
     try:
+        if 'image' in request.files:
+            file = request.files['image']
+            if not allowed_file(file.filename):
+                return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
+            img = Image.open(file.stream).convert('RGB')
+        else:
+            data = request.get_json()
+            image_base64 = data.get('image_base64')
+            if not image_base64:
+                return jsonify({'error': '유효한 이미지 데이터를 업로드해주세요.'}), 400
+            image_data = base64.b64decode(image_base64)
+            img = Image.open(io.BytesIO(image_data)).convert('RGB')
+
+        # 이미지 최적화
+        optimized_buffer = optimize_image(img)
+        img = Image.open(optimized_buffer)
+
+        # 캐시 헤더 추가
+        @app.after_request
+        def add_header(response):
+            if request.path.startswith('/uploads/'):
+                response.cache_control.max_age = 31536000  # 1년
+                response.cache_control.public = True
+            return response
+
         results = model(img, exist_ok=True, device=device)
         detections = []
         
@@ -900,7 +930,7 @@ def get_closest_sealoc():
         LIMIT 1;
     """)
     
-    # 조수간만 태그 + 없음 제거
+    # 조수간 태그 + 없음 제거
     query_obspretab = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
@@ -1038,3 +1068,36 @@ def update_consent(user_id):
         return jsonify({'message': 'Consent updated successfully'})
     finally:
         session.close()
+
+# 서비스 목록 API 추가
+@app.route('/api/services', methods=['GET'])
+def get_services():
+    # 기본 서비스 목록 반환
+    services = [
+        {
+            "id": 1,
+            "name": "물때 정보",
+            "icon": "/icons/tide.png",
+            "route": "/map-location-service"
+        },
+        {
+            "id": 2,
+            "name": "날씨 정보",
+            "icon": "/icons/weather.png",
+            "route": "/map-location-service"
+        },
+        {
+            "id": 3,
+            "name": "내 기록",
+            "icon": "/icons/record.png",
+            "route": "/catches"
+        },
+        {
+            "id": 4,
+            "name": "커뮤니티",
+            "icon": "/icons/community.png",
+            "route": "/community"
+        },
+        # 추가 서비스들...
+    ]
+    return jsonify(services)
