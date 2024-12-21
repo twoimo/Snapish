@@ -257,14 +257,19 @@ export default createStore({
     },
     async updateCatch({ commit }, updatedCatch) {
       try {
+        if (!updatedCatch.id) {
+          throw new Error('Catch ID is required');
+        }
         const token = localStorage.getItem("token");
+        console.log('Sending update request for catch:', updatedCatch.id);  // 디버깅용 로그 추가
         const response = await axios.put(
-          `http://localhost:5000/catches/${updatedCatch.id}`,
+          `/catches/${updatedCatch.id}`,
           updatedCatch,
           {
             headers: {
               Authorization: `Bearer ${token}`,
-            },
+              'Content-Type': 'application/json'
+            }
           }
         );
         commit("UPDATE_CATCH", response.data);
@@ -354,6 +359,20 @@ export default createStore({
         return response.data;
       } catch (error) {
         console.error('Error updating consent:', error);
+        throw error;
+      }
+    },
+    async createCatch({ commit }, catchData) {
+      try {
+        const response = await axios.post('/catches', catchData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        commit('addCatch', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error creating catch:', error);
         throw error;
       }
     }

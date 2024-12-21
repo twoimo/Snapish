@@ -282,7 +282,11 @@ Base.metadata.create_all(engine)
 
 # Flask 앱 초기화
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {
+    "origins": "http://localhost:8080",
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
@@ -388,7 +392,7 @@ def token_required(f):
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
             user_id = data['user_id']
         except jwt.ExpiredSignatureError:
-            return jsonify({'message': '토��이 만료되었습니다.'}), 401
+            return jsonify({'message': '토큰이 만료되었습니다.'}), 401
         except Exception:
             return jsonify({'message': '토큰 인증에 실패하였습니다.'}), 401
 
@@ -621,31 +625,36 @@ def recent_activities(user_id):
 
 @app.route('/catches', methods=['POST'])
 @token_required
-def add_catch(user_id):
+def create_catch(user_id):
     data = request.get_json()
-    imageUrl = data.get('imageUrl')
-    detections = data.get('detections')
-
-    if not imageUrl or not detections:
-        return jsonify({'message': '이미지 URL 또는 감지 결과가 필요합니다.'}), 400
-
     session = Session()
-    current_user = session.query(User).filter_by(user_id=user_id).first()
-    if not current_user:
+    try:
+        new_catch = Catch(
+            user_id=user_id,
+            photo_url=data.get('imageUrl'),
+            exif_data=data.get('detections'),
+            catch_date=datetime.strptime(data.get('catch_date'), '%Y-%m-%d')
+        )
+        session.add(new_catch)
+        session.commit()
+        
+        return jsonify({
+            'id': new_catch.catch_id,
+            'imageUrl': new_catch.photo_url,
+            'detections': new_catch.exif_data,
+            'catch_date': new_catch.catch_date.strftime('%Y-%m-%d'),
+            'weight_kg': float(new_catch.weight_kg) if new_catch.weight_kg else None,
+            'length_cm': float(new_catch.length_cm) if new_catch.length_cm else None,
+            'latitude': float(new_catch.latitude) if new_catch.latitude else None,
+            'longitude': float(new_catch.longitude) if new_catch.longitude else None,
+            'memo': new_catch.memo,
+            'message': '캐치가 성공적으로 추가되었습니다.'
+        })
+    except Exception as e:
+        session.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
         session.close()
-        return jsonify({'message': 'User not found'}), 404
-
-    new_catch = Catch(
-        user_id=current_user.user_id,
-        photo_url=imageUrl,
-        exif_data=detections,
-        catch_date=datetime.utcnow()
-    )
-    session.add(new_catch)
-    session.commit()
-    session.close()
-
-    return jsonify({'message': '캐치가 성공적으로 추가되었습니다.'}), 201
 
 @app.route('/catches', methods=['GET'])
 @token_required

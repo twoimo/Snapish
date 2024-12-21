@@ -128,7 +128,15 @@ onMounted(() => {
 
 const saveFishData = async () => {
   try {
+    if (!props.catchData || !props.catchData.id) {
+      console.error('Invalid catch data:', props.catchData);
+      alert('물고기 정보가 올바르지 않습니다.');
+      return;
+    }
+
+    console.log('Saving fish data with ID:', props.catchData.id);
     const updatedData = {
+      id: props.catchData.id,
       ...props.catchData,
       detections: [{
         ...props.catchData.detections[0],
@@ -141,12 +149,14 @@ const saveFishData = async () => {
       memo: fishData.value.memo
     };
 
+    console.log('Updating catch with data:', updatedData);
     await store.dispatch('updateCatch', updatedData);
     emit('save', updatedData);
     emit('close');
     router.push('/catches');
   } catch (error) {
     console.error('Error saving fish data:', error);
+    alert('물고기 정보 저장에 실패했습니다.');
   }
 };
 </script> 

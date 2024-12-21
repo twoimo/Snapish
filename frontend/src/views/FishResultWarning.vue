@@ -193,6 +193,7 @@ import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, 
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
+import axios from 'axios';
 
 const store = useStore();
 const route = useRoute();
@@ -278,7 +279,7 @@ function navigateToCatches() {
 
 // 컴포넌트 마운트 시 초기화
 onMounted(async () => {
-  console.log('���포넌트가 마운트되었습니다.');
+  console.log('포넌트가 마운트되었습니다.');
   
   imageUrl.value = route.query.imageUrl || '';
   imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
@@ -373,7 +374,7 @@ const imageContainerStyle = computed(() => {
   if (aspectRatio < 1) {
     style.padding = '2rem 1rem';
   }
-  // 가로로 긴 이미지�� 작은 이미지일 경우 패딩 조정
+  // 가로로 긴 이미지일 경우 작은 이미지일 경우 패딩 조정
   else if (aspectRatio > 1.5 || imageDimensions.value.height < 500) {
     style.padding = '0.5rem';
   }
@@ -400,18 +401,57 @@ const getConfidenceColor = (confidence) => {
 };
 
 const openEditModal = () => {
-  selectedCatch.value = {
-    id: route.query.id,
-    detections: detections,
-    imageUrl: imageUrl.value,
-    catch_date: new Date().toISOString().split('T')[0],
-    weight_kg: null,
-    length_cm: null,
-    latitude: null,
-    longitude: null,
-    memo: ''
+  // 새로운 catch 생성을 위한 POST 요청
+  const createNewCatch = async () => {
+    try {
+      const response = await axios.post('/catches', {
+        detections: detections,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log('Created new catch:', response.data);
+      if (!response.data.id) {
+        throw new Error('Invalid response from server: missing catch ID');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error creating new catch:', error);
+      alert('새로운 캐치 생성에 실패했습니다.');
+      throw error;
+    }
   };
-  showEditModal.value = true;
+
+  // 새로운 catch 생성 후 수정 모달 열기
+  const initEditModal = async () => {
+    try {
+      const newCatch = await createNewCatch();
+      if (!newCatch.id) {
+        throw new Error('No catch ID received from server');
+      }
+      selectedCatch.value = {
+        id: newCatch.id,
+        detections: detections,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0],
+        weight_kg: null,
+        length_cm: null,
+        latitude: null,
+        longitude: null,
+        memo: ''
+      };
+      console.log('Opening edit modal with catch:', selectedCatch.value);  // 디버깅용 로그
+      showEditModal.value = true;
+    } catch (error) {
+      console.error('Error initializing edit modal:', error);
+      alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
+    }
+  };
+
+  initEditModal();
 };
 
 const handleFishDataSave = async (updatedData) => {

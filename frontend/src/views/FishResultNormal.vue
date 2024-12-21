@@ -190,7 +190,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from '../axios';
+import axios from 'axios';
 import html2canvas from 'html2canvas';
 import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit } from 'lucide-vue-next';
 import { useStore } from 'vuex';
@@ -453,18 +453,57 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
-  selectedCatch.value = {
-    id: route.query.id, // 만약 ID가 있다면
-    detections: parsedDetections.value,
-    imageUrl: imageUrl.value,
-    catch_date: new Date().toISOString().split('T')[0],
-    weight_kg: null,
-    length_cm: null,
-    latitude: null,
-    longitude: null,
-    memo: ''
+  // 새로운 catch 생성을 위한 POST 요청
+  const createNewCatch = async () => {
+    try {
+      const response = await axios.post('/catches', {
+        detections: parsedDetections.value,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      console.log('Created new catch:', response.data);
+      if (!response.data.id) {
+        throw new Error('Invalid response from server: missing catch ID');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error creating new catch:', error);
+      alert('새로운 캐치 생성에 실패했습니다.');
+      throw error;
+    }
   };
-  showEditModal.value = true;
+
+  // 새로운 catch 생성 후 수정 모달 열기
+  const initEditModal = async () => {
+    try {
+      const newCatch = await createNewCatch();
+      if (!newCatch.id) {
+        throw new Error('No catch ID received from server');
+      }
+      selectedCatch.value = {
+        id: newCatch.id,
+        detections: parsedDetections.value,
+        imageUrl: imageUrl.value,
+        catch_date: new Date().toISOString().split('T')[0],
+        weight_kg: null,
+        length_cm: null,
+        latitude: null,
+        longitude: null,
+        memo: ''
+      };
+      console.log('Opening edit modal with catch:', selectedCatch.value);  // 디버깅용 로그
+      showEditModal.value = true;
+    } catch (error) {
+      console.error('Error initializing edit modal:', error);
+      alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
+    }
+  };
+
+  initEditModal();
 };
 </script>
 
