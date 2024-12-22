@@ -121,19 +121,15 @@
               <div class="flex items-center divide-x divide-gray-200">
                 <button 
                   @click="toggleLike(post)"
-                  class="group flex items-center pr-6"
+                  :class="['like-button', { 'liked': post.is_liked }]"
                 >
-                  <div class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-red-50 transition-colors duration-200">
-                    <Heart
-                      class="w-5 h-5 transition-all duration-200"
-                      :class="post.is_liked ? 'fill-red-500 stroke-red-500 transform scale-110' : 'stroke-gray-400 group-hover:stroke-red-500'"
-                    />
-                  </div>
-                  <div class="ml-2">
-                    <span class="text-base font-semibold" :class="post.is_liked ? 'text-red-500' : 'text-gray-900'">
-                      {{ post.likes_count.toLocaleString() }}
-                    </span>
-                  </div>
+                  <Heart
+                    class="w-5 h-5 transition-all duration-200"
+                    :class="post.is_liked ? 'fill-red-500 stroke-red-500 transform scale-110' : 'stroke-gray-400 group-hover:stroke-red-500'"
+                  />
+                  <span class="ml-2">
+                    {{ post.likes_count.toLocaleString() }}
+                  </span>
                 </button>
 
                 <button 
@@ -353,13 +349,15 @@ export default {
 
     const toggleLike = async (post) => {
       try {
-        await axios.post(`/api/posts/${post.post_id}/like`, {}, {
+        const response = await axios.post(`/api/posts/${post.post_id}/like`, {}, {
           headers: {
             'Authorization': `Bearer ${store.state.token}`
           }
         })
-        post.is_liked = !post.is_liked
-        post.likes_count += post.is_liked ? 1 : -1
+        
+        // Update post data
+        post.is_liked = response.data.is_liked
+        post.likes_count = response.data.likes_count
       } catch (error) {
         console.error('Error toggling like:', error)
         alert('좋아요 처리 중 오류가 발생했습니다.')
@@ -682,5 +680,106 @@ img.loaded {
   .overflow-hidden {
     overscroll-behavior: none;
   }
+}
+
+.post-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  margin: 1rem 0;
+}
+
+.like-button, .comment-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.like-button:hover {
+  color: #e74c3c;
+}
+
+.like-button.liked {
+  color: #e74c3c;
+}
+
+.comment-button:hover {
+  color: #3498db;
+}
+
+.comments-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.comment-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.comment-input input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.comment-input button {
+  padding: 0.5rem 1rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comment {
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.comment-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-username {
+  font-weight: bold;
+}
+
+.comment-date {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.comment-content {
+  margin: 0;
+  color: #333;
 }
 </style>

@@ -204,12 +204,13 @@ export default {
         })
 
         if (route.params.id) {
-          await axios.put(`/api/posts/${route.params.id}`, formData, {
+          const response = await axios.put(`/api/posts/${route.params.id}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
               'Authorization': `Bearer ${store.state.token}`
             }
           })
+          console.log('Edit response:', response.data)
         } else {
           await axios.post('/api/posts', formData, {
             headers: {
