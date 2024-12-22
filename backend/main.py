@@ -332,7 +332,7 @@ CORS(app, resources={r"/*": {
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
-# 초시 헤더를 ���한 after_request 데코레이터를 앱 초기화 직후에 추가
+# 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
 def add_header(response):
     if request.path.startswith('/uploads/'):
@@ -343,7 +343,7 @@ def add_header(response):
 # 초기 DB install
 initialize_service()
 
-# 라벨 매핑 (어 -> 한국어)
+# 라벨 핑 (어 -> 한국어)
 labels_korean = {
  0: '감성돔',
  1: '대구',
@@ -398,7 +398,7 @@ PROHIBITED_DATES = {
 def hello():
     return 'Welcome to SNAPISH'
 
-# 물때 정보 받아오기
+# 물때 정보 받아기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -679,7 +679,7 @@ def recent_activities(user_id):
         session.close()
         return jsonify({'message': 'User not found'}), 404
 
-    # 최근 활동을 ���회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
+    # 최근 활동을 회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
     activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
     session.close()
     
@@ -720,7 +720,7 @@ def create_catch(user_id):
             'latitude': float(new_catch.latitude) if new_catch.latitude else None,
             'longitude': float(new_catch.longitude) if new_catch.longitude else None,
             'memo': new_catch.memo,
-            'message': '캐치가 성공적으로 추가되었습니다.'
+            'message': '치가 성공적으로 추가되었습니다.'
         })
     except Exception as e:
         session.rollback()
@@ -959,7 +959,7 @@ def get_closest_sealoc():
     session = Session()
     
     ## ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
-    # 조위, 수온, 기온 , 기압 4개 모두 체크 가능한 경우
+    # 조위, 수온, 기온 , 기압 4개 모두 체크 가능한 ��우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
@@ -1202,26 +1202,47 @@ def get_posts(user_id):
         session.close()
 
 @app.route('/api/posts/<int:post_id>', methods=['GET'])
-def get_post(post_id):
+@token_required
+def get_post(user_id, post_id):
+    session = Session()
     try:
-        session = Session()
-        post = session.query(CommunicationBoard).get_or_404(post_id)
-        user = session.query(User).get(post.user_id)
+        logging.info(f"Fetching post with ID: {post_id}")
+        post = session.query(CommunicationBoard).get(post_id)
         
-        return jsonify({
+        if not post:
+            logging.warning(f"Post with ID {post_id} not found")
+            return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
+            
+        user = session.query(User).get(post.user_id)
+        if not user:
+            logging.error(f"User with ID {post.user_id} not found for post {post_id}")
+            return jsonify({'error': '게시물 작성자를 찾을 수 없습니다.'}), 500
+        
+        image_url = None
+        if post.image_url:
+            logging.info(f"Original image URL: {post.image_url}")
+            image_url = f"/uploads/{os.path.basename(post.image_url)}"
+            logging.info(f"Processed image URL: {image_url}")
+        
+        response_data = {
             'post_id': post.post_id,
             'title': post.title,
             'content': post.content,
-            'image_url': get_full_url(f"/uploads/{os.path.basename(post.image_url)}" if post.image_url else None),
+            'image_url': get_full_url(image_url),
             'created_at': post.created_at.isoformat(),
             'user_id': post.user_id,
             'username': user.username,
             'avatar': get_full_url(user.avatar),
             'likes_count': len(post.likes),
             'comments_count': len(post.comments)
-        })
+        }
+        
+        logging.info(f"Successfully fetched post data: {response_data}")
+        return jsonify(response_data)
+        
     except Exception as e:
-        logging.error(f"Error getting post: {e}")
+        logging.error(f"Error getting post {post_id}: {str(e)}")
+        logging.exception("Full traceback:")
         return jsonify({'error': '게시물을 불러오는 중 오류가 발생했습니다.'}), 500
     finally:
         session.close()
@@ -1384,7 +1405,7 @@ def update_post(user_id, post_id):
         if image and allowed_file(image.filename):
             # Delete old image if exists
             if post.image_url:
-                old_image_path = os.path.join(UPLOAD_FOLDER, post.image_url.split('/')[-1])
+                old_image_path = os.path.join(UPLOAD_FOLDER, os.path.basename(post.image_url))
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)
             
@@ -1394,7 +1415,7 @@ def update_post(user_id, post_id):
             post.image_url = f'/uploads/{filename}'
         elif data.get('remove_image') == 'true' and post.image_url:
             # Remove existing image if requested
-            old_image_path = os.path.join(UPLOAD_FOLDER, post.image_url.split('/')[-1])
+            old_image_path = os.path.join(UPLOAD_FOLDER, os.path.basename(post.image_url))
             if os.path.exists(old_image_path):
                 os.remove(old_image_path)
             post.image_url = None
@@ -1411,7 +1432,7 @@ def update_post(user_id, post_id):
                 'post_id': post.post_id,
                 'title': post.title,
                 'content': post.content,
-                'image_url': post.image_url,
+                'image_url': get_full_url(post.image_url),
                 'updated_at': post.updated_at.isoformat()
             }
         })
@@ -1433,7 +1454,7 @@ def delete_post(user_id, post_id):
             
         # Delete associated image if exists
         if post.image_url:
-            image_path = os.path.join(UPLOAD_FOLDER, post.image_url.split('/')[-1])
+            image_path = os.path.join(UPLOAD_FOLDER, os.path.basename(post.image_url))
             if os.path.exists(image_path):
                 os.remove(image_path)
                 

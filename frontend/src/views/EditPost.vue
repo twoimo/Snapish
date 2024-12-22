@@ -115,6 +115,7 @@
 import axios from '@/axios'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useStore } from 'vuex'
 import { X, Save, Trash2, ImagePlus } from 'lucide-vue-next'
 
 export default {
@@ -128,6 +129,7 @@ export default {
   setup() {
     const router = useRouter()
     const route = useRoute()
+    const store = useStore()
     const post = ref(null)
     const title = ref('')
     const content = ref('')
@@ -137,15 +139,16 @@ export default {
     const shouldRemoveImage = ref(false)
 
     const fetchPost = async () => {
-      if (!route.params.id) return
-
       try {
-        const response = await axios.get(`/api/posts/${route.params.id}`)
-        post.value = response.data
-        title.value = post.value.title
-        content.value = post.value.content
-        if (post.value.image_url) {
-          imagePreview.value = post.value.image_url
+        const response = await axios.get(`/api/posts/${route.params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${store.state.token}`
+          }
+        })
+        title.value = response.data.title
+        content.value = response.data.content
+        if (response.data.image_url) {
+          imagePreview.value = response.data.image_url
         }
       } catch (error) {
         console.error('Error fetching post:', error)
@@ -196,15 +199,17 @@ export default {
         }
 
         if (route.params.id) {
-          await axios.post(`/api/posts/${route.params.id}/edit`, formData, {
+          await axios.put(`/api/posts/${route.params.id}`, formData, {
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${store.state.token}`
             }
           })
         } else {
           await axios.post('/api/posts', formData, {
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${store.state.token}`
             }
           })
         }
@@ -221,7 +226,11 @@ export default {
     const confirmDelete = async () => {
       if (confirm('정말로 이 게시물을 삭제하시겠습니까?')) {
         try {
-          await axios.post(`/api/posts/${route.params.id}/delete`)
+          await axios.delete(`/api/posts/${route.params.id}`, {
+            headers: {
+              'Authorization': `Bearer ${store.state.token}`
+            }
+          })
           router.push('/community')
         } catch (error) {
           console.error('Error deleting post:', error)
