@@ -9,15 +9,17 @@
         >
           <X class="w-6 h-6" />
         </button>
-        <button
-          type="button"
-          @click="submitPost"
-          :disabled="isSubmitting"
-          class="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2"
-        >
-          <Save class="w-4 h-4" />
-          <span>{{ isSubmitting ? '저장 중...' : '작성' }}</span>
-        </button>
+        <div class="flex items-center space-x-3">
+          <button
+            type="button"
+            @click="submitPost"
+            :disabled="isSubmitting"
+            class="px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2"
+          >
+            <Send class="w-4 h-4" />
+            <span>{{ isSubmitting ? '작성 중...' : '작성' }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Content area -->
@@ -48,41 +50,20 @@
 
             <!-- Image upload -->
             <div>
-              <div 
-                class="relative group cursor-pointer"
-                :class="{'border-2 border-dashed border-gray-200 rounded-2xl hover:border-blue-400 transition-colors duration-200': !imagePreview}"
-              >
+              <div class="relative">
                 <!-- Empty state -->
                 <div 
-                  v-if="!imagePreview" 
-                  class="flex flex-col items-center justify-center py-12"
+                  class="border-2 border-dashed border-gray-200 rounded-2xl hover:border-blue-400 transition-colors duration-200 cursor-pointer"
                   @click="$refs.fileInput.click()"
                 >
-                  <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
-                    <ImagePlus class="w-8 h-8 text-blue-500" />
-                  </div>
-                  <div class="text-center">
-                    <p class="text-sm font-medium text-gray-900 mb-1">이미지를 업로드하세요</p>
-                    <p class="text-xs text-gray-500">PNG, JPG, GIF (최대 10MB)</p>
-                  </div>
-                </div>
-
-                <!-- Preview state -->
-                <div v-else class="relative rounded-2xl overflow-hidden group">
-                  <img
-                    :src="imagePreview"
-                    alt="Preview"
-                    class="w-full object-cover rounded-2xl transform group-hover:scale-105 transition-transform duration-500"
-                    style="max-height: 32rem;"
-                  >
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <button
-                      type="button"
-                      @click="removeImage"
-                      class="bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transform hover:scale-110 transition-all duration-200"
-                    >
-                      <Trash2 class="w-6 h-6" />
-                    </button>
+                  <div class="flex flex-col items-center justify-center py-8">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <ImagePlus class="w-8 h-8 text-blue-500" />
+                    </div>
+                    <div class="text-center">
+                      <p class="text-sm font-medium text-gray-900 mb-1">이미지를 업로드하세요</p>
+                      <p class="text-xs text-gray-500">PNG, JPG, GIF (최대 10MB)</p>
+                    </div>
                   </div>
                 </div>
 
@@ -91,8 +72,33 @@
                   type="file"
                   class="hidden"
                   accept="image/*"
+                  multiple
                   @change="handleImageUpload"
                 >
+              </div>
+
+              <!-- Image previews -->
+              <div v-if="imagePreviews.length > 0" class="mt-4 grid grid-cols-2 gap-4">
+                <div 
+                  v-for="(preview, index) in imagePreviews" 
+                  :key="index"
+                  class="relative rounded-2xl overflow-hidden group aspect-video"
+                >
+                  <img
+                    :src="preview"
+                    alt="Preview"
+                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  >
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <button
+                      type="button"
+                      @click="removeImage(index)"
+                      class="bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transform hover:scale-110 transition-all duration-200"
+                    >
+                      <Trash2 class="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -106,46 +112,47 @@
 import axios from '@/axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { X, Save, Trash2, ImagePlus } from 'lucide-vue-next'
+import { useStore } from 'vuex'
+import { X, Send, Trash2, ImagePlus } from 'lucide-vue-next'
 
 export default {
   name: 'NewPost',
   components: {
     X,
-    Save,
+    Send,
     Trash2,
     ImagePlus
   },
   setup() {
     const router = useRouter()
+    const store = useStore()
     const title = ref('')
     const content = ref('')
-    const imageFile = ref(null)
-    const imagePreview = ref(null)
+    const imageFiles = ref([])
+    const imagePreviews = ref([])
     const isSubmitting = ref(false)
 
     const handleImageUpload = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
+      const files = Array.from(event.target.files)
+      
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          alert('각 이미지의 크기는 10MB를 초과할 수 없습니다.')
+          continue
+        }
 
-      if (file.size > 10 * 1024 * 1024) {
-        alert('이미지 크기는 10MB를 초과할 수 없습니다.')
-        return
+        imageFiles.value.push(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          imagePreviews.value.push(e.target.result)
+        }
+        reader.readAsDataURL(file)
       }
-
-      imageFile.value = file
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        imagePreview.value = e.target.result
-      }
-      reader.readAsDataURL(file)
     }
 
-    const removeImage = () => {
-      imageFile.value = null
-      imagePreview.value = null
-      const input = document.getElementById('image-upload')
-      if (input) input.value = ''
+    const removeImage = (index) => {
+      imageFiles.value.splice(index, 1)
+      imagePreviews.value.splice(index, 1)
     }
 
     const submitPost = async () => {
@@ -156,13 +163,15 @@ export default {
         const formData = new FormData()
         formData.append('title', title.value)
         formData.append('content', content.value)
-        if (imageFile.value) {
-          formData.append('image', imageFile.value)
-        }
+        
+        imageFiles.value.forEach(file => {
+          formData.append('images', file)
+        })
 
         await axios.post('/api/posts', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${store.state.token}`
           }
         })
 
@@ -178,7 +187,7 @@ export default {
     return {
       title,
       content,
-      imagePreview,
+      imagePreviews,
       isSubmitting,
       handleImageUpload,
       removeImage,

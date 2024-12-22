@@ -95,7 +95,7 @@ const router = createRouter({
   routes,
 });
 
-// 네비게이션 가드 설정 (인증 여부 ��인)
+// 네비게이션 가드 설정 (인증 여부 확인)
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
   const isAuthenticated = store.getters.isAuthenticated;

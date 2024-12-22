@@ -63,16 +63,56 @@
               <h2 class="text-2xl font-bold text-gray-900 leading-tight">{{ post.title }}</h2>
               <p class="text-gray-600 leading-relaxed">{{ post.content }}</p>
               
-              <div v-if="post.image_url" class="relative rounded-2xl overflow-hidden group">
-                <img 
-                  :src="getImageUrl(post.image_url)" 
-                  alt="Post image" 
-                  class="w-full object-cover rounded-2xl transform group-hover:scale-105 transition-transform duration-500"
-                  style="max-height: 32rem;"
-                  loading="lazy"
-                  @load="onImageLoad"
+              <!-- Image gallery -->
+              <div v-if="post.images?.length" class="space-y-4">
+                <div 
+                  class="relative rounded-2xl overflow-hidden"
+                  :data-post-id="post.post_id"
+                  @touchstart="handleTouchStart($event, post)"
+                  @touchmove="handleTouchMove($event, post)"
+                  @touchend="handleTouchEnd($event, post)"
                 >
-                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <!-- Image container -->
+                  <div class="relative w-full overflow-hidden" ref="imageContainer">
+                    <div 
+                      class="flex w-full transition-transform duration-300"
+                      :style="{
+                        transform: `translateX(${post.translateX || 0}px)`,
+                        width: `${post.images.length * 100}%`
+                      }"
+                    >
+                      <div 
+                        v-for="(image, index) in post.images"
+                        :key="index"
+                        class="w-full flex-shrink-0"
+                        :style="{ width: `${100 / post.images.length}%` }"
+                      >
+                        <img 
+                          :src="image" 
+                          alt="Post image"
+                          class="w-full h-full object-cover"
+                          style="max-height: 32rem;"
+                          loading="lazy"
+                          @load="onImageLoad"
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Dot indicators -->
+                  <div 
+                    v-if="post.images.length > 1"
+                    class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10"
+                  >
+                    <button
+                      v-for="(_, index) in post.images"
+                      :key="index"
+                      @click="setImageIndex(post, index)"
+                      class="w-2 h-2 rounded-full transition-all duration-200"
+                      :class="index === post.currentImageIndex ? 'bg-white scale-110' : 'bg-white/50'"
+                    ></button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -203,6 +243,7 @@
 import axios from '@/axios'
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import { 
   Clock, 
   MoreVertical, 
@@ -251,11 +292,17 @@ export default {
   },
   setup() {
     const store = useStore()
+    const router = useRouter()
     const posts = ref([])
     const newComments = ref({})
     const currentPage = ref(1)
     const totalPages = ref(1)
     const currentUserId = ref(store.state.user?.user_id)
+
+    const imageContainer = ref(null)
+    const touchStart = ref({ x: 0, y: 0 })
+    const touchEnd = ref({ x: 0, y: 0 })
+    const minSwipeDistance = 50
 
     const fetchPosts = async () => {
       try {
@@ -263,6 +310,9 @@ export default {
           params: {
             page: currentPage.value,
             per_page: 10
+          },
+          headers: {
+            'Authorization': `Bearer ${store.state.token}`
           }
         })
         posts.value = response.data.posts.map(post => ({
@@ -270,18 +320,29 @@ export default {
           showComments: false,
           showOptions: false,
           comments: [],
-          image_url: post.image_url || null
+          currentImageIndex: 0,
+          translateX: 0,
+          isDragging: false,
+          containerWidth: 0
         }))
         totalPages.value = response.data.pages
       } catch (error) {
         console.error('Error fetching posts:', error)
+        if (error.response?.status === 401) {
+          store.dispatch('logout')
+          router.push('/login')
+        }
       }
     }
 
     const confirmDelete = async (post) => {
       if (confirm('정말로 이 게시물을 삭제하시겠습니까?')) {
         try {
-          await axios.post(`/api/posts/${post.post_id}/delete`)
+          await axios.delete(`/api/posts/${post.post_id}`, {
+            headers: {
+              'Authorization': `Bearer ${store.state.token}`
+            }
+          })
           posts.value = posts.value.filter(p => p.post_id !== post.post_id)
         } catch (error) {
           console.error('Error deleting post:', error)
@@ -292,24 +353,32 @@ export default {
 
     const toggleLike = async (post) => {
       try {
-        await axios.post(`/api/posts/${post.post_id}/like`)
+        await axios.post(`/api/posts/${post.post_id}/like`, {}, {
+          headers: {
+            'Authorization': `Bearer ${store.state.token}`
+          }
+        })
         post.is_liked = !post.is_liked
         post.likes_count += post.is_liked ? 1 : -1
       } catch (error) {
         console.error('Error toggling like:', error)
+        alert('좋아요 처리 중 오류가 발생했습니다.')
       }
     }
 
     const showComments = async (post) => {
-      if (!post.showComments) {
-        try {
-          const response = await axios.get(`/api/posts/${post.post_id}/comments`)
-          post.comments = response.data.comments
-        } catch (error) {
-          console.error('Error fetching comments:', error)
-        }
+      try {
+        const response = await axios.get(`/api/posts/${post.post_id}/comments`, {
+          headers: {
+            'Authorization': `Bearer ${store.state.token}`
+          }
+        })
+        post.comments = response.data.comments
+        post.showComments = !post.showComments
+      } catch (error) {
+        console.error('Error fetching comments:', error)
+        alert('댓글을 불러오는 중 오류가 발생했습니다.')
       }
-      post.showComments = !post.showComments
     }
 
     const addComment = async (post) => {
@@ -317,13 +386,26 @@ export default {
       if (!content?.trim()) return
 
       try {
-        await axios.post(`/api/posts/${post.post_id}/comments`, { content })
-        const response = await axios.get(`/api/posts/${post.post_id}/comments`)
+        await axios.post(`/api/posts/${post.post_id}/comments`, 
+          { content },
+          {
+            headers: {
+              'Authorization': `Bearer ${store.state.token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+        const response = await axios.get(`/api/posts/${post.post_id}/comments`, {
+          headers: {
+            'Authorization': `Bearer ${store.state.token}`
+          }
+        })
         post.comments = response.data.comments
         post.comments_count += 1
         newComments.value[post.post_id] = ''
       } catch (error) {
         console.error('Error adding comment:', error)
+        alert('댓글 작성 중 오류가 발생했습니다.')
       }
     }
 
@@ -343,17 +425,20 @@ export default {
         const shareData = {
           title: post.title,
           text: post.content,
-          url: window.location.href
+          url: `${window.location.origin}/community/${post.post_id}`
         }
 
-        if (navigator.share) {
+        if (navigator.share && navigator.canShare(shareData)) {
           await navigator.share(shareData)
         } else {
-          await navigator.clipboard.writeText(window.location.href)
+          await navigator.clipboard.writeText(shareData.url)
           alert('링크가 클립보드에 복사되었습니다.')
         }
       } catch (error) {
         console.error('Error sharing:', error)
+        if (error.name !== 'AbortError') {
+          alert('공유하기에 실패했습니다.')
+        }
       }
     }
 
@@ -365,6 +450,72 @@ export default {
 
     const onImageLoad = (event) => {
       event.target.classList.add('loaded')
+    }
+
+    const setImageIndex = (post, index) => {
+      if (!post.images || post.images.length <= 1) return
+      post.currentImageIndex = index
+      const container = document.querySelector(`[data-post-id="${post.post_id}"] .overflow-hidden`)
+      post.containerWidth = container ? container.offsetWidth : window.innerWidth
+      post.translateX = -index * post.containerWidth
+    }
+
+    const handleTouchStart = (event, post) => {
+      if (!post.images || post.images.length <= 1) return
+      
+      const touch = event.touches[0]
+      touchStart.value = { x: touch.clientX, y: touch.clientY }
+      touchEnd.value = { x: touch.clientX, y: touch.clientY }
+      
+      const container = event.currentTarget.querySelector('.overflow-hidden')
+      post.containerWidth = container ? container.offsetWidth : window.innerWidth
+      post.isDragging = true
+      post.startTranslateX = post.translateX || 0
+    }
+
+    const handleTouchMove = (event, post) => {
+      if (!post.isDragging || !post.images || post.images.length <= 1) return
+      
+      event.preventDefault()
+      const touch = event.touches[0]
+      touchEnd.value = { x: touch.clientX, y: touch.clientY }
+      
+      const deltaX = touchEnd.value.x - touchStart.value.x
+      const deltaY = touchEnd.value.y - touchStart.value.y
+      
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        post.isDragging = false
+        return
+      }
+      
+      const newTranslateX = post.startTranslateX + deltaX
+      const maxTranslateX = 0
+      const minTranslateX = -(post.images.length - 1) * post.containerWidth
+      
+      if (newTranslateX > maxTranslateX) {
+        post.translateX = newTranslateX * 0.3
+      } else if (newTranslateX < minTranslateX) {
+        post.translateX = minTranslateX + (newTranslateX - minTranslateX) * 0.3
+      } else {
+        post.translateX = newTranslateX
+      }
+    }
+
+    const handleTouchEnd = (event, post) => {
+      if (!post.isDragging || !post.images || post.images.length <= 1) return
+      
+      post.isDragging = false
+      const deltaX = touchEnd.value.x - touchStart.value.x
+      
+      if (Math.abs(deltaX) > minSwipeDistance) {
+        if (deltaX < 0 && post.currentImageIndex < post.images.length - 1) {
+          post.currentImageIndex++
+        } else if (deltaX > 0 && post.currentImageIndex > 0) {
+          post.currentImageIndex--
+        }
+      }
+      
+      post.translateX = -post.currentImageIndex * post.containerWidth
     }
 
     onMounted(() => {
@@ -382,37 +533,26 @@ export default {
       confirmDelete,
       sharePost,
       getImageUrl,
-      onImageLoad
+      onImageLoad,
+      setImageIndex,
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd,
+      imageContainer
     }
-    }
+  }
 }
 </script>
 
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(30px);
-}
-
-/* Smooth image loading */
-img {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-img[loading] {
-    opacity: 0;
-  transform: scale(0.95);
-}
-
-img.loaded {
-  opacity: 1;
-  transform: scale(1);
 }
 
 /* Custom scrollbar */
@@ -431,5 +571,116 @@ img.loaded {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #2563EB, #6D28D9);
+}
+
+/* Smooth image loading */
+img {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+img[loading] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+img.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Add fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Add custom scrollbar for thumbnails */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E0 transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: #CBD5E0;
+  border-radius: 3px;
+}
+
+/* Add slide transition */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-leave-to {
+  transform: translateX(-100%);
+}
+
+/* Prevent text selection during swipe */
+.touch-pan-y {
+  touch-action: pan-x;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Remove slide transition styles as we're using transform now */
+.slide-enter-active,
+.slide-leave-active,
+.slide-enter-from,
+.slide-leave-to {
+  display: none;
+}
+
+/* Add smooth transition for dot indicators */
+.dot-indicator {
+  transition: all 0.2s ease-out;
+}
+
+/* Add smooth transition for image sliding */
+.image-slider {
+  transition: transform 0.3s ease-out;
+}
+
+/* Update touch action for proper swipe handling */
+.overflow-hidden {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Remove conflicting styles */
+.touch-pan-y {
+  touch-action: none;
+}
+
+/* Optimize for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .overflow-hidden {
+    overscroll-behavior: none;
+  }
 }
 </style>

@@ -57,41 +57,20 @@
 
             <!-- Image upload -->
             <div>
-              <div 
-                class="relative group cursor-pointer"
-                :class="{'border-2 border-dashed border-gray-200 rounded-2xl hover:border-blue-400 transition-colors duration-200': !imagePreview && !post?.image_url}"
-              >
+              <div class="relative">
                 <!-- Empty state -->
                 <div 
-                  v-if="!imagePreview && !post?.image_url" 
-                  class="flex flex-col items-center justify-center py-12"
+                  class="border-2 border-dashed border-gray-200 rounded-2xl hover:border-blue-400 transition-colors duration-200 cursor-pointer"
                   @click="$refs.fileInput.click()"
                 >
-                  <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
-                    <ImagePlus class="w-8 h-8 text-blue-500" />
-                  </div>
-                  <div class="text-center">
-                    <p class="text-sm font-medium text-gray-900 mb-1">이미지를 업로드하세요</p>
-                    <p class="text-xs text-gray-500">PNG, JPG, GIF (최대 10MB)</p>
-                  </div>
-                </div>
-
-                <!-- Preview state -->
-                <div v-else class="relative rounded-2xl overflow-hidden group">
-                  <img
-                    :src="imagePreview || post?.image_url"
-                    alt="Preview"
-                    class="w-full object-cover rounded-2xl transform group-hover:scale-105 transition-transform duration-500"
-                    style="max-height: 32rem;"
-                  >
-                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                    <button
-                      type="button"
-                      @click="removeImage"
-                      class="bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transform hover:scale-110 transition-all duration-200"
-                    >
-                      <Trash2 class="w-6 h-6" />
-                    </button>
+                  <div class="flex flex-col items-center justify-center py-8">
+                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <ImagePlus class="w-8 h-8 text-blue-500" />
+                    </div>
+                    <div class="text-center">
+                      <p class="text-sm font-medium text-gray-900 mb-1">이미지를 업로드하세요</p>
+                      <p class="text-xs text-gray-500">PNG, JPG, GIF (최대 10MB)</p>
+                    </div>
                   </div>
                 </div>
 
@@ -100,8 +79,33 @@
                   type="file"
                   class="hidden"
                   accept="image/*"
+                  multiple
                   @change="handleImageUpload"
                 >
+              </div>
+
+              <!-- Image previews -->
+              <div v-if="imagePreviews.length > 0" class="mt-4 grid grid-cols-2 gap-4">
+                <div 
+                  v-for="(preview, index) in imagePreviews" 
+                  :key="index"
+                  class="relative rounded-2xl overflow-hidden group aspect-video"
+                >
+                  <img
+                    :src="preview"
+                    alt="Preview"
+                    class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  >
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <button
+                      type="button"
+                      @click="removeImage(index)"
+                      class="bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transform hover:scale-110 transition-all duration-200"
+                    >
+                      <Trash2 class="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -133,10 +137,10 @@ export default {
     const post = ref(null)
     const title = ref('')
     const content = ref('')
-    const imageFile = ref(null)
-    const imagePreview = ref(null)
+    const imageFiles = ref([])
+    const imagePreviews = ref([])
+    const removedImages = ref([])
     const isSubmitting = ref(false)
-    const shouldRemoveImage = ref(false)
 
     const fetchPost = async () => {
       try {
@@ -147,8 +151,8 @@ export default {
         })
         title.value = response.data.title
         content.value = response.data.content
-        if (response.data.image_url) {
-          imagePreview.value = response.data.image_url
+        if (response.data.images?.length) {
+          imagePreviews.value = response.data.images
         }
       } catch (error) {
         console.error('Error fetching post:', error)
@@ -157,30 +161,29 @@ export default {
     }
 
     const handleImageUpload = (event) => {
-      const file = event.target.files[0]
-      if (!file) return
+      const files = Array.from(event.target.files)
+      
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          alert('각 이미지의 크기는 10MB를 초과할 수 없습니다.')
+          continue
+        }
 
-      if (file.size > 10 * 1024 * 1024) {
-        alert('이미지 크기는 10MB를 초과할 수 없습니다.')
-        return
+        imageFiles.value.push(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          imagePreviews.value.push(e.target.result)
+        }
+        reader.readAsDataURL(file)
       }
-
-      imageFile.value = file
-      shouldRemoveImage.value = false
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        imagePreview.value = e.target.result
-      }
-      reader.readAsDataURL(file)
     }
 
-    const removeImage = () => {
-      imageFile.value = null
-      imagePreview.value = null
-      shouldRemoveImage.value = true
-      if (post.value) {
-        post.value.image_url = null
+    const removeImage = (index) => {
+      if (post.value?.images?.[index]) {
+        removedImages.value.push(post.value.images[index])
       }
+      imageFiles.value.splice(index, 1)
+      imagePreviews.value.splice(index, 1)
     }
 
     const submitEdit = async () => {
@@ -191,12 +194,14 @@ export default {
         const formData = new FormData()
         formData.append('title', title.value)
         formData.append('content', content.value)
-        if (imageFile.value) {
-          formData.append('image', imageFile.value)
-        }
-        if (shouldRemoveImage.value) {
-          formData.append('remove_image', 'true')
-        }
+        
+        imageFiles.value.forEach(file => {
+          formData.append('images', file)
+        })
+        
+        removedImages.value.forEach(url => {
+          formData.append('removed_images[]', url)
+        })
 
         if (route.params.id) {
           await axios.put(`/api/posts/${route.params.id}`, formData, {
@@ -247,7 +252,7 @@ export default {
       post,
       title,
       content,
-      imagePreview,
+      imagePreviews,
       isSubmitting,
       handleImageUpload,
       removeImage,
