@@ -4,6 +4,8 @@ import store from "./store"; // 스토어 임포트
 // 컴포넌트 임포트
 import Home from "./views/Home.vue";
 import Community from "./views/Community.vue";
+import NewPost from "./views/NewPost.vue";
+import EditPost from "./views/EditPost.vue";
 import MapLocationService from "./views/MapLocationService.vue";
 import Profile from "./views/Profile.vue";
 import FishResultNormal from "./views/FishResultNormal.vue";
@@ -28,6 +30,19 @@ const routes = [
     path: "/community",
     name: "Community",
     component: Community, // 커뮤니티 컴포넌트
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/community/new",
+    name: "NewPost",
+    component: NewPost,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/community/edit/:id",
+    name: "EditPost",
+    component: EditPost,
+    meta: { requiresAuth: true },
   },
   {
     path: "/map-location-service",
@@ -80,7 +95,7 @@ const router = createRouter({
   routes,
 });
 
-// 네비게이션 가드 설정 (인증 여부 확인)
+// 네비게이션 가드 설정 (인증 여부 ��인)
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
   const isAuthenticated = store.getters.isAuthenticated;
