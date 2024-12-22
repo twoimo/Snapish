@@ -424,7 +424,7 @@ export default createStore({
     },
     async fetchHotIssues({ commit }) {
       try {
-        // 임시 데��터 사용 (실제 API 연동 전까지)
+        // 임시 데이터 사용 (실제 API 연동 전까지)
         const tempHotIssues = [
           {
             id: 1,

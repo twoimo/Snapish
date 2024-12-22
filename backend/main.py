@@ -191,10 +191,52 @@ class CommunicationBoard(Base):
     user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
     title = Column(String(255))
     content = Column(Text)
+    images = Column(JSON, default=list)  # Store multiple image URLs as JSON array
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship('User', back_populates='posts')
+    likes = relationship('PostLike', back_populates='post', cascade='all, delete')
+    comments = relationship('PostComment', back_populates='post', cascade='all, delete')
+    retweets = relationship('PostRetweet', back_populates='post', cascade='all, delete')
+
+
+class PostLike(Base):
+    __tablename__ = 'PostLikes'
+
+    like_id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey('CommunicationBoard.post_id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    post = relationship('CommunicationBoard', back_populates='likes')
+    user = relationship('User')
+
+
+class PostComment(Base):
+    __tablename__ = 'PostComments'
+
+    comment_id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey('CommunicationBoard.post_id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    post = relationship('CommunicationBoard', back_populates='comments')
+    user = relationship('User')
+
+
+class PostRetweet(Base):
+    __tablename__ = 'PostRetweets'
+
+    retweet_id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey('CommunicationBoard.post_id', ondelete='CASCADE'))
+    user_id = Column(Integer, ForeignKey('Users.user_id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    post = relationship('CommunicationBoard', back_populates='retweets')
+    user = relationship('User')
 
 
 class WeatherData(Base):
@@ -290,7 +332,7 @@ CORS(app, resources={r"/*": {
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
-# 초시 헤더를 위한 after_request 데코레이터를 앱 초기화 직후에 추가
+# 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
 def add_header(response):
     if request.path.startswith('/uploads/'):
@@ -301,7 +343,7 @@ def add_header(response):
 # 초기 DB install
 initialize_service()
 
-# 라벨 매핑 (영어 -> 한국어)
+# 라벨 핑 (어 -> 한국어)
 labels_korean = {
  0: '감성돔',
  1: '대구',
@@ -356,7 +398,7 @@ PROHIBITED_DATES = {
 def hello():
     return 'Welcome to SNAPISH'
 
-# 물때 정보 받아오기
+# 물떼 정보 받아기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -382,7 +424,7 @@ def get_mulddae():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전�� 키로 변경하세요.
 
 def token_required(f):
     @wraps(f)
@@ -416,7 +458,7 @@ def signup():
     password = data.get('password')
 
     if not username or not email or not password:
-        return jsonify({'message': '모든 필드를 채워주세요.'}), 400
+        return jsonify({'message': '모든 필드를 채워세요.'}), 400
 
     session = Session()
     existing_user = session.query(User).filter(
@@ -498,7 +540,7 @@ def optimize_image(image, max_size=1024):
     buffer.seek(0)
     return buffer
 
-# predict 라우트 수정
+# predict 라트 수정
 @app.route('/backend/predict', methods=['POST'])
 def predict():
     try:
@@ -637,7 +679,7 @@ def recent_activities(user_id):
         session.close()
         return jsonify({'message': 'User not found'}), 404
 
-    # 최근 활동을 조회하는 로직 (예: 데이터베이스에서 최근 5개의 캐치를 가져오기)
+    # 최근 활동을 회하는 로직 (예: 데이터베이스에서 최근 5개 캐치를 가져오기)
     activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
     session.close()
     
@@ -678,7 +720,7 @@ def create_catch(user_id):
             'latitude': float(new_catch.latitude) if new_catch.latitude else None,
             'longitude': float(new_catch.longitude) if new_catch.longitude else None,
             'memo': new_catch.memo,
-            'message': '캐치가 성공적으로 추가되었습니다.'
+            'message': '치가 성공적으로 추가되었습니다.'
         })
     except Exception as e:
         session.rollback()
@@ -905,7 +947,7 @@ def upload_avatar(user_id):
     else:
         return jsonify({'error': 'Invalid file type'}), 400
     
-# 요청 위치 기준 가장 가까운 관소 위치 반환 
+# 요청 위치 기준 가장 가까운 관 위치 반환 
 @app.route('/backend/closest-sealoc', methods=['POST'])
 def get_closest_sealoc():
     user_lat = request.form.get('lat')
@@ -916,8 +958,8 @@ def get_closest_sealoc():
 
     session = Session()
     
-    ## ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
-    # 조위, 수온, 기온 , 기압 4개 모두 체크 가능한 경우
+    ## ST_Distance_Sphere를 사용하여 MySQL에�� 직접 거리 계산
+    # 조위, 수온, 기온 , 기압 4개 모두 체 가능한 우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
             ST_Distance_Sphere(POINT(:lon, :lat), POINT(obs_lon, obs_lat)) AS distance
@@ -942,7 +984,7 @@ def get_closest_sealoc():
     """)
 
     try:
-        # 두 개 쿼리 실행
+        #  개 쿼리 실행
         result_obsrecent = session.execute(query_obsrecent, {'lat': user_lat, 'lon': user_lon}).fetchone()
         result_obspretab = session.execute(query_obspretab, {'lat': user_lat, 'lon': user_lon}).fetchone()
 
@@ -1098,6 +1140,421 @@ def get_services():
             "icon": "/icons/community.png",
             "route": "/community"
         },
-        # ��가 서비스들...
+        # 추가 서비스들...
     ]
     return jsonify(services)
+
+def get_full_url(url):
+    if not url:
+        return None
+    if url.startswith('http'):
+        return url
+    return f"http://localhost:5000{url}"
+
+@app.route('/api/posts', methods=['GET'])
+@token_required
+def get_posts(user_id):
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        session = Session()
+        
+        # Calculate total posts and pages
+        total = session.query(CommunicationBoard).count()
+        offset = (page - 1) * per_page
+        
+        # Get posts with pagination
+        posts = session.query(CommunicationBoard)\
+            .order_by(CommunicationBoard.created_at.desc())\
+            .offset(offset)\
+            .limit(per_page)\
+            .all()
+            
+        result = []
+        for post in posts:
+            user = session.query(User).get(post.user_id)
+            
+            # Get like status for current user
+            is_liked = session.query(PostLike)\
+                .filter_by(post_id=post.post_id, user_id=user_id)\
+                .first() is not None
+            
+            post_data = {
+                'post_id': post.post_id,
+                'user_id': post.user_id,
+                'username': user.username if user else 'Unknown',
+                'avatar': get_full_url(user.avatar) if user and user.avatar else None,
+                'title': post.title,
+                'content': post.content,
+                'images': [get_full_url(image) for image in (post.images or [])],
+                'created_at': post.created_at.isoformat(),
+                'likes_count': session.query(PostLike).filter_by(post_id=post.post_id).count(),
+                'comments_count': session.query(PostComment).filter_by(post_id=post.post_id).count(),
+                'is_liked': is_liked
+            }
+            result.append(post_data)
+            
+        total_pages = (total + per_page - 1) // per_page
+        
+        return jsonify({
+            'posts': result,
+            'total': total,
+            'pages': total_pages,
+            'current_page': page
+        })
+    except Exception as e:
+        logging.error(f"Error getting posts: {str(e)}")
+        return jsonify({'error': '게시물을 불러오는 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts', methods=['POST'])
+@token_required
+def create_post(user_id):
+    session = Session()
+    try:
+        # Get form data
+        title = request.form.get('title')
+        content = request.form.get('content')
+        images = request.files.getlist('images')
+
+        if not title or not content:
+            return jsonify({'error': '제목과 내용은 필수입니다.'}), 400
+
+        # Create new post
+        new_post = CommunicationBoard(
+            user_id=user_id,
+            title=title,
+            content=content,
+            images=[],  # Initialize empty list for images
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        # Handle image uploads
+        for image in images:
+            if image and allowed_file(image.filename):
+                try:
+                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
+                    image_path = os.path.join(UPLOAD_FOLDER, filename)
+                    image.save(image_path)
+                    new_post.images.append(f'/uploads/{filename}')
+                except Exception as e:
+                    logging.error(f"Error saving image {image.filename}: {str(e)}")
+                    continue
+
+        session.add(new_post)
+        session.commit()
+
+        # Get user info for response
+        user = session.query(User).get(user_id)
+
+        response_data = {
+            'message': '게시물이 성공적으로 작성되었습니다.',
+            'post': {
+                'post_id': new_post.post_id,
+                'user_id': user_id,
+                'username': user.username,
+                'avatar': get_full_url(user.avatar),
+                'title': new_post.title,
+                'content': new_post.content,
+                'images': [get_full_url(url) for url in new_post.images],
+                'created_at': new_post.created_at.isoformat(),
+                'updated_at': new_post.updated_at.isoformat(),
+                'likes_count': 0,
+                'comments_count': 0,
+                'is_liked': False
+            }
+        }
+        return jsonify(response_data), 201
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error creating post: {str(e)}")
+        return jsonify({'error': '게시물 작성 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>', methods=['GET'])
+@token_required
+def get_post(user_id, post_id):
+    session = Session()
+    try:
+        post = session.query(CommunicationBoard).get(post_id)
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
+
+        user = session.query(User).get(post.user_id)
+        if not user:
+            return jsonify({'error': '게시물 작성자를 찾을 수 없습니다.'}), 500
+
+        # Check if the current user has liked this post
+        is_liked = session.query(PostLike).filter_by(
+            post_id=post_id,
+            user_id=user_id
+        ).first() is not None
+
+        # Get counts
+        likes_count = session.query(PostLike).filter_by(post_id=post_id).count()
+        comments_count = session.query(PostComment).filter_by(post_id=post_id).count()
+
+        # Handle images safely
+        images = []
+        if post.images:
+            if isinstance(post.images, list):
+                images = [get_full_url(image) for image in post.images]
+            else:
+                logging.warning(f"Unexpected images type for post {post_id}: {type(post.images)}")
+                images = []
+
+        response_data = {
+            'post_id': post.post_id,
+            'user_id': post.user_id,
+            'username': user.username,
+            'avatar': get_full_url(user.avatar),
+            'title': post.title,
+            'content': post.content,
+            'images': images,
+            'created_at': post.created_at.isoformat(),
+            'updated_at': post.updated_at.isoformat() if post.updated_at else post.created_at.isoformat(),
+            'likes_count': likes_count,
+            'comments_count': comments_count,
+            'is_liked': is_liked
+        }
+
+        return jsonify(response_data)
+    except Exception as e:
+        logging.error(f"Error getting post {post_id}: {str(e)}")
+        return jsonify({'error': '게시물을 불러오는 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+@token_required
+def update_post(user_id, post_id):
+    session = Session()
+    try:
+        post = session.query(CommunicationBoard).filter_by(post_id=post_id, user_id=user_id).first()
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없거나 수정 권한이 없습니다.'}), 404
+
+        data = request.form
+        new_images = request.files.getlist('images')
+        removed_images = request.form.getlist('removed_images[]')
+
+        # Initialize images list if it doesn't exist
+        if not hasattr(post, 'images') or post.images is None:
+            post.images = []
+        elif not isinstance(post.images, list):
+            post.images = []
+
+        # Handle removed images
+        if removed_images:
+            logging.info(f"Removing images: {removed_images}")
+            for image_url in removed_images:
+                if image_url in post.images:
+                    try:
+                        post.images.remove(image_url)
+                        # Delete the actual file
+                        image_path = os.path.join(app.root_path, image_url.lstrip('/'))
+                        if os.path.exists(image_path):
+                            os.remove(image_path)
+                            logging.info(f"Deleted file: {image_path}")
+                    except Exception as e:
+                        logging.error(f"Error removing image {image_url}: {str(e)}")
+
+        # Add new images
+        for image in new_images:
+            if image and allowed_file(image.filename):
+                try:
+                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
+                    image_path = os.path.join(UPLOAD_FOLDER, filename)
+                    image.save(image_path)
+                    post.images.append(f'/uploads/{filename}')
+                    logging.info(f"Added new image: {filename}")
+                except Exception as e:
+                    logging.error(f"Error saving image {image.filename}: {str(e)}")
+
+        # Update post content
+        post.title = data.get('title', post.title)
+        post.content = data.get('content', post.content)
+        post.updated_at = datetime.utcnow()
+
+        session.commit()
+        
+        # Prepare response with updated data
+        response_data = {
+            'message': '게시물이 성공적으로 수정되었습니다.',
+            'post': {
+                'post_id': post.post_id,
+                'title': post.title,
+                'content': post.content,
+                'images': [get_full_url(url) for url in (post.images or [])],
+                'updated_at': post.updated_at.isoformat()
+            }
+        }
+        logging.info(f"Successfully updated post {post_id} with images: {post.images}")
+        return jsonify(response_data)
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error updating post {post_id}: {str(e)}")
+        return jsonify({'error': '게시물 수정 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+@token_required
+def delete_post(user_id, post_id):
+    session = Session()
+    try:
+        post = session.query(CommunicationBoard).filter_by(post_id=post_id, user_id=user_id).first()
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없거나 삭제 권한이 없습니다.'}), 404
+
+        # Delete all associated images
+        if post.images:
+            for image_url in post.images:
+                image_path = os.path.join(UPLOAD_FOLDER, os.path.basename(image_url))
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+
+        session.delete(post)
+        session.commit()
+
+        return jsonify({'message': '게시물이 성공적으로 삭제되었습니다.'})
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error deleting post: {str(e)}")
+        return jsonify({'error': '게시물 삭제 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>/like', methods=['POST'])
+@token_required
+def toggle_like(user_id, post_id):
+    session = Session()
+    try:
+        # Check if post exists
+        post = session.query(CommunicationBoard).get(post_id)
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
+
+        # Check if user already liked the post
+        existing_like = session.query(PostLike).filter_by(
+            post_id=post_id,
+            user_id=user_id
+        ).first()
+
+        if existing_like:
+            # Unlike
+            session.delete(existing_like)
+            session.commit()
+            likes_count = session.query(PostLike).filter_by(post_id=post_id).count()
+            return jsonify({
+                'message': '좋아요가 취소되었습니다.',
+                'is_liked': False,
+                'likes_count': likes_count
+            })
+        else:
+            # Like
+            new_like = PostLike(post_id=post_id, user_id=user_id)
+            session.add(new_like)
+            session.commit()
+            likes_count = session.query(PostLike).filter_by(post_id=post_id).count()
+            return jsonify({
+                'message': '좋아요가 추가되었습니다.',
+                'is_liked': True,
+                'likes_count': likes_count
+            })
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error toggling like for post {post_id}: {str(e)}")
+        return jsonify({'error': '좋아요 처리 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['GET'])
+@token_required
+def get_comments(user_id, post_id):
+    session = Session()
+    try:
+        # Check if post exists
+        post = session.query(CommunicationBoard).get(post_id)
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
+
+        # Get comments with user information
+        comments = session.query(PostComment, User).join(
+            User, PostComment.user_id == User.user_id
+        ).filter(
+            PostComment.post_id == post_id
+        ).order_by(
+            PostComment.created_at.desc()
+        ).all()
+
+        comments_data = [{
+            'comment_id': comment.comment_id,
+            'user_id': comment.user_id,
+            'username': user.username,
+            'avatar': get_full_url(user.avatar),
+            'content': comment.content,
+            'created_at': comment.created_at.isoformat()
+        } for comment, user in comments]
+
+        return jsonify({'comments': comments_data})
+
+    except Exception as e:
+        logging.error(f"Error getting comments for post {post_id}: {str(e)}")
+        return jsonify({'error': '댓글을 불러오는 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['POST'])
+@token_required
+def create_comment(user_id, post_id):
+    session = Session()
+    try:
+        # Check if post exists
+        post = session.query(CommunicationBoard).get(post_id)
+        if not post:
+            return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
+
+        data = request.get_json()
+        if not data or not data.get('content'):
+            return jsonify({'error': '댓글 내용이 필요합니다.'}), 400
+
+        # Create new comment
+        new_comment = PostComment(
+            post_id=post_id,
+            user_id=user_id,
+            content=data['content']
+        )
+        session.add(new_comment)
+        session.commit()
+
+        # Get user info for response
+        user = session.query(User).get(user_id)
+        
+        comment_data = {
+            'comment_id': new_comment.comment_id,
+            'user_id': user_id,
+            'username': user.username,
+            'avatar': get_full_url(user.avatar),
+            'content': new_comment.content,
+            'created_at': new_comment.created_at.isoformat()
+        }
+
+        return jsonify({
+            'message': '댓글이 성공적으로 작성되었습니다.',
+            'comment': comment_data
+        })
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error creating comment for post {post_id}: {str(e)}")
+        return jsonify({'error': '댓글 작성 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
