@@ -424,7 +424,7 @@ def get_mulddae():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전한 키로 변경하세요.
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전�� 키로 변경하세요.
 
 def token_required(f):
     @wraps(f)
@@ -958,7 +958,7 @@ def get_closest_sealoc():
 
     session = Session()
     
-    ## ST_Distance_Sphere를 사용하여 MySQL에서 직접 거리 계산
+    ## ST_Distance_Sphere를 사용하여 MySQL에�� 직접 거리 계산
     # 조위, 수온, 기온 , 기압 4개 모두 체 가능한 우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
@@ -1136,7 +1136,7 @@ def get_services():
         },
         {
             "id": 4,
-            "name": "커니티",
+            "name": "커뮤니티",
             "icon": "/icons/community.png",
             "route": "/community"
         },
@@ -1206,6 +1206,73 @@ def get_posts(user_id):
     except Exception as e:
         logging.error(f"Error getting posts: {str(e)}")
         return jsonify({'error': '게시물을 불러오는 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts', methods=['POST'])
+@token_required
+def create_post(user_id):
+    session = Session()
+    try:
+        # Get form data
+        title = request.form.get('title')
+        content = request.form.get('content')
+        images = request.files.getlist('images')
+
+        if not title or not content:
+            return jsonify({'error': '제목과 내용은 필수입니다.'}), 400
+
+        # Create new post
+        new_post = CommunicationBoard(
+            user_id=user_id,
+            title=title,
+            content=content,
+            images=[],  # Initialize empty list for images
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        # Handle image uploads
+        for image in images:
+            if image and allowed_file(image.filename):
+                try:
+                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
+                    image_path = os.path.join(UPLOAD_FOLDER, filename)
+                    image.save(image_path)
+                    new_post.images.append(f'/uploads/{filename}')
+                except Exception as e:
+                    logging.error(f"Error saving image {image.filename}: {str(e)}")
+                    continue
+
+        session.add(new_post)
+        session.commit()
+
+        # Get user info for response
+        user = session.query(User).get(user_id)
+
+        response_data = {
+            'message': '게시물이 성공적으로 작성되었습니다.',
+            'post': {
+                'post_id': new_post.post_id,
+                'user_id': user_id,
+                'username': user.username,
+                'avatar': get_full_url(user.avatar),
+                'title': new_post.title,
+                'content': new_post.content,
+                'images': [get_full_url(url) for url in new_post.images],
+                'created_at': new_post.created_at.isoformat(),
+                'updated_at': new_post.updated_at.isoformat(),
+                'likes_count': 0,
+                'comments_count': 0,
+                'is_liked': False
+            }
+        }
+        return jsonify(response_data), 201
+
+    except Exception as e:
+        session.rollback()
+        logging.error(f"Error creating post: {str(e)}")
+        return jsonify({'error': '게시물 작성 중 오류가 발생했습니다.'}), 500
     finally:
         session.close()
 
