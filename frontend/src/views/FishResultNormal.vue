@@ -250,6 +250,7 @@ const showConsentModal = ref(false);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const loading = ref(true);
+const isLoadingMore = ref(false);
 
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
@@ -267,6 +268,7 @@ const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요�
 
 const fetchDetections = async () => {
   isLoading.value = true;
+  isLoadingMore.value = true;
   try {
     const token = localStorage.getItem('token');
     if (token && route.query.imageUrl) {
@@ -291,6 +293,7 @@ const fetchDetections = async () => {
     parsedDetections.value = [];
   } finally {
     isLoading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
