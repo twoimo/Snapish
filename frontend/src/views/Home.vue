@@ -1,279 +1,247 @@
 <template>
-    <div class="min-h-screen bg-gray-100 flex justify-center">
-        <div class="w-full max-w-4xl bg-white shadow-lg overflow-hidden rounded-lg">
-            <main class="pb-20 px-4">
-                <!-- 로딩 상태 -->
-                <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
-                    <div class="flex flex-col items-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-                        <span class="text-sm text-gray-500">로딩중...</span>
-                    </div>
-                </div>
-
-                <!-- 오늘의 물때 섹션 -->
-                <section class="mb-6 pt-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <router-link to="/map-location-service"
-                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <h2 class="text-lg font-semibold text-gray-800 mr-2">오늘의 물때</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
-                        </router-link>
-                    </div>
-                    <MulddaeWidget></MulddaeWidget>
-                </section>
-
-                <!-- 내가 잡은 물고기 섹션 -->
-                <section v-if="isAuthenticated" class="mb-6 pt-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <router-link to="/catches"
-                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <h2 class="text-lg font-semibold text-gray-800 mr-2">내가 잡은 물고기</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
-                        </router-link>
-                    </div>
-                    <div v-if="isLoadingCatches" class="text-center text-gray-500">
-                        Loading...
-                    </div>
-                    <div v-else-if="displayedCatches.length > 0" 
-                        ref="scrollContainer"
-                        class="overflow-x-auto touch-pan-x relative group element"
-                        @mouseenter="stopAutoSlide"
-                        @mouseleave="startAutoSlide">
-                        <div class="flex space-x-4 transition-all duration-700 ease-in-out transform">
-                            <div v-for="catchItem in displayedCatches" :key="catchItem.id"
-                                class="bg-gray-50 p-4 rounded-lg shadow-md flex-shrink-0 w-80 h-64 transition-transform duration-200 hover:shadow-lg">
-                                <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
-                                    alt="Catch Image"
-                                    class="w-full h-48 object-cover rounded-lg mb-2 cursor-pointer"
-                                    @click="openImagePopup(catchItem.imageUrl)" />
-                                <p class="text-gray-800 text-sm text-center font-medium">
-                                    {{ catchItem.detections[0].label }}
-                                </p>
-                                <p class="text-gray-600 text-xs text-center mb-2">
-                                    신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="text-gray-500 flex flex-col items-center p-2">아직 잡은 물고기가 없습니다.</div>
-                </section>
-
-                <!-- 오늘의 핫이슈 섹션 -->
-                <section class="mb-6 pt-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <router-link to="/community"
-                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out">
-                            <h2 class="text-lg font-semibold text-gray-800">오늘의 핫이슈</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
-                        </router-link>
-                    </div>
-                    <div class="space-y-4">
-                        <router-link v-for="issue in hotIssues" :key="issue.post_id" 
-                            :to="`/community/${issue.post_id}`" 
-                            class="p-4">
-                            <div class="flex gap-3">
-                                <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img 
-                                        :src="getImageUrl(issue.images[0])" 
-                                        :alt="issue.title"
-                                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                                        @error="$event.target.src = DEFAULT_IMAGE"
-                                    />
-                                </div>
-                                <div class="flex-1">
-                                    <h3 class="font-semibold mb-1 text-blue-900">{{ issue.title }}</h3>
-                                    <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
-                                    <div class="flex items-center justify-between text-sm text-gray-500">
-                                        <span class="font-medium text-gray-600">{{ issue.username }}</span>
-                                        <div class="flex items-center">
-                                            <ClockIcon class="w-4 h-4 mr-1" />
-                                            <span>{{ new Date(issue.created_at).toLocaleDateString() }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center justify-between text-sm text-gray-500 mt-2">
-                                        <div class="flex items-center">
-                                            <Heart class="w-4 h-4 mr-1 text-red-500" />
-                                            <span class="font-medium text-gray-600">좋아요: {{ issue.likes_count }}</span>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <MessageCircle class="w-4 h-4 mr-1 text-blue-500" />
-                                            <span class="font-medium text-gray-600">댓글: {{ issue.comments_count }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </router-link>
-                    </div>
-                </section>
-            </main>
+  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100">
+    <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
+      <main class="pb-20 px-4">
+        <!-- Loading state -->
+        <div v-if="loading" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75 z-50">
+          <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <span class="text-lg text-blue-600 font-medium">로딩중...</span>
+          </div>
         </div>
-    </div>
-    <div v-if="isImagePopupVisible"
-        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
-        @click="isImagePopupVisible = false">
-        <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
-            <div class="relative">
-                <img 
-                    :src="popupImageUrl" 
-                    alt="Popup Image"
-                    class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
-                />
-                <button 
-                    @click="isImagePopupVisible = false"
-                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg">
-                    <X class="w-5 h-5 text-gray-600" />
-                </button>
+
+        <!-- Today's tide section -->
+        <section class="mb-2 pt-6">
+          <router-link to="/map-location-service"
+            class="group flex justify-between items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <h2 class="text-xl font-bold text-blue-800 group-hover:text-blue-900 transition duration-300">오늘의 물때</h2>
+            <ChevronRightIcon class="w-6 h-6 text-blue-500 group-hover:text-blue-600 transition duration-300" />
+          </router-link>
+          <div class="mt-4">
+            <MulddaeWidget></MulddaeWidget>
+          </div>
+        </section>
+
+        <!-- My caught fish section -->
+        <section v-if="isAuthenticated" class="mb-2 pt-3">
+          <router-link to="/catches"
+            class="group flex justify-between items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500">
+            <h2 class="text-xl font-bold text-green-800 group-hover:text-green-900 transition duration-300">내가 잡은 물고기</h2>
+            <ChevronRightIcon class="w-6 h-6 text-green-500 group-hover:text-green-600 transition duration-300" />
+          </router-link>
+          <div v-if="isLoadingCatches" class="text-center text-gray-500 mt-4">
+            <div class="animate-pulse">Loading...</div>
+          </div>
+          <div v-else-if="displayedCatches.length > 0" 
+            ref="scrollContainer"
+            class="overflow-x-auto touch-pan-x relative group">
+            <div class="flex space-x-2 py-1">
+              <div v-for="catchItem in displayedCatches" :key="catchItem.id"
+                class="bg-white p-4 rounded-xl shadow-lg flex-shrink-0 w-72 transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
+                  alt="Catch Image"
+                  class="w-full h-48 object-cover rounded-lg mb-3 cursor-pointer"
+                  @click="openImagePopup(catchItem.imageUrl)" />
+                <p class="text-gray-800 text-lg font-semibold text-center">
+                  {{ catchItem.detections[0].label }}
+                </p>
+                <p class="text-blue-600 text-sm font-medium text-center mt-1">
+                  신뢰도: {{ (catchItem.detections[0].confidence * 100).toFixed(2) }}%
+                </p>
+              </div>
             </div>
-        </div>
+          </div>
+          <div v-else class="text-gray-600 text-center p-6 bg-gray-50 rounded-xl mt-4">
+            <FishIcon class="w-12 h-12 text-gray-400 mx-auto mb-2" />
+            <p class="font-medium">아직 잡은 물고기가 없습니다.</p>
+            <p class="text-sm mt-1">첫 물고기를 잡아보세요!</p>
+          </div>
+        </section>
+
+        <!-- Today's hot issues section -->
+        <section class="mb-2 pt-3">
+          <router-link to="/community"
+            class="group flex justify-between items-center p-4 bg-red-50 hover:bg-red-100 rounded-xl transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500">
+            <h2 class="text-xl font-bold text-red-800 group-hover:text-red-900 transition duration-300">오늘의 핫이슈</h2>
+            <ChevronRightIcon class="w-6 h-6 text-red-500 group-hover:text-red-600 transition duration-300" />
+          </router-link>
+          <div class="space-y-4 mt-4">
+            <router-link v-for="issue in hotIssues" :key="issue.post_id" 
+              :to="`/community/${issue.post_id}`" 
+              class="block p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-300">
+              <div class="flex gap-4">
+                <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                  <img 
+                    :src="getImageUrl(issue.images[0])" 
+                    :alt="issue.title"
+                    class="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    @error="$event.target.src = DEFAULT_IMAGE"
+                  />
+                </div>
+                <div class="flex-1 space-y-2">
+                  <h3 class="font-bold text-lg text-gray-800">{{ issue.title }}</h3>
+                  <p class="text-sm text-gray-600 line-clamp-2">{{ issue.content }}</p>
+                  <div class="flex items-center justify-between text-sm text-gray-500">
+                    <span class="font-medium text-blue-600">{{ issue.username }}</span>
+                    <div class="flex items-center space-x-1">
+                      <Heart class="w-4 h-4 text-red-500" />
+                      <span class="font-semibold text-gray-800">{{ issue.likes_count }}</span>
+                      <MessageCircle class="w-4 h-4 text-blue-500" />
+                      <span class="font-semibold text-gray-800">{{ issue.comments_count }}</span>
+                    </div>
+                    <span class="flex items-center">
+                      <ClockIcon class="w-4 h-4 text-gray-400 mr-1" />
+                      <span>{{ new Date(issue.created_at).toLocaleDateString() }}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </section>
+      </main>
     </div>
+  </div>
+  <!-- Image Popup -->
+  <div v-if="isImagePopupVisible"
+    class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
+    @click="isImagePopupVisible = false">
+    <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+      <div class="relative">
+        <img 
+          :src="popupImageUrl" 
+          alt="Popup Image"
+          class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
+        />
+        <button 
+          @click="isImagePopupVisible = false"
+          class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg">
+          <X class="w-5 h-5 text-gray-600" />
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import {
-    ChevronRightIcon,
-    ClockIcon,
-    X,
-    Heart,
-    MessageCircle,
+  ChevronRightIcon,
+  ClockIcon,
+  X,
+  Heart,
+  MessageCircle,
+  FishIcon,
 } from 'lucide-vue-next'
 import { onMounted, computed, ref, watch, onUnmounted } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
 import axios from 'axios';
 
-// Vuex 스토어 사용
 const store = useStore();
-
-// Define backend base URL
 const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
-
 const loading = ref(true);
 const isLoadingCatches = ref(false);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
-// Function to get image URL
 const getImageUrl = (url) => {
-    if (!url) return DEFAULT_IMAGE; // Fallback to default image if no URL
-    // If the URL is already absolute, return it directly
-    return url.startsWith('http') ? url : `${BACKEND_BASE_URL}/uploads/${url}`;
+  if (!url) return DEFAULT_IMAGE;
+  return url.startsWith('http') ? url : `${BACKEND_BASE_URL}/uploads/${url}`;
 };
 
-// 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(async () => {
-    try {
-        loading.value = true;
-        await store.dispatch('fetchInitialData');
-        if (isAuthenticated.value && catches.value.length > 0) {
-            updateDisplayedCatches();
-            startAutoSlide();
-        }
-        const response = await axios.get('/api/posts/top');
-        hotIssues.value = response.data;
-        console.log('Fetched hot issues:', hotIssues.value);
-    } catch (error) {
-        console.error('Error:', error);
-    } finally {
-        loading.value = false;
+  try {
+    loading.value = true;
+    await store.dispatch('fetchInitialData');
+    if (isAuthenticated.value && catches.value.length > 0) {
+      updateDisplayedCatches();
+      startAutoSlide();
     }
+    const response = await axios.get('/api/posts/top');
+    hotIssues.value = response.data;
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    loading.value = false;
+  }
 });
 
-// 컴포넌트 언마운트 시 자동 슬라이드 정지
 onUnmounted(() => {
-    stopAutoSlide();
+  stopAutoSlide();
 });
 
-// Vuex 스토어에 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
-
-// 이미지 업 관련 상태
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
-
-// 잡은 물고기 섹션 관련 상태
 const displayedCatches = ref([]);
 
 function openImagePopup(imageUrl) {
-    popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`; // Updated to include BACKEND_BASE_URL
-    isImagePopupVisible.value = true;
+  popupImageUrl.value = `${BACKEND_BASE_URL}/uploads/${imageUrl}`;
+  isImagePopupVisible.value = true;
 }
 
 function updateDisplayedCatches() {
-    // 모든 catches를 표시하도록 수정
-    const sortedCatches = catches.value.slice().reverse();
-    displayedCatches.value = sortedCatches;
+  displayedCatches.value = catches.value.slice().reverse();
 }
 
-// catches 데이터가 변경될 때마다 displayed catches 업데이트
 watch(() => catches.value, () => {
-    if (catches.value.length > 0) {
-        updateDisplayedCatches();
-    }
+  if (catches.value.length > 0) {
+    updateDisplayedCatches();
+  }
 }, { immediate: true });
 
-// 자동 슬라이드 관련 상태
 const autoSlideInterval = ref(null);
 const scrollContainer = ref(null);
 
-// 자동 슬라이드 시작 함수
 function startAutoSlide() {
-    if (!autoSlideInterval.value) {
-        autoSlideInterval.value = setInterval(() => {
-            if (scrollContainer.value) {
-                const container = scrollContainer.value;
-                const scrollAmount = 335; // 카드 너비 + 간격
-                
-                if (container.scrollLeft + container.clientWidth >= container.scrollWidth) {
-                    // 에 도달하면 드럽게 처음으로 돌아가기
-                    container.scrollTo({
-                        left: 0,
-                        behavior: 'smooth'
-                    });
-                } else {
-                    // 부드럽게 다음 슬라이드로 이동
-                    container.scrollTo({
-                        left: container.scrollLeft + scrollAmount,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        }, 1900); // 시간 간격 늘림
-    }
+  if (!autoSlideInterval.value) {
+    autoSlideInterval.value = setInterval(() => {
+      if (scrollContainer.value) {
+        const container = scrollContainer.value;
+        const scrollAmount = 300;
+        if (container.scrollLeft + container.clientWidth >= container.scrollWidth) {
+          container.scrollTo({
+            left: 0,
+            behavior: 'smooth'
+          });
+        } else {
+          container.scrollTo({
+            left: container.scrollLeft + scrollAmount,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }, 3000);
+  }
 }
 
-// 자동 슬라이드 정지 함수
 function stopAutoSlide() {
-    if (autoSlideInterval.value) {
-        clearInterval(autoSlideInterval.value);
-        autoSlideInterval.value = null;
-    }
+  if (autoSlideInterval.value) {
+    clearInterval(autoSlideInterval.value);
+    autoSlideInterval.value = null;
+  }
 }
 
-// 기본 이미지 (Community.vue와 동��한 DEFAULT_IMAGE 사용)
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7snbTrr7jsp4Ag7JeG7J2EPC90ZXh0Pjwvc3ZnPg==';
 
 const hotIssues = ref([]);
-
 </script>
 
-<style lang="css" scoped>
-/* 기존 스타일은 유지하고 transition 관련 스타일 수정 */
-.transition-all {
-    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 슬라이드 컨테이너에 스무스 스크롤 추가 */
+<style scoped>
 .touch-pan-x {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* 부가적인 애니메이션 부드러움을 위한 스타일 */
-.transform {
-    will-change: transform;
+.touch-pan-x::-webkit-scrollbar {
+  display: none;
 }
 
-/* 스크롤바를 숨기고 싶은 요소에 적용 */
-.element {
-    overflow: hidden; /* 스크롤바 숨기기 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>
