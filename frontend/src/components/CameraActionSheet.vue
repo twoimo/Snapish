@@ -1,6 +1,6 @@
 <template>
     <!-- 액션 시트 모달 -->
-    <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-20"
+    <div v-if="props.isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-[100]"
         @click="closeActionSheet">
         <!-- 모달 콘텐츠 -->
         <div class="bg-white w-full max-w-sm rounded-t-xl" @click.stop>
@@ -97,13 +97,15 @@ const handleOption = (action) => {
 const onFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-        const token = localStorage.getItem('token');
-        if (token) {
-            // ...existing code to send image as FormData with token...
-            const formData = new FormData();
-            formData.append('image', file);
+        try {
+            // 전역 로딩 상태 활성화
+            store.dispatch('setGlobalLoading', true);
+            
+            const token = localStorage.getItem('token');
+            if (token) {
+                const formData = new FormData();
+                formData.append('image', file);
 
-            try {
                 const response = await axios.post('/backend/predict', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
@@ -111,27 +113,29 @@ const onFileChange = async (event) => {
                     },
                     withCredentials: true,
                 });
-                handlePredictResponse(response.data);
-            } catch (error) {
-                console.error('Error during Axios POST:', error);
-                alert('이미지 업로드 중 오류가 발생했습니다.');
+                await handlePredictResponse(response.data);
+            } else {
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const image_base64 = reader.result.split(',')[1];
+                    try {
+                        const response = await axios.post('/backend/predict', {
+                            image_base64,
+                        });
+                        await handlePredictResponse(response.data);
+                    } catch (error) {
+                        console.error('Error during Axios POST:', error);
+                        alert('이미지 업로드 중 오류가 발생했습니다.');
+                    }
+                };
+                reader.readAsDataURL(file);
             }
-        } else {
-            // Read file as base64 and send it
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const image_base64 = reader.result.split(',')[1]; // Remove data:image/*;base64,
-                try {
-                    const response = await axios.post('/backend/predict', {
-                        image_base64,
-                    });
-                    handlePredictResponse(response.data);
-                } catch (error) {
-                    console.error('Error during Axios POST:', error);
-                    alert('이미지 업로드 중 오류가 발생했습니다.');
-                }
-            };
-            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Error during file upload:', error);
+            alert('이미지 업로드 중 오류가 발생했습니다.');
+        } finally {
+            // 전역 로딩 상태 비활성화
+            store.dispatch('setGlobalLoading', false);
         }
     }
 };
@@ -227,7 +231,7 @@ const handlePredictResponse = async (data) => {
 .border-b {
     /* 하단 경계선 */
     border-bottom: 1px solid #e5e7eb;
-    /* Tailwind의 gray-200 */
+    /* Tailwind gray-200 */
 }
 
 .last\:border-b-0 {
