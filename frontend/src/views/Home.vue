@@ -78,12 +78,13 @@
                         </router-link>
                     </div>
                     <div class="space-y-3">
-                        <article v-for="issue in hotIssues" :key="issue.post_id"
+                        <router-link v-for="issue in hotIssues" :key="issue.post_id" 
+                            :to="`/community/${issue.post_id}`" 
                             class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition cursor-pointer">
                             <div class="flex gap-3">
                                 <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                     <img 
-                                        :src="issue.images[0]" 
+                                        :src="getImageUrl(issue.images[0])" 
                                         :alt="issue.title"
                                         class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                         @error="$event.target.src = DEFAULT_IMAGE"
@@ -101,7 +102,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </article>
+                        </router-link>
                     </div>
                 </section>
             </main>
@@ -149,6 +150,13 @@ const loading = ref(true);
 const isLoadingCatches = ref(false);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);
 
+// Function to get image URL
+const getImageUrl = (url) => {
+    if (!url) return DEFAULT_IMAGE; // Fallback to default image if no URL
+    // If the URL is already absolute, return it directly
+    return url.startsWith('http') ? url : `${BACKEND_BASE_URL}/uploads/${url}`;
+};
+
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(async () => {
     try {
@@ -176,7 +184,7 @@ onUnmounted(() => {
 // Vuex 스토어에서 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 
-// 이미지 팝업 관련 상태
+// 이미지 업 관련 상태
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
 
@@ -214,7 +222,7 @@ function startAutoSlide() {
                 const scrollAmount = 335; // 카드 너비 + 간격
                 
                 if (container.scrollLeft + container.clientWidth >= container.scrollWidth) {
-                    // 끝에 도달하면 부드럽게 처음으로 돌아가기
+                    // 에 도달하면 드럽게 처음으로 돌아가기
                     container.scrollTo({
                         left: 0,
                         behavior: 'smooth'

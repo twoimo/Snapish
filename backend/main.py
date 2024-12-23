@@ -517,7 +517,7 @@ def login():
                 }
             })
         else:
-            return jsonify({'message': '로그인 실���'}), 401
+            return jsonify({'message': '로그인 실패'}), 401
     except Exception as e:
         logging.error(f"Login error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
@@ -1455,7 +1455,7 @@ def toggle_like(user_id, post_id):
             session.commit()
             likes_count = session.query(PostLike).filter_by(post_id=post_id).count()
             return jsonify({
-                'message': '좋아요가 ���소되었습니다.',
+                'message': '좋아요가 취소되었습니다.',
                 'is_liked': False,
                 'likes_count': likes_count
             })

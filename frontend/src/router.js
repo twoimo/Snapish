@@ -33,6 +33,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/community/:id", // Dynamic route for individual posts
+    name: "CommunityPost",
+    component: Community, // You might want to create a separate component for individual posts
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/community/new",
     name: "NewPost",
     component: NewPost,
