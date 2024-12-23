@@ -29,7 +29,8 @@ from sqlalchemy import (
     JSON,
     Float,
     VARCHAR,
-    text
+    text,
+    func
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -437,7 +438,7 @@ def token_required(f):
             token = request.headers['Authorization'].split(' ')[1]
 
         if not token:
-            return jsonify({'message': '���큰이 필요합니다.'}), 401
+            return jsonify({'message': '토큰이 필요합니다.'}), 401
 
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
@@ -516,7 +517,7 @@ def login():
                 }
             })
         else:
-            return jsonify({'message': '로그인 실패'}), 401
+            return jsonify({'message': '로그인 실���'}), 401
     except Exception as e:
         logging.error(f"Login error: {e}")
         return jsonify({'message': 'Internal server error'}), 500
@@ -1454,7 +1455,7 @@ def toggle_like(user_id, post_id):
             session.commit()
             likes_count = session.query(PostLike).filter_by(post_id=post_id).count()
             return jsonify({
-                'message': '좋아요가 취소되었습니다.',
+                'message': '좋아요가 ���소되었습니다.',
                 'is_liked': False,
                 'likes_count': likes_count
             })
@@ -1557,5 +1558,48 @@ def create_comment(user_id, post_id):
         session.rollback()
         logging.error(f"Error creating comment for post {post_id}: {str(e)}")
         return jsonify({'error': '댓글 작성 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/top', methods=['GET'])
+def get_top_posts():
+    session = Session()
+    try:
+        # Get top 5 posts by likes
+        top_posts = session.query(CommunicationBoard)\
+            .outerjoin(PostLike)\
+            .group_by(CommunicationBoard.post_id)\
+            .order_by(func.count(PostLike.like_id).desc(), CommunicationBoard.created_at.desc())\
+            .limit(5)\
+            .all()
+
+        if not top_posts:
+            # If no posts with likes, get the most recent 5 posts
+            top_posts = session.query(CommunicationBoard)\
+                .order_by(CommunicationBoard.created_at.desc())\
+                .limit(5)\
+                .all()
+
+        result = []
+        for post in top_posts:
+            user = session.query(User).get(post.user_id)
+            post_data = {
+                'post_id': post.post_id,
+                'user_id': post.user_id,
+                'username': user.username if user else 'Unknown',
+                'avatar': get_full_url(user.avatar) if user else None,
+                'title': post.title,
+                'content': post.content,
+                'images': [get_full_url(image) for image in (post.images or [])],
+                'created_at': post.created_at.isoformat(),
+                'likes_count': session.query(PostLike).filter_by(post_id=post.post_id).count(),
+                'comments_count': session.query(PostComment).filter_by(post_id=post.post_id).count(),
+            }
+            result.append(post_data)
+
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Error getting top posts: {str(e)}")
+        return jsonify({'error': 'Error fetching top posts'}), 500
     finally:
         session.close()

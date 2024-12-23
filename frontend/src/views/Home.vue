@@ -78,15 +78,14 @@
                         </router-link>
                     </div>
                     <div class="space-y-3">
-                        <article v-for="issue in hotIssues" :key="issue.id"
+                        <article v-for="issue in hotIssues" :key="issue.post_id"
                             class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition cursor-pointer">
                             <div class="flex gap-3">
-                                <div
-                                    class="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                     <img 
-                                        :src="issue.imageUrl" 
+                                        :src="issue.images[0]" 
                                         :alt="issue.title"
-                                        class="w-full h-full object-cover"
+                                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                                         @error="$event.target.src = DEFAULT_IMAGE"
                                     />
                                 </div>
@@ -94,10 +93,10 @@
                                     <h3 class="font-medium mb-1 text-blue-900">{{ issue.title }}</h3>
                                     <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
                                     <div class="flex items-center justify-between text-sm text-gray-500">
-                                        <span class="font-medium text-gray-600">{{ issue.author }}</span>
+                                        <span class="font-medium text-gray-600">{{ issue.username }}</span>
                                         <div class="flex items-center">
                                             <ClockIcon class="w-4 h-4 mr-1" />
-                                            <span>{{ formatTimestamp(issue.timestamp) }}</span>
+                                            <span>{{ new Date(issue.created_at).toLocaleDateString() }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -138,6 +137,7 @@ import {
 import { onMounted, computed, ref, watch, onUnmounted } from "vue";
 import { useStore } from "vuex";
 import MulddaeWidget from '../components/MulddaeWidget.vue';
+import axios from 'axios';
 
 // Vuex 스토어 사용
 const store = useStore();
@@ -158,6 +158,9 @@ onMounted(async () => {
             updateDisplayedCatches();
             startAutoSlide();
         }
+        const response = await axios.get('/api/posts/top');
+        hotIssues.value = response.data;
+        console.log('Fetched hot issues:', hotIssues.value);
     } catch (error) {
         console.error('Error:', error);
     } finally {
@@ -255,27 +258,10 @@ function scrollRight() {
     }
 }
 
-// Vuex store에서 핫이슈 데이터 가져오기
-const hotIssues = computed(() => store.getters.hotIssues);
-
-// 타임스탬프 포맷팅 함수
-function formatTimestamp(timestamp) {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffInMinutes < 60) {
-        return `${diffInMinutes}분 전`;
-    } else if (diffInMinutes < 1440) {
-        return `${Math.floor(diffInMinutes / 60)}시간 전`;
-    } else {
-        return date.toLocaleDateString();
-    }
-}
-
 // 기본 이미지 (Community.vue와 동일한 DEFAULT_IMAGE 사용)
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7snbTrr7jsp4Ag7JeG7J2EPC90ZXh0Pjwvc3ZnPg==';
+
+const hotIssues = ref([]);
 
 </script>
 
@@ -291,7 +277,7 @@ const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ
     -webkit-overflow-scrolling: touch;
 }
 
-/* 추가적인 애니메이션 부드러움을 위한 스타일 */
+/* 부가적인 애니메이션 부드러움을 위한 스타일 */
 .transform {
     will-change: transform;
 }

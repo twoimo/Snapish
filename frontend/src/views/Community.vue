@@ -143,7 +143,7 @@
                     />
                   </div>
                   <div class="ml-2">
-                    <span class="text-base font-semibold" :class="post.showComments ? 'text-blue-500' : 'text-gray-900'">
+                    <span class="text-base" :class="post.showComments ? 'text-blue-500' : 'text-gray-900'">
                       {{ post.comments_count.toLocaleString() }}
                     </span>
                   </div>
