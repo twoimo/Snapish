@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
     <!-- Main content -->
-    <main class="max-w-5xl mx-auto px-4">
+    <main class="max-w-5xl mx-auto px-4 pb-24">
       <!-- Post list -->
       <div class="grid gap-8">
         <article 
@@ -223,15 +223,15 @@
           </div>
         </article>
       </div>
+      <!-- Floating action button -->
+      <router-link 
+        to="/community/new"
+        class="fixed bottom-24 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transform hover:scale-110 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 z-20"
+      >
+        <PenLine class="w-6 h-6" />
+      </router-link>
     </main>
 
-    <!-- Floating action button -->
-    <router-link 
-      to="/community/new"
-      class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transform hover:scale-110 hover:rotate-180 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-    >
-      <PenLine class="w-6 h-6" />
-    </router-link>
   </div>
 </template>
 
@@ -783,3 +783,4 @@ img.loaded {
   color: #333;
 }
 </style>
+

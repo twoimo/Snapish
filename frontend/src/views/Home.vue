@@ -1,5 +1,4 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100">
     <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden">
       <main class="pb-20 px-4">
         <!-- Loading state -->
@@ -101,7 +100,6 @@
         </section>
       </main>
     </div>
-  </div>
   <!-- Image Popup -->
   <div v-if="isImagePopupVisible"
     class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
