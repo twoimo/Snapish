@@ -29,7 +29,8 @@ from sqlalchemy import (
     JSON,
     Float,
     VARCHAR,
-    text
+    text,
+    func
 )
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -54,7 +55,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # 환경 변수 로드
-load_dotenv("./.env")
+load_dotenv("./backend/.env")
 
 SQL_KEY = os.getenv("SQL_KEY")
 
@@ -325,10 +326,11 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://localhost:8080",
+    "origins": "http://54.252.210.69",  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
@@ -343,7 +345,7 @@ def add_header(response):
 # 초기 DB install
 initialize_service()
 
-# 라벨 핑 (어 -> 한국어)
+# 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
  0: '감성돔',
  1: '대구',
@@ -398,7 +400,7 @@ PROHIBITED_DATES = {
 def hello():
     return 'Welcome to SNAPISH'
 
-# 물떼 정보 받아기
+# 물떼 정보 받아오기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -424,7 +426,7 @@ def get_mulddae():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전�� 키로 변경하세요.
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실 서비스에서는 안전 키로 변경하세요.
 
 def token_required(f):
     @wraps(f)
@@ -679,7 +681,7 @@ def recent_activities(user_id):
         session.close()
         return jsonify({'message': 'User not found'}), 404
 
-    # 최근 활동을 회하는 로직 (예: 데이터베이스에서 최근 5개 캐치를 가져오기)
+    # 최근 동을 회하는 로직 (예: 데이터베이스에서 최근 5개 캐치를 가져오기)
     activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
     session.close()
     
@@ -958,7 +960,7 @@ def get_closest_sealoc():
 
     session = Session()
     
-    ## ST_Distance_Sphere를 사용하여 MySQL에�� 직접 거리 계산
+    ## ST_Distance_Sphere를 사용하여 MySQL에 직접 거리 계산
     # 조위, 수온, 기온 , 기압 4개 모두 체 가능한 우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
@@ -991,7 +993,7 @@ def get_closest_sealoc():
         if result_obsrecent and result_obspretab:
             print(f"obs recent : {result_obsrecent}")
             print(f"obs pretab : {result_obspretab}")
-            # 조위 관측소 정보
+            # 조위 관측 정보
             obsrecent_data = {
                 'obs_station_id': result_obsrecent[0],
                 'obs_post_id': result_obsrecent[1],
@@ -1065,7 +1067,7 @@ def get_weather_api():
         logging.error(f"Error in get_weather_api: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
-# 애플리케이션 종료 시 세션 제거
+# 애플리케이션 종료 시 세 제거
 @app.teardown_appcontext
 def remove_session(exception=None):
     Session.remove()
@@ -1149,7 +1151,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://localhost:5000{url}"
+    return f"http://54.252.210.69:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required
@@ -1556,5 +1558,48 @@ def create_comment(user_id, post_id):
         session.rollback()
         logging.error(f"Error creating comment for post {post_id}: {str(e)}")
         return jsonify({'error': '댓글 작성 중 오류가 발생했습니다.'}), 500
+    finally:
+        session.close()
+
+@app.route('/api/posts/top', methods=['GET'])
+def get_top_posts():
+    session = Session()
+    try:
+        # Get top 5 posts by likes
+        top_posts = session.query(CommunicationBoard)\
+            .outerjoin(PostLike)\
+            .group_by(CommunicationBoard.post_id)\
+            .order_by(func.count(PostLike.like_id).desc(), CommunicationBoard.created_at.desc())\
+            .limit(5)\
+            .all()
+
+        if not top_posts:
+            # If no posts with likes, get the most recent 5 posts
+            top_posts = session.query(CommunicationBoard)\
+                .order_by(CommunicationBoard.created_at.desc())\
+                .limit(5)\
+                .all()
+
+        result = []
+        for post in top_posts:
+            user = session.query(User).get(post.user_id)
+            post_data = {
+                'post_id': post.post_id,
+                'user_id': post.user_id,
+                'username': user.username if user else 'Unknown',
+                'avatar': get_full_url(user.avatar) if user else None,
+                'title': post.title,
+                'content': post.content,
+                'images': [get_full_url(image) for image in (post.images or [])],
+                'created_at': post.created_at.isoformat(),
+                'likes_count': session.query(PostLike).filter_by(post_id=post.post_id).count(),
+                'comments_count': session.query(PostComment).filter_by(post_id=post.post_id).count(),
+            }
+            result.append(post_data)
+
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Error getting top posts: {str(e)}")
+        return jsonify({'error': 'Error fetching top posts'}), 500
     finally:
         session.close()

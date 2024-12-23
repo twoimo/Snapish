@@ -250,9 +250,10 @@ const showConsentModal = ref(false);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const loading = ref(true);
+const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
 
 // Change fishName to a computed property
 const fishName = computed(() => {
@@ -267,6 +268,7 @@ const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요�
 
 const fetchDetections = async () => {
   isLoading.value = true;
+  isLoadingMore.value = true;
   try {
     const token = localStorage.getItem('token');
     if (token && route.query.imageUrl) {
@@ -291,6 +293,7 @@ const fetchDetections = async () => {
     parsedDetections.value = [];
   } finally {
     isLoading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
@@ -436,10 +439,17 @@ const imageClass = computed(() => {
     return 'detection-image';
   }
   
-  // 작은 이미지 기준 (예: 800px)
-  return imageDimensions.value.width < 800 
-    ? 'detection-image small-image' 
-    : 'detection-image';
+  // Calculate aspect ratio
+  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
+
+  // Classify based on aspect ratio
+  if (aspectRatio < 1) {
+    return 'detection-image'; // For vertically long images
+  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
+    return 'detection-image'; // For normal images
+  } else {
+    return 'detection-image small-image'; // For horizontally long images
+  }
 });
 
 const imageContainerStyle = computed(() => {
@@ -496,7 +506,7 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
-  // 새로운 catch 생성을 위한 POST 요청
+  // 새로운 catch 생성을 위한 POST 청
   const createNewCatch = async () => {
     try {
       const response = await axios.post('/catches', {

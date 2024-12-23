@@ -1,12 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex justify-center">
-    <div class="w-full max-w-sm md:max-w-md bg-white shadow-lg relative touch-manipulation">
-      <Header v-if="!hideHeader" class="fixed top-0 left-0 right-0 z-10 max-w-sm md:max-w-md mx-auto" />
+    <div class="w-full max-w-md bg-white shadow-lg relative">
+      <Header v-if="!hideHeader" class="fixed top-0 left-0 right-0 z-10 max-w-md mx-auto" />
       <div class="pt-14 pb-14 overflow-y-auto overscroll-contain">
         <router-view></router-view>
       </div>
       <BottomNavigation @toggleCameraActions="handleToggleCameraActions"
-        class="fixed bottom-0 left-0 right-0 max-w-sm md:max-w-md mx-auto z-10" />
+        class="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-10" />
     </div>
   </div>
 </template>

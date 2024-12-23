@@ -18,7 +18,7 @@ import Catches from "./views/Catches.vue"; // Catches 컴포넌트 임포트
 // Example for axios base URL configuration
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = "http://54.252.210.69:5000";
 
 const routes = [
   {
@@ -30,6 +30,12 @@ const routes = [
     path: "/community",
     name: "Community",
     component: Community, // 커뮤니티 컴포넌트
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/community/:id", // Dynamic route for individual posts
+    name: "CommunityPost",
+    component: Community, // You might want to create a separate component for individual posts
     meta: { requiresAuth: true },
   },
   {
