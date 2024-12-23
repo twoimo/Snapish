@@ -47,6 +47,7 @@
               <div class="detection-area">
                 <img 
                   ref="fishImage" 
+                  :class="imageClass" 
                   :src="imageSource" 
                   alt="물고기 사진" 
                   class="detection-image"
@@ -496,6 +497,24 @@ const handleImageClick = () => {
   }
   openImagePopup(imageSource.value);
 };
+
+const imageClass = computed(() => {
+  if (!imageDimensions.value.width || !imageDimensions.value.height) {
+    return 'detection-image';
+  }
+  
+  // Calculate aspect ratio
+  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
+
+  // Classify based on aspect ratio
+  if (aspectRatio < 1) {
+    return 'detection-image'; // For vertically long images
+  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
+    return 'detection-image'; // For normal images
+  } else {
+    return 'detection-image small-image'; // For horizontally long images
+  }
+});
 </script>
 
 <style scoped>

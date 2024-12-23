@@ -436,10 +436,17 @@ const imageClass = computed(() => {
     return 'detection-image';
   }
   
-  // 작은 이미지 기준 (예: 800px)
-  return imageDimensions.value.width < 800 
-    ? 'detection-image small-image' 
-    : 'detection-image';
+  // Calculate aspect ratio
+  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
+
+  // Classify based on aspect ratio
+  if (aspectRatio < 1) {
+    return 'detection-image'; // For vertically long images
+  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
+    return 'detection-image'; // For normal images
+  } else {
+    return 'detection-image small-image'; // For horizontally long images
+  }
 });
 
 const imageContainerStyle = computed(() => {
@@ -496,7 +503,7 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
-  // 새로운 catch 생성을 위한 POST 요청
+  // 새로운 catch 생성을 위한 POST 청
   const createNewCatch = async () => {
     try {
       const response = await axios.post('/catches', {
