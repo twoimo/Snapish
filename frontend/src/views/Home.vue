@@ -14,9 +14,9 @@
                 <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/map-location-service"
-                            class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
-                            <h2 class="text-lg font-medium mr-2">오늘의 물때</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
+                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <h2 class="text-lg font-semibold text-gray-800 mr-2">오늘의 물때</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
                         </router-link>
                     </div>
                     <MulddaeWidget></MulddaeWidget>
@@ -26,9 +26,9 @@
                 <section v-if="isAuthenticated" class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/catches"
-                            class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
-                            <h2 class="text-lg font-medium mr-2">내가 잡은 물고기</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
+                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <h2 class="text-lg font-semibold text-gray-800 mr-2">내가 잡은 물고기</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
                         </router-link>
                     </div>
                     <div v-if="isLoadingCatches" class="text-center text-gray-500">
@@ -36,17 +36,17 @@
                     </div>
                     <div v-else-if="displayedCatches.length > 0" 
                         ref="scrollContainer"
-                        class="overflow-x-auto touch-pan-x relative group"
+                        class="overflow-x-auto touch-pan-x relative group element"
                         @mouseenter="stopAutoSlide"
                         @mouseleave="startAutoSlide">
                         <div class="flex space-x-4 transition-all duration-700 ease-in-out transform">
                             <div v-for="catchItem in displayedCatches" :key="catchItem.id"
-                                class="bg-gray-50 p-4 rounded-lg shadow-sm flex-shrink-0 w-80 h-64">
+                                class="bg-gray-50 p-4 rounded-lg shadow-md flex-shrink-0 w-80 h-64 transition-transform duration-200 hover:shadow-lg">
                                 <img :src="`${BACKEND_BASE_URL}/uploads/${catchItem.imageUrl}`" 
                                     alt="Catch Image"
                                     class="w-full h-48 object-cover rounded-lg mb-2 cursor-pointer"
                                     @click="openImagePopup(catchItem.imageUrl)" />
-                                <p class="text-gray-800 text-sm text-center">
+                                <p class="text-gray-800 text-sm text-center font-medium">
                                     {{ catchItem.detections[0].label }}
                                 </p>
                                 <p class="text-gray-600 text-xs text-center mb-2">
@@ -54,33 +54,23 @@
                                 </p>
                             </div>
                         </div>
-                        
-                        <!-- 네비게이션 버튼 수정 -->
-                        <button @click="scrollLeft"
-                            class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-r hidden group-hover:block transition-opacity duration-300">
-                            ←
-                        </button>
-                        <button @click="scrollRight"
-                            class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-l hidden group-hover:block transition-opacity duration-300">
-                            →
-                        </button>
                     </div>
                     <div v-else class="text-gray-500 flex flex-col items-center p-2">아직 잡은 물고기가 없습니다.</div>
                 </section>
 
                 <!-- 오늘의 핫이슈 섹션 -->
-                <section>
+                <section class="mb-6 pt-4">
                     <div class="flex justify-between items-center mb-3">
                         <router-link to="/community"
-                            class="flex justify-between items-center p-2 w-full hover:bg-gray-50 rounded-lg transition">
-                            <h2 class="text-lg font-medium">오늘의 핫이슈</h2>
-                            <ChevronRightIcon class="w-5 h-5 text-gray-400" />
+                            class="flex justify-between items-center p-3 w-full hover:bg-gray-100 rounded-lg transition duration-200 ease-in-out">
+                            <h2 class="text-lg font-semibold text-gray-800">오늘의 핫이슈</h2>
+                            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
                         </router-link>
                     </div>
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                         <router-link v-for="issue in hotIssues" :key="issue.post_id" 
                             :to="`/community/${issue.post_id}`" 
-                            class="bg-gray-50 rounded-lg p-4 shadow-sm hover:bg-gray-100 transition cursor-pointer">
+                            class="p-4">
                             <div class="flex gap-3">
                                 <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                     <img 
@@ -91,13 +81,23 @@
                                     />
                                 </div>
                                 <div class="flex-1">
-                                    <h3 class="font-medium mb-1 text-blue-900">{{ issue.title }}</h3>
+                                    <h3 class="font-semibold mb-1 text-blue-900">{{ issue.title }}</h3>
                                     <p class="text-sm text-gray-600 mb-2">{{ issue.content }}</p>
                                     <div class="flex items-center justify-between text-sm text-gray-500">
                                         <span class="font-medium text-gray-600">{{ issue.username }}</span>
                                         <div class="flex items-center">
                                             <ClockIcon class="w-4 h-4 mr-1" />
                                             <span>{{ new Date(issue.created_at).toLocaleDateString() }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm text-gray-500 mt-2">
+                                        <div class="flex items-center">
+                                            <Heart class="w-4 h-4 mr-1 text-red-500" />
+                                            <span class="font-medium text-gray-600">좋아요: {{ issue.likes_count }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <MessageCircle class="w-4 h-4 mr-1 text-blue-500" />
+                                            <span class="font-medium text-gray-600">댓글: {{ issue.comments_count }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -120,8 +120,7 @@
                 />
                 <button 
                     @click="isImagePopupVisible = false"
-                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
-                >
+                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg">
                     <X class="w-5 h-5 text-gray-600" />
                 </button>
             </div>
@@ -134,6 +133,8 @@ import {
     ChevronRightIcon,
     ClockIcon,
     X,
+    Heart,
+    MessageCircle,
 } from 'lucide-vue-next'
 import { onMounted, computed, ref, watch, onUnmounted } from "vue";
 import { useStore } from "vuex";
@@ -181,7 +182,7 @@ onUnmounted(() => {
     stopAutoSlide();
 });
 
-// Vuex 스토어에서 잡은 물고기 데이터 가져오기
+// Vuex 스토어에 잡은 물고기 데이터 가져오기
 const catches = computed(() => store.getters.catches);
 
 // 이미지 업 관련 상태
@@ -247,26 +248,7 @@ function stopAutoSlide() {
     }
 }
 
-// 네비게이션 버튼 클릭 핸들러도 수정
-function scrollLeft() {
-    if (scrollContainer.value) {
-        scrollContainer.value.scrollTo({
-            left: scrollContainer.value.scrollLeft - 320,
-            behavior: 'smooth'
-        });
-    }
-}
-
-function scrollRight() {
-    if (scrollContainer.value) {
-        scrollContainer.value.scrollTo({
-            left: scrollContainer.value.scrollLeft + 320,
-            behavior: 'smooth'
-        });
-    }
-}
-
-// 기본 이미지 (Community.vue와 동일한 DEFAULT_IMAGE 사용)
+// 기본 이미지 (Community.vue와 동��한 DEFAULT_IMAGE 사용)
 const DEFAULT_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7snbTrr7jsp4Ag7JeG7J2EPC90ZXh0Pjwvc3ZnPg==';
 
 const hotIssues = ref([]);
@@ -288,5 +270,10 @@ const hotIssues = ref([]);
 /* 부가적인 애니메이션 부드러움을 위한 스타일 */
 .transform {
     will-change: transform;
+}
+
+/* 스크롤바를 숨기고 싶은 요소에 적용 */
+.element {
+    overflow: hidden; /* 스크롤바 숨기기 */
 }
 </style>
