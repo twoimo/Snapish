@@ -18,7 +18,7 @@ import Catches from "./views/Catches.vue"; // Catches 컴포넌트 임포트
 // Example for axios base URL configuration
 import axios from "axios";
 
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = "http://13.55.133.76:5000";
 
 const routes = [
   {

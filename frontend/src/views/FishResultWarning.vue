@@ -254,7 +254,7 @@ const imageBase64 = ref('');
 const showModal = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const BACKEND_BASE_URL = 'http://13.55.133.76:5000';
 
 const goBack = () => {
   window.history.back();

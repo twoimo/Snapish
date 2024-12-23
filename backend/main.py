@@ -325,12 +325,12 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://localhost:8080",
+    "origins": "http://13.55.133.76",
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/weights/yolov11-custom/yani/yolo11m_aug7_conf87.pt').to(device)
+model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
 # 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
@@ -424,7 +424,7 @@ def get_mulddae():
         logging.error(f"Unexpected error: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실제 서비스에서는 안전�� 키로 변경하세요.
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')  # 실 서비스에서는 안전 키로 변경하세요.
 
 def token_required(f):
     @wraps(f)
@@ -679,7 +679,7 @@ def recent_activities(user_id):
         session.close()
         return jsonify({'message': 'User not found'}), 404
 
-    # 최근 활동을 회하는 로직 (예: 데이터베이스에서 최근 5개 캐치를 가져오기)
+    # 최근 동을 회하는 로직 (예: 데이터베이스에서 최근 5개 캐치를 가져오기)
     activities = session.query(Catch).filter_by(user_id=current_user.user_id).order_by(Catch.catch_date.desc()).limit(5).all()
     session.close()
     
@@ -958,7 +958,7 @@ def get_closest_sealoc():
 
     session = Session()
     
-    ## ST_Distance_Sphere를 사용하여 MySQL에�� 직접 거리 계산
+    ## ST_Distance_Sphere를 사용하여 MySQL에 직접 거리 계산
     # 조위, 수온, 기온 , 기압 4개 모두 체 가능한 우
     query_obsrecent = text("""
         SELECT obs_station_id, obs_post_id, obs_post_name,
@@ -991,7 +991,7 @@ def get_closest_sealoc():
         if result_obsrecent and result_obspretab:
             print(f"obs recent : {result_obsrecent}")
             print(f"obs pretab : {result_obspretab}")
-            # 조위 관측소 정보
+            # 조위 관측��� 정보
             obsrecent_data = {
                 'obs_station_id': result_obsrecent[0],
                 'obs_post_id': result_obsrecent[1],
@@ -1149,7 +1149,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://localhost:5000{url}"
+    return f"http://13.55.133.76:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required

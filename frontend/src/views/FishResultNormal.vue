@@ -252,7 +252,7 @@ const selectedCatch = ref(null);
 const loading = ref(true);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const BACKEND_BASE_URL = 'http://13.55.133.76:5000';
 
 // Change fishName to a computed property
 const fishName = computed(() => {
