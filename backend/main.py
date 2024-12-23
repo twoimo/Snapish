@@ -325,10 +325,11 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://13.55.133.76",
+    "origins": "http://54.252.210.69",  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
 
@@ -343,7 +344,7 @@ def add_header(response):
 # 초기 DB install
 initialize_service()
 
-# 라벨 핑 (어 -> 한국어)
+# 라벨 매핑 (영어 -> 한국어)
 labels_korean = {
  0: '감성돔',
  1: '대구',
@@ -398,7 +399,7 @@ PROHIBITED_DATES = {
 def hello():
     return 'Welcome to SNAPISH'
 
-# 물떼 정보 받아기
+# 물떼 정보 받아오기
 @app.route('/backend/mulddae', methods=['POST'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
@@ -436,7 +437,7 @@ def token_required(f):
             token = request.headers['Authorization'].split(' ')[1]
 
         if not token:
-            return jsonify({'message': '토큰이 필요합니다.'}), 401
+            return jsonify({'message': '���큰이 필요합니다.'}), 401
 
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
@@ -991,7 +992,7 @@ def get_closest_sealoc():
         if result_obsrecent and result_obspretab:
             print(f"obs recent : {result_obsrecent}")
             print(f"obs pretab : {result_obspretab}")
-            # 조위 관측��� 정보
+            # 조위 관측 정보
             obsrecent_data = {
                 'obs_station_id': result_obsrecent[0],
                 'obs_post_id': result_obsrecent[1],
@@ -1065,7 +1066,7 @@ def get_weather_api():
         logging.error(f"Error in get_weather_api: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
-# 애플리케이션 종료 시 세션 제거
+# 애플리케이션 종료 시 세 제거
 @app.teardown_appcontext
 def remove_session(exception=None):
     Session.remove()
@@ -1149,7 +1150,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://13.55.133.76:5000{url}"
+    return f"http://54.252.210.69:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required

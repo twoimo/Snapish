@@ -5,11 +5,11 @@ module.exports = {
     port: 8080, // 원하는 포트 번호로 변경
     proxy: {
       "/backend": {
-        target: "http://13.55.133.76:5000",
+        target: "http://54.252.210.69:5000",
         changeOrigin: true,
       },
       "/api": {
-        target: "http://13.55.133.76:5000",
+        target: "http://54.252.210.69:5000",
         changeOrigin: true,
       },
     },

@@ -176,7 +176,7 @@ const sortOption = ref('latest');
 const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://13.55.133.76:5000';
+const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
 
 let observer = null;
 

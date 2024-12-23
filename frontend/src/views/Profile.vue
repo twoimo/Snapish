@@ -7,7 +7,7 @@
                 <div @click="triggerFileInput" class="flex flex-col items-center space-y-4 cursor-pointer">
                     <!-- 아바타 -->
                     <div class="w-32 h-32 rounded-full bg-gray-200 flex-shrink-0" :style="{
-                        backgroundImage: `url(${user.avatar ? `http://13.55.133.76:5000${user.avatar}` : '/default-avatar.webp'})`,
+                        backgroundImage: `url(${user.avatar ? `http://54.252.210.69:5000${user.avatar}` : '/default-avatar.webp'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }"></div>
@@ -151,7 +151,7 @@ const uploadAvatar = async (event) => {
         const formData = new FormData();
         formData.append('avatar', file);
         try {
-            const response = await axios.post('http://13.55.133.76:5000/profile/avatar', formData, {
+            const response = await axios.post('http://54.252.210.69:5000/profile/avatar', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
