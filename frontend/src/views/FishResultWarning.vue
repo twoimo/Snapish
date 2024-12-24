@@ -42,7 +42,7 @@
         </div>
 
         <!-- 업로드된 물고기 이미지 표시 -->
-        <div v-if="!loading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
+        <div class="mt-4 bg-gray-200 rounded-lg p-4 transition-all duration-300 fade-slide-enter">
           <div class="image-container" :style="imageContainerStyle">
             <div class="image-wrapper">
               <div class="detection-area">
@@ -59,8 +59,7 @@
         </div>
 
         <!-- AI 판별 결과 -->
-        <div v-show="!loading && !errorMessage" 
-             class="mt-6 bg-red-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+        <div class="mt-6 bg-red-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
              :style="{ transitionDelay: '0ms' }">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
@@ -331,7 +330,7 @@ onMounted(async () => {
   };
 
   // ChatGPT 응답 가져오기
-  await fetchChatGPTResponse();
+  fetchChatGPTResponse();
 
   if (store.state.isAuthenticated) {
     try {
@@ -412,7 +411,7 @@ const imageContainerStyle = computed(() => {
     padding: '1rem'
   };
 
-  // 세로로 긴 이미지일 경우 패딩 조정
+  // 세로�� 긴 이미지일 경우 패딩 조정
   if (aspectRatio < 1) {
     style.padding = '2rem 1rem';
   }

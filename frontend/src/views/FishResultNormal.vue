@@ -52,8 +52,7 @@
       </div>
 
       <!-- AI 판별 결과 -->
-      <div v-show="!isLoading && !errorMessage" 
-           class="mt-6 bg-blue-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+      <div class="mt-6 bg-blue-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
            :style="{ transitionDelay: '0ms' }">
         <div class="flex items-center mb-2">
           <h2 class="text-lg font-bold text-blue-700">정상: 현재 포획 가능 어종</h2>
