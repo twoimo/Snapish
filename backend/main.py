@@ -326,13 +326,13 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://54.252.210.69",  # Ensure this matches your frontend's origin
+    "origins": "http://52.65.144.245",  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
+model = YOLO('./models/yolo11m_aug6_plus.pt').to(device)
 
 # 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
@@ -596,24 +596,42 @@ def predict():
             current_user = None
 
         if current_user:
-            # Save detections and image info to the database
-            filename = secure_filename(f"{uuid.uuid4().hex}.jpg")
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            img.save(file_path, format='JPEG')
+            # Check if catchId is provided in the request
+            catch_id = request.args.get('catchId')
+            if catch_id:
+                # Update existing catch
+                existing_catch = session.query(Catch).filter_by(catch_id=catch_id, user_id=current_user.user_id).first()
+                if existing_catch:
+                    existing_catch.exif_data = detections
+                    existing_catch.photo_url = filename
+                    existing_catch.catch_date = datetime.utcnow()
+                    session.commit()
+                    response_data = {
+                        'id': existing_catch.catch_id,
+                        'detections': detections,
+                        'imageUrl': filename
+                    }
+                else:
+                    return jsonify({'error': 'Catch not found'}), 404
+            else:
+                # Save new catch
+                filename = secure_filename(f"{uuid.uuid4().hex}.jpg")
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                img.save(file_path, format='JPEG')
 
-            new_catch = Catch(
-                user_id=current_user.user_id,
-                photo_url=filename,
-                exif_data=detections,
-                catch_date=datetime.utcnow()
-            )
-            session.add(new_catch)
-            session.commit()
-            response_data = {
-                'id': new_catch.catch_id,
-                'detections': detections,
-                'imageUrl': filename
-            }
+                new_catch = Catch(
+                    user_id=current_user.user_id,
+                    photo_url=filename,
+                    exif_data=detections,
+                    catch_date=datetime.utcnow()
+                )
+                session.add(new_catch)
+                session.commit()
+                response_data = {
+                    'id': new_catch.catch_id,
+                    'detections': detections,
+                    'imageUrl': filename
+                }
         else:
             # Do not save the image to disk or database
             buffered = io.BytesIO()
@@ -1151,7 +1169,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://54.252.210.69:5000{url}"
+    return f"http://52.65.144.245:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required

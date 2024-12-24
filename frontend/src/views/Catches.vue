@@ -176,7 +176,7 @@ const sortOption = ref('latest');
 const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
+const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 
 let observer = null;
 
@@ -331,6 +331,8 @@ const handleFishDataSave = async (updatedData) => {
     try {
         await store.dispatch('updateCatch', updatedData);
         showEditModal.value = false;
+        // Fetch updated catches to ensure the list is up-to-date
+        await store.dispatch('fetchCatches');
     } catch (error) {
         console.error('Error saving fish data:', error);
         alert('물고기 정보 저장에 실패했습니다.');
