@@ -113,17 +113,18 @@
         </div>
 
         <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
-          <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
-          <p class="text-gray-600">학명: {{ scientificName }}</p>
-          <p class="mt-2 text-gray-700">{{ fishDescription }}</p>
+          <h2 class="text-xl font-bold mb-2">{{ fishName }}은?</h2>
+          <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
+            <span class="inline-flex gap-1">
+              설명을 불러오는 중
+              <span class="loading-dots">
+                <span>.</span><span>.</span><span>.</span>
+              </span>
+            </span>
+          </p>
+          <p v-else class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
         </div>
 
-        <div v-if="!loading && !errorMessage" class="mt-6 bg-yellow-50 rounded-lg p-4">
-          <h3 class="font-bold text-yellow-700 mb-2">포획 제한 이유</h3>
-          <ul class="list-disc list-inside text-yellow-800">
-            <li>ChatGPT로 생성된 포획 제한 이유</li>
-          </ul>
-        </div>
 
         <!-- 공유하기 버튼 -->
         <div v-if="!loading && !errorMessage" class="mt-4">
@@ -217,7 +218,7 @@ const selectedCatch = ref(null);
 const showConsentModal = ref(false);
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
 const fishName = computed(() => {
-  if (detections.length > 0 && detections[0].label !== '알 수 없음') {
+  if (detections.length > 0 && detections[0].label !== '��� 수 없음') {
     return detections[0].label;
   }
   return '알 수 없는 물고기';
@@ -231,11 +232,10 @@ const imageBase64 = ref('');
 const showModal = ref(false);
 
 // ChatGPT assistant result
-const assistant_id = computed(() => {
-  const assistantIdFromQuery = route.query.assistant_id;
+const assistant_request_id = computed(() => {
+  const assistantIdFromQuery = route.query.assistant_request_id;
   return assistantIdFromQuery || null;
 });
-const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
 // Define backend base URL
@@ -266,7 +266,7 @@ const imageSource = computed(() => {
 const isImagePopupVisible = ref(false);
 const popupImageUrl = ref('');
 
-// 이미지 팝업 열기
+// 이��지 팝업 열기
 function openImagePopup(imageSrc) {
   popupImageUrl.value = imageSrc.startsWith('http') ? imageSrc : `${BACKEND_BASE_URL}/uploads/${imageSrc}`;
   isImagePopupVisible.value = true;
@@ -279,22 +279,23 @@ function navigateToCatches() {
 
 // ChatGPT 응답을 가져오는 메서드 추가
 const fetchChatGPTResponse = async () => {
-  const currentAssistantId = assistant_id.value;
+  const currentAssistantId = assistant_request_id.value;
   if (currentAssistantId) {
     try {
-      // assistant_id가 문자열화된 배열이므로 파싱
       const [thread_id, run_id] = currentAssistantId;
       const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
       console.log('ChatGPT Response:', response.data);
       if (response.data.status === 'Success') {
-        fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+        fishDescription.value = response.data.data || '잠시만 기다려 주세요';
       } else {
         console.error('Error in ChatGPT response:', response.data.status);
-        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+        fishDescription.value = '현재 서비스를 이용할 수 없어요';
       }
     } catch (error) {
       console.error('Error fetching ChatGPT response:', error);
-      fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      fishDescription.value = '현재 서비스를 이용할 수 없어요';
+    } finally {
+      isDescriptionLoading.value = false;
     }
   }
 };
@@ -315,7 +316,7 @@ onMounted(async () => {
   img.onerror = () => {
     loading.value = false;
     if (imageSource.value === '/placeholder.svg') {
-      errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+      errorMessage.value = '이미지를 불러��는 데 실패했습니다.';
     }
   };
 
@@ -467,7 +468,7 @@ const handleConsent = async (consented) => {
   }
 };
 
-// 이��지 클릭 핸들러 추가
+// 이미지 클릭 핸들러 추가
 const handleImageClick = () => {
   if (imageSource.value === '/placeholder.svg') {
     alert('이미지를 불러올 수 없습니다.');
@@ -479,6 +480,9 @@ const handleImageClick = () => {
 const imageClass = computed(() => {
   return 'detection-image';
 });
+
+// isDescriptionLoading ref 추가
+const isDescriptionLoading = ref(true);
 </script>
 
 <style scoped>
@@ -561,5 +565,25 @@ const imageClass = computed(() => {
 
 .modal {
   background: white;
+}
+
+.loading-dots span {
+  animation: loadingDots 1.4s infinite;
+  opacity: 0;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingDots {
+  0% { opacity: 0; transform: translateY(0); }
+  25% { opacity: 1; transform: translateY(-4px); }
+  50% { opacity: 0; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
 }
 </style>

@@ -111,9 +111,16 @@
       </div>
 
       <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
-        <p class="text-gray-600">학명: {{ scientificName || '정보 없음' }}</p>
-        <p class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
+        <h2 class="text-xl font-bold mb-2">{{ fishName }}은?</h2>
+        <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
+          <span class="inline-flex gap-1">
+            설명을 불러오는 중
+            <span class="loading-dots">
+              <span>.</span><span>.</span><span>.</span>
+            </span>
+          </span>
+        </p>
+        <p v-else class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
       </div>
 
       <!-- 공유하기 버튼 -->
@@ -230,13 +237,14 @@ const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const loading = ref(true);
 const isLoadingMore = ref(false);
+const isDescriptionLoading = ref(true);
 
 // ChatGPT assistant Get result
-const assistant_id = computed(() => {
-  const assistantIdFromQuery = route.query.assistant_id;
+const assistant_request_id = computed(() => {
+  const assistantIdFromQuery = route.query.assistant_request_id;
   return assistantIdFromQuery || null;
 });
-const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
+// const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
 const baseUrl = process.env.VUE_APP_BASE_URL;
@@ -252,22 +260,23 @@ const fishName = computed(() => {
 
 // ChatGPT 응답을 가져오는 메서드 추가
 const fetchChatGPTResponse = async () => {
-  const currentAssistantId = assistant_id.value;
+  const currentAssistantId = assistant_request_id.value;
   if (currentAssistantId) {
     try {
-      // assistant_id가 문자열화된 배열이므로 파싱
       const [thread_id, run_id] = currentAssistantId;
       const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
       console.log('ChatGPT Response:', response.data);
       if (response.data.status === 'Success') {
-        fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+        fishDescription.value = response.data.data || '잠시만 기다려 주세요';
       } else {
         console.error('Error in ChatGPT response:', response.data.status);
-        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+        fishDescription.value = '현재 서비스를 이용할 수 없어요';
       }
     } catch (error) {
       console.error('Error fetching ChatGPT response:', error);
-      fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      fishDescription.value = '현재 서비스를 이용할 수 없어요';
+    } finally {
+      isDescriptionLoading.value = false;
     }
   }
 };
@@ -294,8 +303,6 @@ const fetchDetections = async () => {
       imageBase64.value = route.query.imageBase64;
     }
     errorMessage.value = '';
-    // 디텍션 업데이트 후 ChatGPT 응답도 새로 가져오기
-    await fetchChatGPTResponse();
   } catch (e) {
     console.error('Failed to fetch detections:', e);
     errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
@@ -313,7 +320,7 @@ onMounted(async () => {
   imageUrl.value = route.query.imageUrl || '';
   imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
 
-  // 실제 이미지 로딩 완료 시에만 isLoading을 false로 설정
+  // 실제 이미지 로딩만 loading 상태로 관리
   const img = new Image();
   img.src = imageSource.value;
   img.onload = () => {
@@ -326,27 +333,26 @@ onMounted(async () => {
     }
   };
 
-  // 병렬로 실행할 작업들
+  // ChatGPT 응답은 별도로 실행
+  fetchChatGPTResponse();
+
+  // 다른 데이터 로딩은 별도로 처리
   try {
-    await Promise.all([
-      // 디텍션 데이터 가져오기
-      fetchDetections(),
-      
-      // 인증된 사용자인 경우 추가 작업
-      (async () => {
-        if (store.state.isAuthenticated) {
-          await store.dispatch('fetchInitialData');
-          try {
-            const consentStatus = await store.dispatch('checkConsent');
-            if (!consentStatus.hasConsent) {
-              showConsentModal.value = true;
-            }
-          } catch (error) {
-            console.error('Error checking consent:', error);
-          }
+    // 디텍션 데이터 가져오기 (loading 상태와 무관)
+    await fetchDetections();
+    
+    // 인증된 사용자인 경우 추가 작업
+    if (store.state.isAuthenticated) {
+      await store.dispatch('fetchInitialData');
+      try {
+        const consentStatus = await store.dispatch('checkConsent');
+        if (!consentStatus.hasConsent) {
+          showConsentModal.value = true;
         }
-      })()
-    ]);
+      } catch (error) {
+        console.error('Error checking consent:', error);
+      }
+    }
   } catch (error) {
     console.error('Error during initialization:', error);
     errorMessage.value = '데이터를 불러오는 데 실패했습니다.';
@@ -632,5 +638,25 @@ const openEditModal = () => {
 
 .aspect-\[4\/3\] {
   aspect-ratio: 4/3;
+}
+
+.loading-dots span {
+  animation: loadingDots 1.4s infinite;
+  opacity: 0;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingDots {
+  0% { opacity: 0; transform: translateY(0); }
+  25% { opacity: 1; transform: translateY(-4px); }
+  50% { opacity: 0; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
 }
 </style>
