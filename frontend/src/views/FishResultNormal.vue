@@ -203,12 +203,12 @@ console.log("FishResultNormal script loaded"); // Debugging log
 
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import html2canvas from 'html2canvas';
 import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
+import axios from 'axios';
 
 const store = useStore();
 const route = useRoute();
@@ -231,6 +231,10 @@ const selectedCatch = ref(null);
 const loading = ref(true);
 const isLoadingMore = ref(false);
 
+// ChatGPT assistant Get result
+const assistant_id = ref(route.query.assistant_id || null);
+const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
 const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 
@@ -241,9 +245,6 @@ const fishName = computed(() => {
   }
   return '알 수 없는 물고기';
 });
-
-const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
-const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 
 const fetchDetections = async () => {
   isLoading.value = true;
@@ -280,6 +281,25 @@ onMounted(async () => {
   try {
     loading.value = true;
     await store.dispatch('fetchInitialData');
+
+    if (assistant_id.value) {
+      try {
+        // assistant_id가 문자열화된 배열이므로 파싱
+        const [thread_id, run_id] = assistant_id.value;
+        const response = await axios.get(`/backend/chat/${thread_id}/${run_id}`);
+        console.log(response.data);
+        if (response.data.status === 'Success') {
+          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+        } else {
+          console.error('Error in ChatGPT response:', response.data.status);
+          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+        }
+      } catch (error) {
+        console.error('Error fetching ChatGPT response:', error);
+        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      }
+    }
+
     if (store.state.isAuthenticated) {
       console.log('Checking consent status...');
       try {
