@@ -7,7 +7,7 @@
                 <div @click="triggerFileInput" class="flex flex-col items-center space-y-4 cursor-pointer">
                     <!-- 아바타 -->
                     <div class="w-32 h-32 rounded-full bg-gray-200 flex-shrink-0" :style="{
-                        backgroundImage: `url(${user.avatar ? `http://52.65.144.245:5000${user.avatar}` : '/default-avatar.webp'})`,
+                        backgroundImage: `url(${user.avatar ? `${baseUrl}${user.avatar}` : '/default-avatar.webp'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }"></div>
@@ -99,6 +99,8 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 
+const baseUrl = process.env.VUE_APP_BASE_URL;
+
 const store = useStore();
 const router = useRouter();
 const avatarInput = ref(null);
@@ -151,7 +153,7 @@ const uploadAvatar = async (event) => {
         const formData = new FormData();
         formData.append('avatar', file);
         try {
-            const response = await axios.post('http://52.65.144.245:5000/profile/avatar', formData, {
+            const response = await axios.post(`${baseUrl}/profile/avatar`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,

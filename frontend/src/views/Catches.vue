@@ -176,7 +176,8 @@ const sortOption = ref('latest');
 const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const BACKEND_BASE_URL = baseUrl;
 
 let observer = null;
 
