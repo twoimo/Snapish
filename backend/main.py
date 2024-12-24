@@ -327,13 +327,14 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://52.65.144.245",  # Ensure this matches your frontend's origin
+    "origins": ["http://52.65.144.245:5000", 
+                "http://localhost:8080"],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_aug6_plus.pt').to(device)
+model = YOLO(f'./models/{os.getenv("MODEL_NAME")}').to(device)
 
 # 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
@@ -660,6 +661,33 @@ def predict():
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         return jsonify({'error': '이미지 처리 중 오류가 발생했습니다.'}), 500
+    
+@app.route('/backend/chat/<thread_id>/<run_id>', methods=['GET'])
+def assistant_talk_result(thread_id, run_id):
+    try:
+        formatted_text = assistant_talk_get(thread_id, run_id)
+        
+        if not formatted_text:
+            return jsonify({            
+                'data': None,
+                'status': 'No response from assistant'
+            }), 404
+            
+        return jsonify({
+            'data': formatted_text,
+            'status': 'Success'
+        })
+        
+    except TimeoutError:
+        return jsonify({
+            'data': None,
+            'status': 'Assistant response timed out'
+        }), 408
+    except Exception as e:
+        return jsonify({
+            'data': None,
+            'status': f'Internal server error : {e}'
+        }), 500
 
 @app.route('/profile', methods=['GET', 'PUT'])
 @token_required
