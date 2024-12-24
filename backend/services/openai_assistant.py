@@ -61,6 +61,5 @@ def assistant_talk_get(target_thread_id, target_run_id):
                     formatted_text.append(cleaned_text.replace('. ', '.\n'))
     
     formatted_text = "\n".join(formatted_text)
-    end = time.time()
     
-    return messages, formatted_text
+    return formatted_text
