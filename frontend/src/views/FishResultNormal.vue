@@ -1,4 +1,3 @@
-# Start of Selection
 <template>
   <div class="min-h-screen bg-white flex flex-col">
     <!-- 헤더 -->
@@ -40,25 +39,32 @@
         <div class="image-container" :style="imageContainerStyle">
           <div class="image-wrapper">
             <div class="detection-area">
-              <img 
-                ref="fishImage" 
-                :src="imageSource" 
-                alt="물고기 사진" 
-                :class="imageClass"
-                @click="handleImageClick" 
-                @load="onImageLoad" 
-              />
+              <img ref="fishImage" :src="imageSource" alt="물고기 사진" :class="imageClass" @click="handleImageClick"
+                @load="onImageLoad" />
               <template v-if="imageDimensions.width && imageDimensions.height">
-                <div 
-                  v-for="(detection, index) in parsedDetections" 
-                  :key="index" 
-                  class="bounding-box" 
-                  :style="getBoundingBoxStyle(detection.bbox)"
-                >
+                <div v-for="(detection, index) in parsedDetections" :key="index" class="bounding-box"
+                  :style="getBoundingBoxStyle(detection.bbox)">
                 </div>
               </template>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- AI 모델 경고 문구 추가 -->
+      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center justify-center gap-2 text-yellow-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="font-semibold">AI 판별 주의사항</span>
+          </div>
+          <p class="text-sm text-gray-600 text-center leading-relaxed">
+            인공지능 모델의 판별 결과는 참고용입니다.<br>
+            실제 상황과 법적 규제를 반드시 확인하세요.
+          </p>
         </div>
       </div>
 
@@ -74,7 +80,7 @@
               'text-sm',
               getConfidenceColor(parsedDetections[0].confidence)
             ]">
-              신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%
+              (신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%)
             </span>
           </p>
           <p class="text-blue-600" v-else>
@@ -93,9 +99,8 @@
                 ]">
                   (신뢰도: {{ (detection.confidence * 100).toFixed(2) }}%)
                 </span>
-                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }}
+                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }} </span>
               </span>
-            </span>
           </p>
         </template>
         <template v-else>
@@ -122,10 +127,8 @@
 
       <!-- 물고기 정보 수정 버튼 -->
       <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
-        <button 
-          class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="openEditModal"
-        >
+        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="openEditModal">
           <Edit class="w-5 h-5 mr-2" />
           <span>물고기 정보 수정</span>
         </button>
@@ -140,21 +143,7 @@
         </button>
       </div>
 
-      <!-- AI 모델 경고 문구 추가 -->
-      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center gap-2 text-yellow-500">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="font-semibold">AI 판별 주의사항</span>
-          </div>
-          <p class="text-sm text-gray-600 text-center leading-relaxed">
-            인공지능 모델의 판별 결과는 참고용입니다.<br>
-            실제 상황과 법적 규제를 반드시 확인하세요.
-          </p>
-        </div>
-      </div>
+
 
       <!-- 추가 로딩 인디케이터 -->
       <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
@@ -166,7 +155,8 @@
     </main>
 
     <!-- 포토카드 모달 -->
-    <div v-if="showModal && !isLoading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] max-w-md mx-auto">
+    <div v-if="showModal && !isLoading"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] max-w-md mx-auto">
       <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
         <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
         <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
@@ -176,60 +166,49 @@
         </div>
         <div class="mt-6 flex justify-end gap-3">
           <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded" :disabled="isLoading">닫기</button>
-          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded" :disabled="isLoading">저장하기</button>
+          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded"
+            :disabled="isLoading">저장하기</button>
         </div>
       </div>
     </div>
 
     <!-- 이미지 팝업 -->
     <div v-if="isImagePopupVisible"
-        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
-        @click="isImagePopupVisible = false">
-        <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
-            <div class="relative">
-                <img 
-                    :src="popupImageUrl" 
-                    alt="Popup Image"
-                    class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
-                />
-                <button 
-                    @click="isImagePopupVisible = false"
-                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
-                >
-                    <X class="w-5 h-5 text-gray-600" />
-                </button>
-            </div>
+      class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
+      @click="isImagePopupVisible = false">
+      <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+        <div class="relative">
+          <img :src="popupImageUrl" alt="Popup Image"
+            class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain" />
+          <button @click="isImagePopupVisible = false"
+            class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg">
+            <X class="w-5 h-5 text-gray-600" />
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- Add consent modal -->
-    <ConsentModal 
-      v-if="showConsentModal"
-      :isVisible="showConsentModal"
-      @close="handleConsentClose"
-      @consent="handleConsent"
-    />
+    <ConsentModal v-if="showConsentModal" :isVisible="showConsentModal" @close="handleConsentClose"
+      @consent="handleConsent" />
 
     <!-- Add edit fish modal -->
-    <EditFishModal
-      v-if="showEditModal"
-      :isVisible="showEditModal"
-      :catchData="selectedCatch"
-      @close="showEditModal = false"
-      @save="handleFishDataSave"
-    />
+    <EditFishModal v-if="showEditModal" :isVisible="showEditModal" :catchData="selectedCatch"
+      @close="showEditModal = false" @save="handleFishDataSave" />
   </div>
 </template>
 
 <script setup>
+console.log("FishResultNormal script loaded"); // Debugging log
+
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import html2canvas from 'html2canvas';
 import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
+import axios from 'axios';
 
 const store = useStore();
 const route = useRoute();
@@ -250,9 +229,14 @@ const showConsentModal = ref(false);
 const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const loading = ref(true);
+const isLoadingMore = ref(false);
 
+// ChatGPT assistant Get result
+const assistant_id = ref(route.query.assistant_id || null);
+const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 
 // Change fishName to a computed property
 const fishName = computed(() => {
@@ -262,11 +246,9 @@ const fishName = computed(() => {
   return '알 수 없는 물고기';
 });
 
-const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
-const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
-
 const fetchDetections = async () => {
   isLoading.value = true;
+  isLoadingMore.value = true;
   try {
     const token = localStorage.getItem('token');
     if (token && route.query.imageUrl) {
@@ -291,6 +273,7 @@ const fetchDetections = async () => {
     parsedDetections.value = [];
   } finally {
     isLoading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
@@ -298,6 +281,25 @@ onMounted(async () => {
   try {
     loading.value = true;
     await store.dispatch('fetchInitialData');
+
+    if (assistant_id.value) {
+      try {
+        // assistant_id가 문자열화된 배열이므로 파싱
+        const [thread_id, run_id] = assistant_id.value;
+        const response = await axios.get(`/backend/chat/${thread_id}/${run_id}`);
+        console.log(response.data);
+        if (response.data.status === 'Success') {
+          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+        } else {
+          console.error('Error in ChatGPT response:', response.data.status);
+          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+        }
+      } catch (error) {
+        console.error('Error fetching ChatGPT response:', error);
+        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      }
+    }
+
     if (store.state.isAuthenticated) {
       console.log('Checking consent status...');
       try {
@@ -395,7 +397,7 @@ const onImageLoad = () => {
       width: imageElement.naturalWidth,
       height: imageElement.naturalHeight
     };
-    
+
     // resize 이벤트 리스너 추가
     window.addEventListener('resize', updateBoundingBoxes);
     // 초기 bbox 업데이트를 위해 약간의 지연 추가
@@ -432,19 +434,12 @@ const getBoundingBoxStyle = (bbox) => {
 
 // 이미지 크기에 따른 클래스 계산
 const imageClass = computed(() => {
-  if (!imageDimensions.value.width || !imageDimensions.value.height) {
-    return 'detection-image';
-  }
-  
-  // 작은 이미지 기준 (예: 800px)
-  return imageDimensions.value.width < 800 
-    ? 'detection-image small-image' 
-    : 'detection-image';
+  return 'detection-image';
 });
 
 const imageContainerStyle = computed(() => {
   if (!imageDimensions.value.width || !imageDimensions.value.height) {
-    return { 
+    return {
       minHeight: 'fit-content',
       padding: '0.5rem'
     };
@@ -496,57 +491,26 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
-  // 새로운 catch 생성을 위한 POST 요청
-  const createNewCatch = async () => {
-    try {
-      const response = await axios.post('/catches', {
-        detections: parsedDetections.value,
-        imageUrl: imageUrl.value,
-        catch_date: new Date().toISOString().split('T')[0]
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      console.log('Created new catch:', response.data);
-      if (!response.data.id) {
-        throw new Error('Invalid response from server: missing catch ID');
-      }
-      return response.data;
-    } catch (error) {
-      console.error('Error creating new catch:', error);
-      alert('새로운 캐치 생성에 실패했습니다.');
-      throw error;
-    }
-  };
+  console.log("openEditModal function called"); // Debugging log
+  const catchId = route.query.catchId;
+  console.log("Route Query:", route.query); // Debugging log
+  console.log("Catch ID:", catchId); // Debugging log
 
-  // 새로운 catch 생성 후 수정 모달 열기
-  const initEditModal = async () => {
-    try {
-      const newCatch = await createNewCatch();
-      if (!newCatch.id) {
-        throw new Error('No catch ID received from server');
-      }
-      selectedCatch.value = {
-        id: newCatch.id,
-        detections: parsedDetections.value,
-        imageUrl: imageUrl.value,
-        catch_date: new Date().toISOString().split('T')[0],
-        weight_kg: null,
-        length_cm: null,
-        latitude: null,
-        longitude: null,
-        memo: ''
-      };
-      console.log('Opening edit modal with catch:', selectedCatch.value);  // 디버깅용 로그
+  if (catchId) {
+    // Fetch the catch data from the store
+    const catchData = store.getters.catches.find(c => c.id === parseInt(catchId));
+    console.log("Catch Data:", catchData); // Debugging log
+    if (catchData) {
+      selectedCatch.value = { ...catchData };
       showEditModal.value = true;
-    } catch (error) {
-      console.error('Error initializing edit modal:', error);
-      alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
+    } else {
+      console.error('Catch data not found in store'); // Debugging log
+      alert('수정할 수 있는 물고기 정보가 없습니다.');
     }
-  };
-
-  initEditModal();
+  } else {
+    console.error('Catch ID not found in route query'); // Debugging log
+    alert('수정할 수 있는 물고기 정보가 없습니다.');
+  }
 };
 </script>
 
@@ -576,7 +540,8 @@ const openEditModal = () => {
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 100vw;  /* 화면 너비 최대로 설정 */
+  max-width: 100vw;
+  /* 화면 너비 최대로 설정 */
 }
 
 .detection-image {
@@ -592,7 +557,8 @@ const openEditModal = () => {
 .small-image {
   width: 100vw;
   max-width: none;
-  margin: -0.5rem;  /* 컨테이너 패딩 상쇄 */
+  margin: -0.5rem;
+  /* 컨테이너 패딩 상쇄 */
 }
 
 .bounding-box {
@@ -636,5 +602,3 @@ const openEditModal = () => {
   aspect-ratio: 4/3;
 }
 </style>
-# End of Selection
-```

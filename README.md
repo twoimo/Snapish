@@ -11,7 +11,7 @@ export FLASK_APP=main.py
 flask run --host=0.0.0.0
 
 cd /home/ubuntu/Snapish/frontend
-sudo npm run serve
+npm run serve
 ```
 
 # 백엔드

@@ -176,7 +176,7 @@ const sortOption = ref('latest');
 const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 
 let observer = null;
 
@@ -198,11 +198,9 @@ const filteredCatches = computed(() => {
         return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
     });
 
-    const sortedCatches = sortOption.value === 'latest'
-        ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
-        : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+    const sortedCatches = allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id);
     
-    return sortedCatches.slice(0, displayCount.value);
+    return sortedCatches;
 });
 
 onMounted(async () => {
@@ -274,8 +272,8 @@ function loadMoreCatches() {
         );
 
         const sortedCatches = sortOption.value === 'latest'
-            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
-            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
+            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
 
         const nextItems = sortedCatches.slice(
             displayCount.value,
@@ -331,6 +329,8 @@ const handleFishDataSave = async (updatedData) => {
     try {
         await store.dispatch('updateCatch', updatedData);
         showEditModal.value = false;
+        // Fetch updated catches to ensure the list is up-to-date
+        await store.dispatch('fetchCatches');
     } catch (error) {
         console.error('Error saving fish data:', error);
         alert('물고기 정보 저장에 실패했습니다.');

@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 overflow-y-auto">
     <!-- Main content -->
-    <main class="max-w-5xl mx-auto px-4">
+    <main class="max-w-5xl mx-auto px-4 pb-24">
       <!-- Post list -->
       <div class="grid gap-8">
         <article 
           v-for="post in posts" 
           :key="post.post_id" 
-          class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100/50"
+          class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50"
         >
           <!-- Post header -->
           <div class="p-6">
@@ -66,11 +66,12 @@
               <!-- Image gallery -->
               <div v-if="post.images?.length" class="space-y-4">
                 <div 
-                  class="relative rounded-2xl overflow-hidden"
+                  class="relative rounded-2xl"
                   :data-post-id="post.post_id"
                   @touchstart="handleTouchStart($event, post)"
                   @touchmove="handleTouchMove($event, post)"
                   @touchend="handleTouchEnd($event, post)"
+                  style="touch-action: pan-y;"
                 >
                   <!-- Image container -->
                   <div class="relative w-full overflow-hidden" ref="imageContainer">
@@ -143,7 +144,7 @@
                     />
                   </div>
                   <div class="ml-2">
-                    <span class="text-base font-semibold" :class="post.showComments ? 'text-blue-500' : 'text-gray-900'">
+                    <span class="text-base" :class="post.showComments ? 'text-blue-500' : 'text-gray-900'">
                       {{ post.comments_count.toLocaleString() }}
                     </span>
                   </div>
@@ -223,15 +224,15 @@
           </div>
         </article>
       </div>
+      <!-- Floating action button -->
+      <router-link 
+        to="/community/new"
+        class="fixed bottom-24 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transform hover:scale-110 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 z-20"
+      >
+        <PenLine class="w-6 h-6" />
+      </router-link>
     </main>
 
-    <!-- Floating action button -->
-    <router-link 
-      to="/community/new"
-      class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center hover:from-blue-700 hover:to-purple-700 transform hover:scale-110 hover:rotate-180 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-    >
-      <PenLine class="w-6 h-6" />
-    </router-link>
   </div>
 </template>
 
@@ -474,7 +475,6 @@ export default {
     const handleTouchMove = (event, post) => {
       if (!post.isDragging || !post.images || post.images.length <= 1) return
       
-      event.preventDefault()
       const touch = event.touches[0]
       touchEnd.value = { x: touch.clientX, y: touch.clientY }
       
@@ -485,6 +485,8 @@ export default {
         post.isDragging = false
         return
       }
+      
+      event.preventDefault()
       
       const newTranslateX = post.startTranslateX + deltaX
       const maxTranslateX = 0
@@ -656,23 +658,19 @@ img.loaded {
 }
 
 /* Update touch action for proper swipe handling */
-.overflow-hidden {
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.transition-transform {
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+.relative.rounded-2xl {
+  touch-action: pan-y;
 }
 
 /* Remove conflicting styles */
-.touch-pan-y {
-  touch-action: none;
+.overflow-hidden {
+  /* Removed touch-action: none; to allow scrolling */
+  /* touch-action: none; */
+}
+
+/* Ensure touch actions on image galleries allow vertical scrolling */
+.relative.rounded-2xl {
+  touch-action: pan-y;
 }
 
 /* Optimize for mobile */
@@ -783,3 +781,4 @@ img.loaded {
   color: #333;
 }
 </style>
+

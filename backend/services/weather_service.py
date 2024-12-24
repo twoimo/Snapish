@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime
+import pytz
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -112,7 +113,7 @@ def process_weather_data(data):
             "wind_speed": data['wind']['speed'],
             "wind_deg": get_wind_direction(data['wind']['deg']),
             "weather": data['weather'][0]['description'],
-            "sunrise": datetime.fromtimestamp(data['sys']['sunrise']).strftime('%H:%M:%S'),
-            "sunset": datetime.fromtimestamp(data['sys']['sunset']).strftime('%H:%M:%S')
+            "sunrise": data['sys']['sunrise'],
+            "sunset": data['sys']['sunset'],
             }
     }

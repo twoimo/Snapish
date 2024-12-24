@@ -11,11 +11,11 @@
         <div class="time-box">
           <div class="time-item">
             <SunriseIcon class="icon" />
-            <span>{{ localWeather.weather.sunrise }}</span>
+            <span>{{ readTimeStamp(localWeather.weather.sunrise, 9) }}</span>
           </div>
           <div class="time-item">
             <SunsetIcon class="icon" />
-            <span>{{ localWeather.weather.sunset }}</span>
+            <span>{{ readTimeStamp(localWeather.weather.sunset, 9) }}</span>
           </div>
         </div>
 
@@ -117,6 +117,19 @@ export default {
         }
       }
     },
+    readTimeStamp(unixTimestamp, timezoneOffset) {
+      // 클라이언트의 로컬 타임존 오프셋을 가져옴 (분 단위)
+      const clientOffset = new Date().getTimezoneOffset(); // 서버 시간과 클라이언트 시간 차이 (분 단위)
+      
+      // 시간 변환을 위한 오프셋 계산 (초 단위로 변환)
+      const offsetTimestamp = unixTimestamp + (clientOffset * 60) + (timezoneOffset * 60 * 60);
+
+      // 오프셋을 적용하여 새로운 Date 객체 생성
+      var date = new Date(offsetTimestamp * 1000);  // 초 단위로 전달되는 timestamp이므로 1000을 곱해서 밀리초로 변환
+
+      // 한국 시간으로 변환된 시간을 "hh:mm:ss" 형식으로 출력
+      return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    }
   },
 };
 </script>
