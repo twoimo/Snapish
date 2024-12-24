@@ -414,21 +414,7 @@ const getBoundingBoxStyle = (bbox) => {
 
 // 이미지 크기에 따른 클래스 계산
 const imageClass = computed(() => {
-  if (!imageDimensions.value.width || !imageDimensions.value.height) {
-    return 'detection-image';
-  }
-
-  // Calculate aspect ratio
-  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
-
-  // Classify based on aspect ratio
-  if (aspectRatio < 1) {
-    return 'detection-image'; // For vertically long images
-  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
-    return 'detection-image'; // For normal images
-  } else {
-    return 'detection-image small-image'; // For horizontally long images
-  }
+  return 'detection-image';
 });
 
 const imageContainerStyle = computed(() => {

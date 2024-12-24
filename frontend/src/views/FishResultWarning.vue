@@ -330,11 +330,9 @@ const getBoundingBoxStyle = (bbox) => {
     return {};
   }
 
-  // 이미지의 실제 렌더링된 크기 계산
   const renderedWidth = imageElement.clientWidth;
   const renderedHeight = imageElement.clientHeight;
 
-  // 스케일 계산
   const scaleX = renderedWidth / imageDimensions.value.width;
   const scaleY = renderedHeight / imageDimensions.value.height;
 
@@ -444,21 +442,7 @@ const handleImageClick = () => {
 };
 
 const imageClass = computed(() => {
-  if (!imageDimensions.value.width || !imageDimensions.value.height) {
-    return 'detection-image';
-  }
-
-  // Calculate aspect ratio
-  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
-
-  // Classify based on aspect ratio
-  if (aspectRatio < 1) {
-    return 'detection-image'; // For vertically long images
-  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
-    return 'detection-image'; // For normal images
-  } else {
-    return 'detection-image small-image'; // For horizontally long images
-  }
+  return 'detection-image';
 });
 </script>
 
@@ -543,4 +527,5 @@ const imageClass = computed(() => {
 .modal {
   background: white;
 }
+</style>
 </style>

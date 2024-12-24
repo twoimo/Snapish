@@ -378,6 +378,49 @@ onUnmounted(() => {
         observer.disconnect();
     }
 });
+
+function getBoundingBoxStyle(bbox) {
+  if (!Array.isArray(bbox)) {
+    console.warn('Invalid bbox format:', bbox);
+    return {};
+  }
+
+  const [x1, y1, x2, y2] = bbox;
+  const imageElement = fishImage.value;
+
+  if (!imageElement || !imageDimensions.value.width || !imageDimensions.value.height) {
+    return {};
+  }
+
+  const renderedWidth = imageElement.clientWidth;
+  const renderedHeight = imageElement.clientHeight;
+
+  const scaleX = renderedWidth / imageDimensions.value.width;
+  const scaleY = renderedHeight / imageDimensions.value.height;
+
+  return {
+    left: `${x1 * scaleX}px`,
+    top: `${y1 * scaleY}px`,
+    width: `${(x2 - x1) * scaleX}px`,
+    height: `${(y2 - y1) * scaleY}px`
+  };
+}
+
+const imageClass = computed(() => {
+  if (!imageDimensions.value.width || !imageDimensions.value.height) {
+    return 'detection-image';
+  }
+
+  const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
+
+  if (aspectRatio < 1) {
+    return 'detection-image'; // For vertically long images
+  } else if (aspectRatio >= 1 && aspectRatio <= 1.5) {
+    return 'detection-image'; // For normal images
+  } else {
+    return 'detection-image small-image'; // For horizontally long images
+  }
+});
 </script>
 
 <style scoped>
@@ -402,5 +445,89 @@ onUnmounted(() => {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  background-color: #f3f4f6;
+  min-height: fit-content;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detection-area {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100vw;
+}
+
+.detection-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.small-image {
+  width: 100vw;
+  max-width: none;
+  margin: -0.5rem;
+}
+
+.bounding-box {
+  position: absolute;
+  border: 2px solid red;
+  pointer-events: none;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.object-contain {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
+.relative {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f3f4f6;
+  min-height: 300px;
+}
+
+.absolute.inset-0 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.aspect-\[4\/3\] {
+  aspect-ratio: 4/3;
 }
 </style>
