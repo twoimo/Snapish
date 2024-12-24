@@ -51,23 +51,6 @@
         </div>
       </div>
 
-      <!-- AI 모델 경고 문구 추가 -->
-      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center gap-2 text-yellow-500">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="font-semibold">AI 판별 주의사항</span>
-          </div>
-          <p class="text-sm text-gray-600 text-center leading-relaxed">
-            인공지능 모델의 판별 결과는 참고용입니다.<br>
-            실제 상황과 법적 규제를 반드시 확인하세요.
-          </p>
-        </div>
-      </div>
-
       <!-- AI 판별 결과 -->
       <div v-if="!isLoading && !errorMessage" class="mt-6 bg-blue-50 rounded-lg p-4">
         <div class="flex items-center mb-2">
@@ -110,18 +93,37 @@
         </template>
       </div>
 
-      <div v-if="!isLoading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
-        <h2 class="text-xl font-bold mb-2">{{ fishName }}은?</h2>
+      <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
         <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
           <span class="inline-flex gap-1">
-            설명을 불러오는 중
+            정보를 찾아보는 중
             <span class="loading-dots">
               <span>.</span><span>.</span><span>.</span>
             </span>
           </span>
         </p>
-        <p v-else class="mt-2 text-gray-700">{{ fishDescription || '설명 없음' }}</p>
+        <p v-else class="mt-2">
+          <span class="text-gray-700">{{ fishDescription || '설명 없음' }}</span>
+          <span class="block text-xs text-gray-700 mt-1">MBRIS 생물종 상세정보 기반 생성형 답변입니다.</span>
+        </p>
       </div>
+
+        <!-- AI 모델 경고 문구 추가 -->
+        <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm">
+          <div class="flex flex-col items-center gap-2">
+            <div class="flex items-center justify-center gap-2 text-yellow-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="font-semibold">AI 판별 주의사항</span>
+            </div>
+            <p class="text-sm text-gray-600 text-center leading-tight">
+              인공지능 모델의 판별 결과는 참고용입니다.<br>
+              실제 상황과 법적 규제를 반드시 확인하세요.
+            </p>
+          </div>
+        </div>
 
       <!-- 공유하기 버튼 -->
       <div v-if="!isLoading && !errorMessage" class="mt-4">
@@ -250,13 +252,13 @@ const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요�
 const baseUrl = process.env.VUE_APP_BASE_URL;
 const BACKEND_BASE_URL = baseUrl;
 
-// Change fishName to a computed property
-const fishName = computed(() => {
-  if (parsedDetections.value.length > 0 && parsedDetections.value[0].label !== '알 수 없음') {
-    return parsedDetections.value[0].label;
-  }
-  return '알 수 없는 물고기';
-});
+// Temporary Disable
+// const fishName = computed(() => {
+//   if (parsedDetections.value.length > 0 && parsedDetections.value[0].label !== '알 수 없음') {
+//     return parsedDetections.value[0].label;
+//   }
+//   return '알 수 없는 물고기';
+// });
 
 // ChatGPT 응답을 가져오는 메서드 추가
 const fetchChatGPTResponse = async () => {
