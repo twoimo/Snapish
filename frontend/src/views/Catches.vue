@@ -331,6 +331,8 @@ const handleFishDataSave = async (updatedData) => {
     try {
         await store.dispatch('updateCatch', updatedData);
         showEditModal.value = false;
+        // Fetch updated catches to ensure the list is up-to-date
+        await store.dispatch('fetchCatches');
     } catch (error) {
         console.error('Error saving fish data:', error);
         alert('물고기 정보 저장에 실패했습니다.');

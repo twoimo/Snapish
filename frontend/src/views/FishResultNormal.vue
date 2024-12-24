@@ -1,4 +1,3 @@
-# Start of Selection
 <template>
   <div class="min-h-screen bg-white flex flex-col">
     <!-- 헤더 -->
@@ -49,6 +48,23 @@
               </template>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- AI 모델 경고 문구 추가 -->
+      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex items-center justify-center gap-2 text-yellow-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="font-semibold">AI 판별 주의사항</span>
+          </div>
+          <p class="text-sm text-gray-600 text-center leading-relaxed">
+            인공지능 모델의 판별 결과는 참고용입니다.<br>
+            실제 상황과 법적 규제를 반드시 확인하세요.
+          </p>
         </div>
       </div>
 
@@ -127,22 +143,7 @@
         </button>
       </div>
 
-      <!-- AI 모델 경고 문구 추가 -->
-      <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center gap-2 text-yellow-500">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="font-semibold">AI 판별 주의사항</span>
-          </div>
-          <p class="text-sm text-gray-600 text-center leading-relaxed">
-            인공지능 모델의 판별 결과는 참고용입니다.<br>
-            실제 상황과 법적 규제를 반드시 확인하세요.
-          </p>
-        </div>
-      </div>
+
 
       <!-- 추가 로딩 인디케이터 -->
       <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
@@ -198,6 +199,8 @@
 </template>
 
 <script setup>
+console.log("FishResultNormal script loaded"); // Debugging log
+
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
@@ -482,66 +485,26 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
+  console.log("openEditModal function called"); // Debugging log
   const catchId = route.query.catchId;
+  console.log("Route Query:", route.query); // Debugging log
+  console.log("Catch ID:", catchId); // Debugging log
 
   if (catchId) {
-    // 기존 catch 수정
-    selectedCatch.value = {
-      id: catchId,
-      detections: parsedDetections.value,
-      imageUrl: imageUrl.value,
-      catch_date: new Date().toISOString().split('T')[0],
-      weight_kg: null,
-      length_cm: null,
-      latitude: null,
-      longitude: null,
-      memo: ''
-    };
-    showEditModal.value = true;
-  } else {
-    // 새로운 catch 생성 (기존 로직)
-    const createNewCatch = async () => {
-      try {
-        const response = await axios.post('/catches', {
-          detections: parsedDetections.value,
-          imageUrl: imageUrl.value,
-          catch_date: new Date().toISOString().split('T')[0]
-        }, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        return response.data;
-      } catch (error) {
-        console.error('Error creating new catch:', error);
-        alert('새로운 캐치 생성에 실패했습니다.');
-        throw error;
-      }
-    };
-
-    const initEditModal = async () => {
-      try {
-        const newCatch = await createNewCatch();
-        selectedCatch.value = {
-          id: newCatch.id,
-          detections: parsedDetections.value,
-          imageUrl: imageUrl.value,
-                    catch_date: new Date().toISOString().split('T')[0],
-                    weight_kg: null,
-                    length_cm: null,
-                    latitude: null,
-                    longitude: null,
-                    memo: ''
-                };
-                showEditModal.value = true;
-            } catch (error) {
-                console.error('Error initializing edit modal:', error);
-                alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
-            }
-        };
-
-        initEditModal();
+    // Fetch the catch data from the store
+    const catchData = store.getters.catches.find(c => c.id === parseInt(catchId));
+    console.log("Catch Data:", catchData); // Debugging log
+    if (catchData) {
+      selectedCatch.value = { ...catchData };
+      showEditModal.value = true;
+    } else {
+      console.error('Catch data not found in store'); // Debugging log
+      alert('수정할 수 있는 물고기 정보가 없습니다.');
     }
+  } else {
+    console.error('Catch ID not found in route query'); // Debugging log
+    alert('수정할 수 있는 물고기 정보가 없습니다.');
+  }
 };
 </script>
 
@@ -633,4 +596,3 @@ const openEditModal = () => {
   aspect-ratio: 4/3;
 }
 </style>
-# End of Selection

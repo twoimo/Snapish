@@ -189,4 +189,4 @@ const saveFishData = async () => {
     errorMessage.value = error.response?.data?.error || '물고기 정보 저장에 실패했습니다.';
   }
 };
-</script> 
+</script>
