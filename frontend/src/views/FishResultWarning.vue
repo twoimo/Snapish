@@ -528,4 +528,3 @@ const imageClass = computed(() => {
   background: white;
 }
 </style>
-</style>
