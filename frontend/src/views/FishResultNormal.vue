@@ -40,21 +40,11 @@
         <div class="image-container" :style="imageContainerStyle">
           <div class="image-wrapper">
             <div class="detection-area">
-              <img 
-                ref="fishImage" 
-                :src="imageSource" 
-                alt="물고기 사진" 
-                :class="imageClass"
-                @click="handleImageClick" 
-                @load="onImageLoad" 
-              />
+              <img ref="fishImage" :src="imageSource" alt="물고기 사진" :class="imageClass" @click="handleImageClick"
+                @load="onImageLoad" />
               <template v-if="imageDimensions.width && imageDimensions.height">
-                <div 
-                  v-for="(detection, index) in parsedDetections" 
-                  :key="index" 
-                  class="bounding-box" 
-                  :style="getBoundingBoxStyle(detection.bbox)"
-                >
+                <div v-for="(detection, index) in parsedDetections" :key="index" class="bounding-box"
+                  :style="getBoundingBoxStyle(detection.bbox)">
                 </div>
               </template>
             </div>
@@ -93,9 +83,8 @@
                 ]">
                   (신뢰도: {{ (detection.confidence * 100).toFixed(2) }}%)
                 </span>
-                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }}
+                {{ index < parsedDetections.slice(1).length - 1 ? ', ' : '' }} </span>
               </span>
-            </span>
           </p>
         </template>
         <template v-else>
@@ -122,10 +111,8 @@
 
       <!-- 물고기 정보 수정 버튼 -->
       <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
-        <button 
-          class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="openEditModal"
-        >
+        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+          @click="openEditModal">
           <Edit class="w-5 h-5 mr-2" />
           <span>물고기 정보 수정</span>
         </button>
@@ -145,7 +132,8 @@
         <div class="flex flex-col items-center gap-2">
           <div class="flex items-center justify-center gap-2 text-yellow-500">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span class="font-semibold">AI 판별 주의사항</span>
           </div>
@@ -166,7 +154,8 @@
     </main>
 
     <!-- 포토카드 모달 -->
-    <div v-if="showModal && !isLoading" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] max-w-md mx-auto">
+    <div v-if="showModal && !isLoading"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] max-w-md mx-auto">
       <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
         <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
         <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
@@ -176,48 +165,35 @@
         </div>
         <div class="mt-6 flex justify-end gap-3">
           <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded" :disabled="isLoading">닫기</button>
-          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded" :disabled="isLoading">저장하기</button>
+          <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded"
+            :disabled="isLoading">저장하기</button>
         </div>
       </div>
     </div>
 
     <!-- 이미지 팝업 -->
     <div v-if="isImagePopupVisible"
-        class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
-        @click="isImagePopupVisible = false">
-        <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
-            <div class="relative">
-                <img 
-                    :src="popupImageUrl" 
-                    alt="Popup Image"
-                    class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain"
-                />
-                <button 
-                    @click="isImagePopupVisible = false"
-                    class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
-                >
-                    <X class="w-5 h-5 text-gray-600" />
-                </button>
-            </div>
+      class="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 p-4"
+      @click="isImagePopupVisible = false">
+      <div class="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center" @click.stop>
+        <div class="relative">
+          <img :src="popupImageUrl" alt="Popup Image"
+            class="w-auto h-auto max-w-full max-h-[85vh] rounded-lg shadow-xl object-contain" />
+          <button @click="isImagePopupVisible = false"
+            class="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg">
+            <X class="w-5 h-5 text-gray-600" />
+          </button>
         </div>
+      </div>
     </div>
 
     <!-- Add consent modal -->
-    <ConsentModal 
-      v-if="showConsentModal"
-      :isVisible="showConsentModal"
-      @close="handleConsentClose"
-      @consent="handleConsent"
-    />
+    <ConsentModal v-if="showConsentModal" :isVisible="showConsentModal" @close="handleConsentClose"
+      @consent="handleConsent" />
 
     <!-- Add edit fish modal -->
-    <EditFishModal
-      v-if="showEditModal"
-      :isVisible="showEditModal"
-      :catchData="selectedCatch"
-      @close="showEditModal = false"
-      @save="handleFishDataSave"
-    />
+    <EditFishModal v-if="showEditModal" :isVisible="showEditModal" :catchData="selectedCatch"
+      @close="showEditModal = false" @save="handleFishDataSave" />
   </div>
 </template>
 
@@ -253,7 +229,7 @@ const loading = ref(true);
 const isLoadingMore = ref(false);
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
+const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 
 // Change fishName to a computed property
 const fishName = computed(() => {
@@ -398,7 +374,7 @@ const onImageLoad = () => {
       width: imageElement.naturalWidth,
       height: imageElement.naturalHeight
     };
-    
+
     // resize 이벤트 리스너 추가
     window.addEventListener('resize', updateBoundingBoxes);
     // 초기 bbox 업데이트를 위해 약간의 지연 추가
@@ -438,7 +414,7 @@ const imageClass = computed(() => {
   if (!imageDimensions.value.width || !imageDimensions.value.height) {
     return 'detection-image';
   }
-  
+
   // Calculate aspect ratio
   const aspectRatio = imageDimensions.value.width / imageDimensions.value.height;
 
@@ -454,7 +430,7 @@ const imageClass = computed(() => {
 
 const imageContainerStyle = computed(() => {
   if (!imageDimensions.value.width || !imageDimensions.value.height) {
-    return { 
+    return {
       minHeight: 'fit-content',
       padding: '0.5rem'
     };
@@ -506,57 +482,66 @@ const handleFishDataSave = async (updatedData) => {
 };
 
 const openEditModal = () => {
-  // 새로운 catch 생성을 위한 POST 청
-  const createNewCatch = async () => {
-    try {
-      const response = await axios.post('/catches', {
-        detections: parsedDetections.value,
-        imageUrl: imageUrl.value,
-        catch_date: new Date().toISOString().split('T')[0]
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      console.log('Created new catch:', response.data);
-      if (!response.data.id) {
-        throw new Error('Invalid response from server: missing catch ID');
-      }
-      return response.data;
-    } catch (error) {
-      console.error('Error creating new catch:', error);
-      alert('새로운 캐치 생성에 실패했습니다.');
-      throw error;
-    }
-  };
+  const catchId = route.query.catchId;
 
-  // 새로운 catch 생성 후 수정 모달 열기
-  const initEditModal = async () => {
-    try {
-      const newCatch = await createNewCatch();
-      if (!newCatch.id) {
-        throw new Error('No catch ID received from server');
+  if (catchId) {
+    // 기존 catch 수정
+    selectedCatch.value = {
+      id: catchId,
+      detections: parsedDetections.value,
+      imageUrl: imageUrl.value,
+      catch_date: new Date().toISOString().split('T')[0],
+      weight_kg: null,
+      length_cm: null,
+      latitude: null,
+      longitude: null,
+      memo: ''
+    };
+    showEditModal.value = true;
+  } else {
+    // 새로운 catch 생성 (기존 로직)
+    const createNewCatch = async () => {
+      try {
+        const response = await axios.post('/catches', {
+          detections: parsedDetections.value,
+          imageUrl: imageUrl.value,
+          catch_date: new Date().toISOString().split('T')[0]
+        }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        console.error('Error creating new catch:', error);
+        alert('새로운 캐치 생성에 실패했습니다.');
+        throw error;
       }
-      selectedCatch.value = {
-        id: newCatch.id,
-        detections: parsedDetections.value,
-        imageUrl: imageUrl.value,
-        catch_date: new Date().toISOString().split('T')[0],
-        weight_kg: null,
-        length_cm: null,
-        latitude: null,
-        longitude: null,
-        memo: ''
-      };
-      console.log('Opening edit modal with catch:', selectedCatch.value);  // 디버깅용 로그
-      showEditModal.value = true;
-    } catch (error) {
-      console.error('Error initializing edit modal:', error);
-      alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
-    }
-  };
+    };
 
-  initEditModal();
+    const initEditModal = async () => {
+      try {
+        const newCatch = await createNewCatch();
+        selectedCatch.value = {
+          id: newCatch.id,
+          detections: parsedDetections.value,
+          imageUrl: imageUrl.value,
+                    catch_date: new Date().toISOString().split('T')[0],
+                    weight_kg: null,
+                    length_cm: null,
+                    latitude: null,
+                    longitude: null,
+                    memo: ''
+                };
+                showEditModal.value = true;
+            } catch (error) {
+                console.error('Error initializing edit modal:', error);
+                alert('물고기 정보 수정을 초기화하는데 실패했습니다.');
+            }
+        };
+
+        initEditModal();
+    }
 };
 </script>
 
@@ -586,7 +571,8 @@ const openEditModal = () => {
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 100vw;  /* 화면 너비 최대로 설정 */
+  max-width: 100vw;
+  /* 화면 너비 최대로 설정 */
 }
 
 .detection-image {
@@ -602,7 +588,8 @@ const openEditModal = () => {
 .small-image {
   width: 100vw;
   max-width: none;
-  margin: -0.5rem;  /* 컨테이너 패딩 상쇄 */
+  margin: -0.5rem;
+  /* 컨테이너 패딩 상쇄 */
 }
 
 .bounding-box {
@@ -647,4 +634,3 @@ const openEditModal = () => {
 }
 </style>
 # End of Selection
-```

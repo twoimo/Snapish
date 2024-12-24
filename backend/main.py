@@ -326,13 +326,13 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://54.252.210.69",  # Ensure this matches your frontend's origin
+    "origins": "http://52.65.144.245",  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_with_augmentations3_conf85.pt').to(device)
+model = YOLO('./models/yolo11m_aug6_plus.pt').to(device)
 
 # 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
@@ -1151,7 +1151,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://54.252.210.69:5000{url}"
+    return f"http://52.65.144.245:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required

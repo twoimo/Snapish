@@ -100,7 +100,7 @@ const onFileChange = async (event) => {
         try {
             // 전역 로딩 상태 활성화
             store.dispatch('setGlobalLoading', true);
-            
+
             const token = localStorage.getItem('token');
             if (token) {
                 const formData = new FormData();
@@ -144,6 +144,7 @@ const handlePredictResponse = async (data) => {
     const detections = data.detections;
     const imageUrl = data.imageUrl || null;
     const imageBase64 = data.image_base64 || null;
+    const catchId = data.catch_id || null; // 서버에서 받은 catch ID
 
     if (detections && detections.length > 0) {
         const currentDate = new Date();
@@ -184,7 +185,8 @@ const handlePredictResponse = async (data) => {
                     imageBase64,
                     detections: encodeURIComponent(JSON.stringify(detections)),
                     prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    catchId // catch ID 추가
                 },
             });
         } else {
