@@ -236,6 +236,7 @@ const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
 // Define backend base URL
+
 const baseUrl = process.env.VUE_APP_BASE_URL;
 const BACKEND_BASE_URL = baseUrl;
 

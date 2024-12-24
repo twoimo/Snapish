@@ -303,7 +303,9 @@ export default createStore({
     async deleteCatch({ commit }, catchId) {
       try {
         const token = localStorage.getItem("token");
+
         await axios.delete(`${baseUrl}/catches/${catchId}`, {
+
           headers: {
             Authorization: `Bearer ${token}`,
           },

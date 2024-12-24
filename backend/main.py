@@ -1205,6 +1205,7 @@ def get_full_url(url):
         return url
     return f"{baseUrl}{url}"
 
+
 @app.route('/api/posts', methods=['GET'])
 @token_required
 def get_posts(user_id):

@@ -154,6 +154,7 @@ const uploadAvatar = async (event) => {
         formData.append('avatar', file);
         try {
             const response = await axios.post(`${baseUrl}/profile/avatar`, formData, {
+
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,

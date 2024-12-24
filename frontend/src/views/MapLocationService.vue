@@ -173,7 +173,9 @@ export default {
     // DB에서 위치 정보 가져오기, 주소 고정값 추후 해결
     async fetchLocations() {
       try {
+
         const response = await axios.post(`${baseUrl}/api/map_fishing_spot`);
+
         if (response.data.location) {
           const locationDict = response.data.location;
           

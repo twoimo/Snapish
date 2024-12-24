@@ -175,7 +175,6 @@ const searchQuery = ref('');
 const sortOption = ref('latest');
 const isLoadingMore = ref(false);
 
-// Define backend base URL
 const baseUrl = process.env.VUE_APP_BASE_URL;
 const BACKEND_BASE_URL = baseUrl;
 
