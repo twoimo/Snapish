@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const baseUrl = process.env.VUE_APP_BASE_URL;
+
 const instance = axios.create({
-  baseURL: "http://52.65.144.245:5000", // Ensure this matches your backend's base URL
+  baseURL: baseUrl, // Ensure this matches your backend's base URL
   headers: {
     'Content-Type': 'application/json'
   },

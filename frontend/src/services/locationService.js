@@ -1,6 +1,7 @@
 import axios from "@/axios";
 
-const apisealocBaseUrl = process.env.VUE_APP_CLOSEST_SEALOC_URL;
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const apisealocBaseUrl = `${baseUrl}/backend/closest-sealoc`;
 
 export async function fetchSeaPostidByCoordinates(lat, lon) {
   try {

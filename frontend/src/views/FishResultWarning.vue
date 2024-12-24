@@ -236,7 +236,9 @@ const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
+
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const BACKEND_BASE_URL = baseUrl;
 
 const goBack = () => {
   window.history.back();
@@ -296,7 +298,7 @@ onMounted(async () => {
       try {
         // assistant_id가 문자열화된 배열이므로 파싱
         const [thread_id, run_id] = assistant_id.value;
-        const response = await axios.get(`/backend/chat/${thread_id}/${run_id}`);
+        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
         console.log(response.data);
         if (response.data.status === 'Success') {
           fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';

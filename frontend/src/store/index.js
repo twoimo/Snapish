@@ -3,6 +3,8 @@ import axios from "@/axios"; // Ensure the correct path to axios.js
 import { getCurrentLocation } from "../services/locationService";
 import { fetchMulddae } from "../services/mulddaeService";
 
+const baseUrl = process.env.VUE_APP_BASE_URL;
+
 export default createStore({
   state: {
     // Existing state
@@ -213,7 +215,7 @@ export default createStore({
     },
     async fetchUserProfile({ commit }) {
       try {
-        const response = await axios.get('http://52.65.144.245:5000/profile', {
+        const response = await axios.get(`${baseUrl}/profile`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -301,7 +303,9 @@ export default createStore({
     async deleteCatch({ commit }, catchId) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://52.65.144.245:5000/catches/${catchId}`, {
+
+        await axios.delete(`${baseUrl}/catches/${catchId}`, {
+
           headers: {
             Authorization: `Bearer ${token}`,
           },
