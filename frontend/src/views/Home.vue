@@ -136,7 +136,7 @@ import MulddaeWidget from '../components/MulddaeWidget.vue';
 import axios from 'axios';
 
 const store = useStore();
-const BACKEND_BASE_URL = 'http://54.252.210.69:5000';
+const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
 const loading = ref(true);
 const isLoadingCatches = ref(false);
 const isAuthenticated = computed(() => store.getters.isAuthenticated);

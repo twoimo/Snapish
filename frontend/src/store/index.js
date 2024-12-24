@@ -213,7 +213,7 @@ export default createStore({
     },
     async fetchUserProfile({ commit }) {
       try {
-        const response = await axios.get('http://54.252.210.69:5000/profile', {
+        const response = await axios.get('http://52.65.144.245:5000/profile', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -301,7 +301,7 @@ export default createStore({
     async deleteCatch({ commit }, catchId) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://54.252.210.69:5000/catches/${catchId}`, {
+        await axios.delete(`http://52.65.144.245:5000/catches/${catchId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
