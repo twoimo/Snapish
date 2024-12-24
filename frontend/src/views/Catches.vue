@@ -199,10 +199,10 @@ const filteredCatches = computed(() => {
     });
 
     const sortedCatches = sortOption.value === 'latest'
-        ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
-        : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+        ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
+        : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
     
-    return sortedCatches.slice(0, displayCount.value);
+    return sortedCatches;
 });
 
 onMounted(async () => {
@@ -274,8 +274,8 @@ function loadMoreCatches() {
         );
 
         const sortedCatches = sortOption.value === 'latest'
-            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date))
-            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date));
+            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
+            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
 
         const nextItems = sortedCatches.slice(
             displayCount.value,

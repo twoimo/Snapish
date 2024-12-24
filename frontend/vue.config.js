@@ -7,10 +7,12 @@ module.exports = {
       "/backend": {
         target: "http://52.65.144.245:5000",
         changeOrigin: true,
+        ws: false,
       },
       "/api": {
         target: "http://52.65.144.245:5000",
         changeOrigin: true,
+        ws: false,
       },
     },
   },
@@ -23,40 +25,40 @@ module.exports = {
       }),
     ],
   },
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     // 이미지 최적화
     config.module
-      .rule('images')
-      .use('image-webpack-loader')
-      .loader('image-webpack-loader')
+      .rule("images")
+      .use("image-webpack-loader")
+      .loader("image-webpack-loader")
       .options({
         mozjpeg: {
           progressive: true,
-          quality: 65
+          quality: 65,
         },
         optipng: {
           enabled: false,
         },
         pngquant: {
-          quality: [0.65, 0.90],
-          speed: 4
+          quality: [0.65, 0.9],
+          speed: 4,
         },
         gifsicle: {
           interlaced: false,
         },
         webp: {
-          quality: 75
-        }
+          quality: 75,
+        },
       });
 
     // 코드 스플리팅
     config.optimization.splitChunks({
-      chunks: 'all',
+      chunks: "all",
       minSize: 20000,
       maxSize: 250000,
     });
   },
-  
+
   pwa: {
     workboxOptions: {
       skipWaiting: true,
@@ -64,17 +66,17 @@ module.exports = {
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/api/,
-          handler: 'NetworkFirst',
+          handler: "NetworkFirst",
           options: {
             networkTimeoutSeconds: 5,
-            cacheName: 'api-cache',
+            cacheName: "api-cache",
             expiration: {
               maxEntries: 50,
-              maxAgeSeconds: 5 * 60 // 5분
-            }
-          }
-        }
-      ]
-    }
-  }
+              maxAgeSeconds: 5 * 60, // 5분
+            },
+          },
+        },
+      ],
+    },
+  },
 };
