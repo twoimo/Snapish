@@ -327,7 +327,7 @@ Base.metadata.create_all(engine)
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": ["http://52.65.144.245:5000", 
+    "origins": ["http://localhost:5000", 
                 "http://localhost:8080"],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
@@ -1201,7 +1201,7 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://52.65.144.245:5000{url}"
+    return f"http://localhost:5000{url}"
 
 @app.route('/api/posts', methods=['GET'])
 @token_required

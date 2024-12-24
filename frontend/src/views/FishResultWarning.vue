@@ -236,7 +236,7 @@ const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
+const BACKEND_BASE_URL = 'http://localhost:5000';
 
 const goBack = () => {
   window.history.back();

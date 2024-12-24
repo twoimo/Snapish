@@ -236,7 +236,7 @@ const assistant_id = ref(route.query.assistant_id || null);
 const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
+const BACKEND_BASE_URL = 'http://localhost:5000';
 
 // Change fishName to a computed property
 const fishName = computed(() => {
