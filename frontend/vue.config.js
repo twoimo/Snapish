@@ -1,21 +1,22 @@
 const webpack = require("webpack");
+const baseUrl = process.env.VUE_APP_BASE_URL;
 
 module.exports = {
   devServer: {
     port: 8080, // 원하는 포트 번호로 변경
     proxy: {
       "/": {
-        target: "http://localhost:5000",
+        target: baseUrl,
         changeOrigin: true,
         ws: false,
       },
       "/backend": {
-        target: "http://localhost:5000",
+        target: baseUrl,
         changeOrigin: true,
         ws: false,
       },
       "/api": {
-        target: "http://localhost:5000",
+        target: baseUrl,
         changeOrigin: true,
         ws: false,
       },

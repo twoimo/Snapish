@@ -236,7 +236,8 @@ const assistant_id = ref(route.query.assistant_id || null);
 const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://localhost:5000';
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const BACKEND_BASE_URL = baseUrl;
 
 // Change fishName to a computed property
 const fishName = computed(() => {
@@ -252,7 +253,7 @@ const fetchDetections = async () => {
   try {
     const token = localStorage.getItem('token');
     if (token && route.query.imageUrl) {
-      const response = await axios.get('/backend/get-detections', {
+      const response = await axios.get(`${baseUrl}/backend/get-detections`, {
         params: {
           imageUrl: route.query.imageUrl,
         },
@@ -286,7 +287,7 @@ onMounted(async () => {
       try {
         // assistant_id가 문자열화된 배열이므로 파싱
         const [thread_id, run_id] = assistant_id.value;
-        const response = await axios.get(`/backend/chat/${thread_id}/${run_id}`);
+        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
         console.log(response.data);
         if (response.data.status === 'Success') {
           fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
