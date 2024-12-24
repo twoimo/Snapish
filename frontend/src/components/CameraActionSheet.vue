@@ -145,7 +145,7 @@ const handlePredictResponse = async (data) => {
     const imageUrl = data.imageUrl || null;
     const imageBase64 = data.image_base64 || null;
     const catchId = data.id || null;
-    const assistant_id = data.assistant_id || null;
+    const assistant_request_id = data.assistant_request_id || null;
 
     if (detections && detections.length > 0) {
         const currentDate = new Date();
@@ -180,7 +180,7 @@ const handlePredictResponse = async (data) => {
             prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
             timestamp: Date.now(),
             catchId,
-            assistant_id
+            assistant_request_id
         };
 
         // 현재 경로가 결과 페이지인지 확인
