@@ -19,4 +19,5 @@ dependencies:
   - korean_lunar_calendar
   - pymysql
   - PyJWT
+  - openai
 prefix: /opt/anaconda3/envs/snapish
