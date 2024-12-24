@@ -197,6 +197,7 @@
 </template>
 
 <script setup>
+// Ensure the script setup section is correctly defined
 console.log("FishResultWarning script loaded"); // Debugging log
 
 import { ref, onMounted, computed, onUnmounted } from 'vue';
