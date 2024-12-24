@@ -52,7 +52,9 @@
       </div>
 
       <!-- AI 판별 결과 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-6 bg-blue-50 rounded-lg p-4">
+      <div v-show="!isLoading && !errorMessage" 
+           class="mt-6 bg-blue-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+           :style="{ transitionDelay: '0ms' }">
         <div class="flex items-center mb-2">
           <h2 class="text-lg font-bold text-blue-700">정상: 현재 포획 가능 어종</h2>
         </div>
@@ -93,7 +95,9 @@
         </template>
       </div>
 
-      <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
+      <div v-show="!loading && !errorMessage" 
+           class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+           :style="{ transitionDelay: '200ms' }">
         <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
           <span class="inline-flex gap-1">
             정보를 찾아보는 중
@@ -109,7 +113,9 @@
       </div>
 
         <!-- AI 모델 경고 문구 추가 -->
-        <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm">
+        <div v-show="!isLoading && !errorMessage" 
+             class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '400ms' }">
           <div class="flex flex-col items-center gap-2">
             <div class="flex items-center justify-center gap-2 text-yellow-500">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,34 +131,37 @@
           </div>
         </div>
 
-      <!-- 공유하기 버튼 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-4">
-        <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="shareResult" :disabled="isLoading">
-          <Share2Icon class="w-5 h-5 mr-2" />
-          <span>공유하기</span>
-        </button>
+      <!-- 버튼들 -->
+      <div v-show="!isLoading && !errorMessage" 
+           class="transition-all duration-300 fade-slide-enter"
+           :style="{ transitionDelay: '600ms' }">
+        <!-- 공유하기 버튼 -->
+        <div class="mt-4">
+          <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+            @click="shareResult" :disabled="isLoading">
+            <Share2Icon class="w-5 h-5 mr-2" />
+            <span>공유하기</span>
+          </button>
+        </div>
+
+        <!-- 물고기 정보 수정 버튼 -->
+        <div v-if="store.state.isAuthenticated" class="mt-4">
+          <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+            @click="openEditModal">
+            <Edit class="w-5 h-5 mr-2" />
+            <span>물고기 정보 수정</span>
+          </button>
+        </div>
+
+        <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
+        <div class="mt-4">
+          <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+            @click="navigateToCatches" :disabled="isLoading">
+            <InfoIcon class="w-5 h-5 mr-2" />
+            <span>내가 잡은 물고기 리스트 보기</span>
+          </button>
+        </div>
       </div>
-
-      <!-- 물고기 정보 수정 버튼 -->
-      <div v-if="!isLoading && !errorMessage && store.state.isAuthenticated" class="mt-4">
-        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="openEditModal">
-          <Edit class="w-5 h-5 mr-2" />
-          <span>물고기 정보 수정</span>
-        </button>
-      </div>
-
-      <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
-      <div v-if="!isLoading && !errorMessage" class="mt-4">
-        <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-          @click="navigateToCatches" :disabled="isLoading">
-          <InfoIcon class="w-5 h-5 mr-2" />
-          <span>내가 잡은 물고기 리스트 보기</span>
-        </button>
-      </div>
-
-
 
       <!-- 추가 로딩 인디케이터 -->
       <div v-if="isLoadingMore" class="flex justify-center items-center py-8">
@@ -359,6 +368,14 @@ onMounted(async () => {
     console.error('Error during initialization:', error);
     errorMessage.value = '데이터를 불러오는 데 실패했습니다.';
   }
+
+  // 컴포넌트가 마운트된 후 약간의 지연을 두고 요소들이 보이도록 함
+  setTimeout(() => {
+    const elements = document.querySelectorAll('.fade-slide-enter');
+    elements.forEach(el => {
+      el.classList.add('fade-slide-enter-active');
+    });
+  }, 100);
 });
 
 watch(route, () => {
@@ -660,5 +677,21 @@ const openEditModal = () => {
   25% { opacity: 1; transform: translateY(-4px); }
   50% { opacity: 0; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(0); }
+}
+
+.fade-slide-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 초기 상태에서 요소들을 숨김 */
+div[v-show="false"] {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

@@ -59,7 +59,9 @@
         </div>
 
         <!-- AI 판별 결과 -->
-        <div v-if="!loading && fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
+        <div v-show="!loading && !errorMessage" 
+             class="mt-6 bg-red-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '0ms' }">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
             <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
@@ -95,7 +97,9 @@
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
 
-        <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
+        <div v-show="!loading && !errorMessage" 
+             class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '200ms' }">
           <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
             <span class="inline-flex gap-1">
               정보를 찾아보는 중
@@ -111,7 +115,9 @@
         </div>
 
         <!-- AI 모델 경고 문구 추가 -->
-        <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm">
+        <div v-show="!loading && !errorMessage" 
+             class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '400ms' }">
           <div class="flex flex-col items-center gap-2">
             <div class="flex items-center justify-center gap-2 text-yellow-500">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,32 +134,35 @@
         </div>
 
         <!-- 공유하기 버튼 -->
-        <div v-if="!loading && !errorMessage" class="mt-4">
-          <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="shareResult">
-            <Share2Icon class="w-5 h-5 mr-2" />
-            <span>공유하기</span>
-          </button>
-        </div>
+        <div v-show="!loading && !errorMessage" 
+             class="transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '600ms' }">
+          <div class="mt-4">
+            <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="shareResult">
+              <Share2Icon class="w-5 h-5 mr-2" />
+              <span>공유하기</span>
+            </button>
+          </div>
 
-        <!-- 물고기 정보 수정 버튼 -->
-        <div v-if="!loading && !errorMessage && store.state.isAuthenticated" class="mt-4">
-          <button class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="openEditModal">
-            <Edit class="w-5 h-5 mr-2" />
-            <span>물고기 정보 수정</span>
-          </button>
-        </div>
+          <!-- 물고기 정보 수정 버튼 -->
+          <div v-if="store.state.isAuthenticated" class="mt-4">
+            <button class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="openEditModal">
+              <Edit class="w-5 h-5 mr-2" />
+              <span>물고기 정보 수정</span>
+            </button>
+          </div>
 
-        <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
-        <div v-if="!loading && !errorMessage" class="mt-4">
-          <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="navigateToCatches">
-            <InfoIcon class="w-5 h-5 mr-2" />
-            <span>내가 잡은 물고기 리스트 보기</span>
-          </button>
+          <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
+          <div class="mt-4">
+            <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="navigateToCatches">
+              <InfoIcon class="w-5 h-5 mr-2" />
+              <span>내가 잡은 물고기 리스트 보기</span>
+            </button>
+          </div>
         </div>
-
 
       </main>
 
@@ -218,12 +227,12 @@ const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const showConsentModal = ref(false);
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
-const fishName = computed(() => {
-  if (detections.length > 0 && detections[0].label !== '알 수 없음') {
-    return detections[0].label;
-  }
-  return '알 수 없는 물고기';
-});
+// const fishName = computed(() => {
+//   if (detections.length > 0 && detections[0].label !== '알 수 없음') {
+//     return detections[0].label;
+//   }
+//   return '알 수 없는 물고기';
+// });
 const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
 const loading = ref(true);
 const isLoadingMore = ref(false);
@@ -301,7 +310,7 @@ const fetchChatGPTResponse = async () => {
   }
 };
 
-// 컴포넌��� 마운트 시 초기화
+// 컴포넌트 마운트 시 초기화
 onMounted(async () => {
   console.log('컴포넌트가 마운트되었습니다.');
 
@@ -334,6 +343,14 @@ onMounted(async () => {
       console.error('Error checking consent:', error);
     }
   }
+
+  // 컴포넌트가 마운트된 후 약간의 지연을 두고 요소들이 보이도록 함
+  setTimeout(() => {
+    const elements = document.querySelectorAll('.fade-slide-enter');
+    elements.forEach(el => {
+      el.classList.add('fade-slide-enter-active');
+    });
+  }, 100);
 });
 
 const fishImage = ref(null);
@@ -586,5 +603,21 @@ const isDescriptionLoading = ref(true);
   25% { opacity: 1; transform: translateY(-4px); }
   50% { opacity: 0; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(0); }
+}
+
+.fade-slide-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 초기 상태에서 요소들을 숨김 */
+div[v-show="false"] {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
