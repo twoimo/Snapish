@@ -198,9 +198,7 @@ const filteredCatches = computed(() => {
         return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
     });
 
-    const sortedCatches = sortOption.value === 'latest'
-        ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
-        : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
+    const sortedCatches = allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id);
     
     return sortedCatches;
 });
