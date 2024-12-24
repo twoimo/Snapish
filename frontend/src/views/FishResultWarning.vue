@@ -231,7 +231,10 @@ const imageBase64 = ref('');
 const showModal = ref(false);
 
 // ChatGPT assistant result
-const assistant_id = ref(route.query.assistant_id || null);
+const assistant_id = computed(() => {
+  const assistantIdFromQuery = route.query.assistant_id;
+  return assistantIdFromQuery || null;
+});
 const scientificName = ref('ChatGPT로 생성된 학명');
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
@@ -274,9 +277,31 @@ function navigateToCatches() {
   router.push('/catches');
 }
 
+// ChatGPT 응답을 가져오는 메서드 추가
+const fetchChatGPTResponse = async () => {
+  const currentAssistantId = assistant_id.value;
+  if (currentAssistantId) {
+    try {
+      // assistant_id가 문자열화된 배열이므로 파싱
+      const [thread_id, run_id] = currentAssistantId;
+      const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
+      console.log('ChatGPT Response:', response.data);
+      if (response.data.status === 'Success') {
+        fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+      } else {
+        console.error('Error in ChatGPT response:', response.data.status);
+        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      }
+    } catch (error) {
+      console.error('Error fetching ChatGPT response:', error);
+      fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+    }
+  }
+};
+
 // 컴포넌트 마운트 시 초기화
 onMounted(async () => {
-  console.log('포넌트가 마운트되었습니다.');
+  console.log('컴포넌트가 마운트되었습니다.');
 
   imageUrl.value = route.query.imageUrl || '';
   imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
@@ -294,23 +319,8 @@ onMounted(async () => {
     }
   };
 
-  if (assistant_id.value) {
-      try {
-        // assistant_id가 문자열화된 배열이므로 파싱
-        const [thread_id, run_id] = assistant_id.value;
-        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
-        console.log(response.data);
-        if (response.data.status === 'Success') {
-          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
-        } else {
-          console.error('Error in ChatGPT response:', response.data.status);
-          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-        }
-      } catch (error) {
-        console.error('Error fetching ChatGPT response:', error);
-        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-      }
-    }
+  // ChatGPT 응답 가져오기
+  await fetchChatGPTResponse();
 
   if (store.state.isAuthenticated) {
     try {
@@ -457,7 +467,7 @@ const handleConsent = async (consented) => {
   }
 };
 
-// 이미지 클릭 핸들러 추가
+// 이��지 클릭 핸들러 추가
 const handleImageClick = () => {
   if (imageSource.value === '/placeholder.svg') {
     alert('이미지를 불러올 수 없습니다.');

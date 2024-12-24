@@ -232,7 +232,10 @@ const loading = ref(true);
 const isLoadingMore = ref(false);
 
 // ChatGPT assistant Get result
-const assistant_id = ref(route.query.assistant_id || null);
+const assistant_id = computed(() => {
+  const assistantIdFromQuery = route.query.assistant_id;
+  return assistantIdFromQuery || null;
+});
 const scientificName = ref('ChatGPT로 생성된 학명'); // 필요에 따라 학명 정보를 추가하세요.
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명'); // 필요에 따라 물고기 설명을 추가하세요.
 // Define backend base URL
@@ -247,6 +250,29 @@ const fishName = computed(() => {
   return '알 수 없는 물고기';
 });
 
+// ChatGPT 응답을 가져오는 메서드 추가
+const fetchChatGPTResponse = async () => {
+  const currentAssistantId = assistant_id.value;
+  if (currentAssistantId) {
+    try {
+      // assistant_id가 문자열화된 배열이므로 파싱
+      const [thread_id, run_id] = currentAssistantId;
+      const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
+      console.log('ChatGPT Response:', response.data);
+      if (response.data.status === 'Success') {
+        fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+      } else {
+        console.error('Error in ChatGPT response:', response.data.status);
+        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      }
+    } catch (error) {
+      console.error('Error fetching ChatGPT response:', error);
+      fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+    }
+  }
+};
+
+// fetchDetections 메서드 수정
 const fetchDetections = async () => {
   isLoading.value = true;
   isLoadingMore.value = true;
@@ -268,6 +294,8 @@ const fetchDetections = async () => {
       imageBase64.value = route.query.imageBase64;
     }
     errorMessage.value = '';
+    // 디텍션 업데이트 후 ChatGPT 응답도 새로 가져오기
+    await fetchChatGPTResponse();
   } catch (e) {
     console.error('Failed to fetch detections:', e);
     errorMessage.value = '예측 결과를 불러오는 데 실패했습니다.';
@@ -279,46 +307,49 @@ const fetchDetections = async () => {
 };
 
 onMounted(async () => {
-  try {
-    loading.value = true;
-    await store.dispatch('fetchInitialData');
+  console.log('컴포넌트가 마운트되었습니다.');
 
-    if (assistant_id.value) {
-      try {
-        // assistant_id가 문자열화된 배열이므로 파싱
-        const [thread_id, run_id] = assistant_id.value;
-        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
-        console.log(response.data);
-        if (response.data.status === 'Success') {
-          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
-        } else {
-          console.error('Error in ChatGPT response:', response.data.status);
-          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-        }
-      } catch (error) {
-        console.error('Error fetching ChatGPT response:', error);
-        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-      }
-    }
+  // 기본 데이터 초기화
+  imageUrl.value = route.query.imageUrl || '';
+  imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
 
-    if (store.state.isAuthenticated) {
-      console.log('Checking consent status...');
-      try {
-        const consentStatus = await store.dispatch('checkConsent');
-        console.log('Consent status:', consentStatus);
-        if (!consentStatus.hasConsent) {
-          console.log('Showing consent modal...');
-          showConsentModal.value = true;
-        }
-      } catch (error) {
-        console.error('Error checking consent:', error);
-      }
-    }
-    fetchDetections();
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
+  // 실제 이미지 로딩 완료 시에만 isLoading을 false로 설정
+  const img = new Image();
+  img.src = imageSource.value;
+  img.onload = () => {
     loading.value = false;
+  };
+  img.onerror = () => {
+    loading.value = false;
+    if (imageSource.value === '/placeholder.svg') {
+      errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+    }
+  };
+
+  // 병렬로 실행할 작업들
+  try {
+    await Promise.all([
+      // 디텍션 데이터 가져오기
+      fetchDetections(),
+      
+      // 인증된 사용자인 경우 추가 작업
+      (async () => {
+        if (store.state.isAuthenticated) {
+          await store.dispatch('fetchInitialData');
+          try {
+            const consentStatus = await store.dispatch('checkConsent');
+            if (!consentStatus.hasConsent) {
+              showConsentModal.value = true;
+            }
+          } catch (error) {
+            console.error('Error checking consent:', error);
+          }
+        }
+      })()
+    ]);
+  } catch (error) {
+    console.error('Error during initialization:', error);
+    errorMessage.value = '데이터를 불러오는 데 실패했습니다.';
   }
 });
 
