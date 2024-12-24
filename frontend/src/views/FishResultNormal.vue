@@ -80,7 +80,7 @@
               'text-sm',
               getConfidenceColor(parsedDetections[0].confidence)
             ]">
-              신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%
+              (신뢰도: {{ (parsedDetections[0].confidence * 100).toFixed(2) }}%)
             </span>
           </p>
           <p class="text-blue-600" v-else>
