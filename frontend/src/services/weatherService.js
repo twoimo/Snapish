@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const apiWeatherBaseUrl = process.env.VUE_APP_WEATHER_URL;
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const apiWeatherBaseUrl = `${baseUrl}/backend/get-weather`;
+
 
 export async function fetchWeatherByCoordinates(lat, lon) {
   try {

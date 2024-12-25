@@ -37,6 +37,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from services.weather_service import get_sea_weather_by_seapostid, get_weather_by_coordinates
 from services.lunar_mulddae import get_mulddae_cycle, calculate_moon_phase
 from services.initialize_db import initialize_service
+from services.openai_assistant import assistant_talk_request, assistant_talk_get
 from ultralytics import YOLO
 from flask_cors import CORS
 
@@ -323,16 +324,19 @@ class FishingPlace(Base):
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(engine)
 
+baseUrl = os.getenv('BACKEND_BASE_URL')
+
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": "http://52.65.144.245",  # Ensure this matches your frontend's origin
+    "origins": [baseUrl, 
+                "http://localhost:8080"],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = YOLO('./models/yolo11m_aug6_plus.pt').to(device)
+model = YOLO(f'./models/{os.getenv("MODEL_NAME")}').to(device)
 
 # 초시 헤더를 한 after_request 데코레이터를 앱 초기화 직후에 추가
 @app.after_request
@@ -576,6 +580,16 @@ def predict():
                 })
 
         detections.sort(key=lambda x: x['confidence'], reverse=True)
+        
+        if detections:
+            try:
+                top_fish = detections[0]['label']
+                assistant_id = assistant_talk_request(f"{top_fish}")
+                
+            except Exception as e:
+                print(f"assistant_id 호출 실패 : {e}")
+                assistant_id = None
+                
         if not detections:
             detections.append({
                 'label': '알 수 없음',
@@ -630,7 +644,8 @@ def predict():
                 response_data = {
                     'id': new_catch.catch_id,
                     'detections': detections,
-                    'imageUrl': filename
+                    'imageUrl': filename,
+                    'assistant_id': assistant_id
                 }
         else:
             # Do not save the image to disk or database
@@ -639,7 +654,8 @@ def predict():
             img_str = base64.b64encode(buffered.getvalue()).decode()
             response_data = {
                 'detections': detections,
-                'image_base64': img_str
+                'image_base64': img_str,
+                'assistant_id': assistant_id
             }
 
         session.close()
@@ -647,6 +663,33 @@ def predict():
     except Exception as e:
         logging.error(f"Error processing image: {e}")
         return jsonify({'error': '이미지 처리 중 오류가 발생했습니다.'}), 500
+    
+@app.route('/backend/chat/<thread_id>/<run_id>', methods=['GET'])
+def assistant_talk_result(thread_id, run_id):
+    try:
+        formatted_text = assistant_talk_get(thread_id, run_id)
+        
+        if not formatted_text:
+            return jsonify({            
+                'data': None,
+                'status': 'No response from assistant'
+            }), 404
+            
+        return jsonify({
+            'data': formatted_text,
+            'status': 'Success'
+        })
+        
+    except TimeoutError:
+        return jsonify({
+            'data': None,
+            'status': 'Assistant response timed out'
+        }), 408
+    except Exception as e:
+        return jsonify({
+            'data': None,
+            'status': f'Internal server error : {e}'
+        }), 500
 
 @app.route('/profile', methods=['GET', 'PUT'])
 @token_required
@@ -1085,15 +1128,6 @@ def get_weather_api():
         logging.error(f"Error in get_weather_api: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
 
-# 애플리케이션 종료 시 세 제거
-@app.teardown_appcontext
-def remove_session(exception=None):
-    Session.remove()
-
-# Ensure the backend server is running on port 5000
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
-
 @app.route('/api/consent/check', methods=['GET'])
 @token_required
 def check_consent(user_id):
@@ -1169,7 +1203,8 @@ def get_full_url(url):
         return None
     if url.startswith('http'):
         return url
-    return f"http://52.65.144.245:5000{url}"
+    return f"{baseUrl}{url}"
+
 
 @app.route('/api/posts', methods=['GET'])
 @token_required
@@ -1621,3 +1656,12 @@ def get_top_posts():
         return jsonify({'error': 'Error fetching top posts'}), 500
     finally:
         session.close()
+        
+    # 애플리케이션 종료 시 세 제거
+@app.teardown_appcontext
+def remove_session(exception=None):
+    Session.remove()
+
+# Ensure the backend server is running on port 5000
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=False)

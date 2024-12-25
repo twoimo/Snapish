@@ -206,6 +206,7 @@ import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, 
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
+import axios from 'axios';
 
 const store = useStore();
 const route = useRoute();
@@ -222,8 +223,6 @@ const fishName = computed(() => {
   return '알 수 없는 물고기';
 });
 const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
-const scientificName = ref('ChatGPT로 생성된 학명');
-const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 const loading = ref(true);
 const isLoadingMore = ref(false);
 const errorMessage = ref('');
@@ -231,8 +230,15 @@ const imageUrl = ref('');
 const imageBase64 = ref('');
 const showModal = ref(false);
 
+// ChatGPT assistant result
+const assistant_id = ref(route.query.assistant_id || null);
+const scientificName = ref('ChatGPT로 생성된 학명');
+const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
+
 // Define backend base URL
-const BACKEND_BASE_URL = 'http://52.65.144.245:5000';
+
+const baseUrl = process.env.VUE_APP_BASE_URL;
+const BACKEND_BASE_URL = baseUrl;
 
 const goBack = () => {
   window.history.back();
@@ -287,6 +293,24 @@ onMounted(async () => {
       errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
     }
   };
+
+  if (assistant_id.value) {
+      try {
+        // assistant_id가 문자열화된 배열이므로 파싱
+        const [thread_id, run_id] = assistant_id.value;
+        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
+        console.log(response.data);
+        if (response.data.status === 'Success') {
+          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
+        } else {
+          console.error('Error in ChatGPT response:', response.data.status);
+          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+        }
+      } catch (error) {
+        console.error('Error fetching ChatGPT response:', error);
+        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
+      }
+    }
 
   if (store.state.isAuthenticated) {
     try {
