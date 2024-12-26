@@ -98,7 +98,7 @@
            class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
            :style="{ transitionDelay: '200ms' }">
         <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
-          <span class="inline-flex gap-1">
+          <span class="inline-flex gap-1 center-align">
             정보를 찾아보는 중
             <span class="loading-dots">
               <span>.</span><span>.</span><span>.</span>
@@ -377,9 +377,62 @@ onMounted(async () => {
   }, 100);
 });
 
-watch(route, () => {
-  fetchDetections();
-});
+watch(
+  () => route.query,
+  async (newQuery) => {
+    console.log('Route query changed:', newQuery);
+    
+    // 이미지 관련 데이터 갱신
+    imageUrl.value = newQuery.imageUrl || '';
+    imageBase64.value = newQuery.imageBase64 ? decodeURIComponent(newQuery.imageBase64) : '';
+    
+    // detections 갱신
+    if (newQuery.detections) {
+      parsedDetections.value = JSON.parse(decodeURIComponent(newQuery.detections));
+    }
+
+    // ChatGPT 응답 갱신
+    if (newQuery.assistant_request_id) {
+      isDescriptionLoading.value = true;
+      try {
+        const [thread_id, run_id] = newQuery.assistant_request_id;
+        const response = await axios.get(`${BACKEND_BASE_URL}/backend/chat/${thread_id}/${run_id}`);
+        console.log('ChatGPT Response:', response.data);
+        if (response.data.status === 'Success') {
+          fishDescription.value = response.data.data || '잠시만 기다려 주세요';
+        } else {
+          console.error('Error in ChatGPT response:', response.data.status);
+          fishDescription.value = '현재 서비스를 이용할 수 없어요';
+        }
+      } catch (error) {
+        console.error('Error fetching ChatGPT response:', error);
+        fishDescription.value = '현재 서비스를 이용할 수 없어요';
+      } finally {
+        isDescriptionLoading.value = false;
+      }
+    }
+
+    // 이미지 로딩 처리
+    const img = new Image();
+    img.src = imageSource.value;
+    loading.value = true;
+    
+    img.onload = () => {
+      loading.value = false;
+      if (fishImage.value) {
+        onImageLoad();
+      }
+    };
+    
+    img.onerror = () => {
+      loading.value = false;
+      if (imageSource.value === '/placeholder.svg') {
+        errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+      }
+    };
+  },
+  { deep: true }
+);
 
 // 신뢰도에 따른 색상 클래스 반환
 const getConfidenceColor = (confidence) => {
