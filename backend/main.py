@@ -324,13 +324,12 @@ class FishingPlace(Base):
 # 데이터베이스 테이블 생성
 Base.metadata.create_all(engine)
 
-baseUrl = os.getenv('BACKEND_BASE_URL')
+baseUrl = os.getenv('BASE_URL')
 
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": [baseUrl, 
-                "http://localhost:8080"],  # Ensure this matches your frontend's origin
+    "origins": [f'{baseUrl}:5000', f'{baseUrl}'],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
@@ -1408,7 +1407,7 @@ def update_post(user_id, post_id):
         if removed_images:
             logging.info(f"Removing images: {removed_images}")
             for image_url in removed_images:
-                if image_url in post.images:
+                if (image_url in post.images):
                     try:
                         post.images.remove(image_url)
                         # Delete the actual file
