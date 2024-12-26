@@ -15,8 +15,8 @@
             <!-- 에러 메시지 -->
             <div class="h-full flex items-center justify-center">
                 <div class="text-center p-4">
-                    <!-- Webpack이 처리하도록 하는 이미지 -->
-                    <img :src="errorImage" alt="Error" class="w-60 h-60 mx-auto mb-4">
+                    <!-- 물에 떠 있는 이미지 -->
+                    <img :src="errorImage" alt="Error" class="floating-image w-60 h-60 mx-auto mb-4">
                     <h2 class="text-xl font-bold text-gray-800 mb-2">{{ errorMessage }}</h2>
                     <p class="text-gray-600 mb-8">{{ errorDescription }}</p>
                     
@@ -91,6 +91,23 @@ const goHome = () => {
 <style scoped>
 .min-h-screen {
     min-height: 100vh;
+}
+
+/* 물에 떠 있는 효과 */
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.floating-image {
+    animation: float 2.5s ease-in-out infinite;
 }
 
 /* 페이드 인 애니메이션 */
