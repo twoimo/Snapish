@@ -268,26 +268,29 @@ const BACKEND_BASE_URL = baseUrl;
 //   return '알 수 없는 물고기';
 // });
 
-// ChatGPT 응답을 가져오는 메서드 추가
-const fetchChatGPTResponse = async () => {
-  const currentAssistantId = assistant_request_id.value;
-  if (currentAssistantId) {
-    try {
-      const [thread_id, run_id] = currentAssistantId;
-      const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
-      console.log('ChatGPT Response:', response.data);
-      if (response.data.status === 'Success') {
-        fishDescription.value = response.data.data || '잠시만 기다려 주세요';
-      } else {
-        console.error('Error in ChatGPT response:', response.data.status);
-        fishDescription.value = '현재 서비스를 이용할 수 없어요';
-      }
-    } catch (error) {
-      console.error('Error fetching ChatGPT response:', error);
+// ChatGPT 응답을 가져오는 메서드 수정
+const fetchAssistantResponse = async (assistantRequestId = null) => {
+  // 파라미터가 없으면 computed 값 사용
+  const currentAssistantId = assistantRequestId || assistant_request_id.value;
+  
+  if (!currentAssistantId) return;
+  
+  isDescriptionLoading.value = true;
+  try {
+    const [thread_id, run_id] = currentAssistantId;
+    const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
+    console.log('ChatGPT Response:', response.data);
+    if (response.data.status === 'Success') {
+      fishDescription.value = response.data.data || '잠시만 기다려 주세요';
+    } else {
+      console.error('Error in ChatGPT response:', response.data.status);
       fishDescription.value = '현재 서비스를 이용할 수 없어요';
-    } finally {
-      isDescriptionLoading.value = false;
     }
+  } catch (error) {
+    console.error('Error fetching ChatGPT response:', error);
+    fishDescription.value = '현재 서비스를 이용할 수 없어요';
+  } finally {
+    isDescriptionLoading.value = false;
   }
 };
 
@@ -344,7 +347,7 @@ onMounted(async () => {
   };
 
   // ChatGPT 응답은 별도로 실행
-  fetchChatGPTResponse();
+  fetchAssistantResponse();
 
   // 다른 데이터 로딩은 별도로 처리
   try {
@@ -391,25 +394,9 @@ watch(
       parsedDetections.value = JSON.parse(decodeURIComponent(newQuery.detections));
     }
 
-    // ChatGPT 응답 갱신
+    // ChatGPT 응답 갱신 - 중복 코드 제거
     if (newQuery.assistant_request_id) {
-      isDescriptionLoading.value = true;
-      try {
-        const [thread_id, run_id] = newQuery.assistant_request_id;
-        const response = await axios.get(`${BACKEND_BASE_URL}/backend/chat/${thread_id}/${run_id}`);
-        console.log('ChatGPT Response:', response.data);
-        if (response.data.status === 'Success') {
-          fishDescription.value = response.data.data || '잠시만 기다려 주세요';
-        } else {
-          console.error('Error in ChatGPT response:', response.data.status);
-          fishDescription.value = '현재 서비스를 이용할 수 없어요';
-        }
-      } catch (error) {
-        console.error('Error fetching ChatGPT response:', error);
-        fishDescription.value = '현재 서비스를 이용할 수 없어요';
-      } finally {
-        isDescriptionLoading.value = false;
-      }
+      await fetchAssistantResponse(newQuery.assistant_request_id);
     }
 
     // 이미지 로딩 처리
@@ -509,7 +496,7 @@ const onImageLoad = () => {
 
     // resize 이벤트 리스너 추가
     window.addEventListener('resize', updateBoundingBoxes);
-    // 초기 bbox 업데이트를 위해 약간의 지연 추가
+    // 초기 bbox 업데이트를 위해 약��의 지연 추가
     setTimeout(updateBoundingBoxes, 100);
   }
 };
@@ -567,7 +554,7 @@ const imageContainerStyle = computed(() => {
   return style;
 });
 
-// 컴포넌트 언마운트 시 이벤트 리스너 제거
+// 컴포넌트 ���마운트 시 이벤트 리스너 제거
 onUnmounted(() => {
   window.removeEventListener('resize', updateBoundingBoxes);
 });

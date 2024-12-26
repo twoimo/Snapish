@@ -286,10 +286,12 @@ function navigateToCatches() {
   router.push('/catches');
 }
 
-// ChatGPT 응답을 가져오는 메서드 추가
-const fetchChatGPTResponse = async () => {
-  const currentAssistantId = assistant_request_id.value;
+// ChatGPT ��답을 가져오는 메서드 수정
+const fetchAssistantResponse = async (assistantRequestId = null) => {
+  const currentAssistantId = assistantRequestId || assistant_request_id.value;
+  
   if (currentAssistantId) {
+    isDescriptionLoading.value = true;
     try {
       const [thread_id, run_id] = currentAssistantId;
       const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
@@ -330,7 +332,7 @@ onMounted(async () => {
   };
 
   // ChatGPT 응답 가져오기
-  fetchChatGPTResponse();
+  fetchAssistantResponse();
 
   if (store.state.isAuthenticated) {
     try {
@@ -518,23 +520,7 @@ watch(
 
     // ChatGPT 응답 갱신
     if (newQuery.assistant_request_id) {
-      isDescriptionLoading.value = true;
-      try {
-        const [thread_id, run_id] = newQuery.assistant_request_id;
-        const response = await axios.get(`${BACKEND_BASE_URL}/backend/chat/${thread_id}/${run_id}`);
-        console.log('ChatGPT Response:', response.data);
-        if (response.data.status === 'Success') {
-          fishDescription.value = response.data.data || '잠시만 기다려 주세요';
-        } else {
-          console.error('Error in ChatGPT response:', response.data.status);
-          fishDescription.value = '현재 서비스를 이용할 수 없어요';
-        }
-      } catch (error) {
-        console.error('Error fetching ChatGPT response:', error);
-        fishDescription.value = '현재 서비스를 이용할 수 없어요';
-      } finally {
-        isDescriptionLoading.value = false;
-      }
+      await fetchAssistantResponse(newQuery.assistant_request_id);
     }
 
     // 이미지 로딩 처리
