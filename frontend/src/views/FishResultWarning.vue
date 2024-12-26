@@ -99,7 +99,7 @@
         <div v-show="!loading && !errorMessage" 
              class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
              :style="{ transitionDelay: '200ms' }">
-          <p v-if="isDescriptionLoading" class="mt-2 text-gray-500 center-align">
+          <p v-if="isDescriptionLoading" class="text-gray-500 center-align">
             <span class="inline-flex gap-1">
               정보를 찾아보는 중
               <span class="loading-dots">
