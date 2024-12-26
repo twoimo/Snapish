@@ -144,63 +144,67 @@ const handlePredictResponse = async (data) => {
     const detections = data.detections;
     const imageUrl = data.imageUrl || null;
     const imageBase64 = data.image_base64 || null;
-    const catchId = data.id || null; // Ensure catchId is included
-    const assistant_id = data.assistant_id || null;
+    const catchId = data.id || null;
+    const assistant_request_id = data.assistant_request_id || null;
 
     if (detections && detections.length > 0) {
         const currentDate = new Date();
         const currentMonthDay = `${(currentDate.getMonth() + 1).toString().padStart(2, '0')}.${currentDate.getDate().toString().padStart(2, '0')}`;
 
-        console.log('현재 날짜:', currentMonthDay); // 현재 날짜 확인
+        console.log('현재 날짜:', currentMonthDay);
 
         const isProhibited = detections.some(detection => {
-            const prohibitedDates = detection.prohibited_dates; // 금어기 날짜 가져오기
-            console.log('감지된 물고기:', detection.label); // 감지된 물고기 확인
-            console.log('금어기 날짜:', prohibitedDates); // 금어기 날짜 확인
+            const prohibitedDates = detection.prohibited_dates;
+            console.log('감지된 물고기:', detection.label);
+            console.log('금어기 날짜:', prohibitedDates);
 
             if (!prohibitedDates) return false;
 
             const [start, end] = prohibitedDates.split('~');
-            console.log('시작 날짜:', start, '종료 날짜:', end); // 시작 및 종료 날짜 확인
+            console.log('시작 날짜:', start, '종료 날짜:', end);
 
-            // 금어기 날짜 비교 로직 수정
             if (end.startsWith('01.')) {
-                // 종료 날짜가 다음 해의 날짜인 경우
                 return (currentMonthDay >= start || currentMonthDay <= end);
             } else {
-                // 일반적인 경우
                 return currentMonthDay >= start && currentMonthDay <= end;
             }
         });
 
-        console.log('금어기 여부:', isProhibited); // 금어기 여부 확인
+        console.log('금어기 여부:', isProhibited);
 
         const routeName = isProhibited ? 'FishResultWarning' : 'FishResultNormal';
+        const queryParams = {
+            imageUrl,
+            imageBase64,
+            detections: encodeURIComponent(JSON.stringify(detections)),
+            prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
+            timestamp: Date.now(),
+            catchId,
+            assistant_request_id
+        };
+
+        // 현재 경로가 결과 페이지인지 확인
+        const isResultPage = router.currentRoute.value.name?.includes('FishResult');
+        const navigationMethod = isResultPage ? router.replace : router.push;
 
         if (store.state.isAuthenticated) {
             await store.dispatch('fetchCatches');
-            router.push({
+            await navigationMethod({
                 name: routeName,
                 query: {
-                    imageUrl,
-                    imageBase64,
-                    detections: encodeURIComponent(JSON.stringify(detections)),
-                    prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
-                    timestamp: Date.now(),
-                    catchId, // Ensure catchId is included
-                    assistant_id: assistant_id
-                },
+                    ...queryParams,
+                    _timestamp: Date.now()
+                }
             });
         } else {
-            router.push({
+            const filteredQueryParams = { ...queryParams };
+            delete filteredQueryParams.catchId;
+            await navigationMethod({
                 name: routeName,
                 query: {
-                    imageBase64,
-                    detections: encodeURIComponent(JSON.stringify(detections)),
-                    prohibitedDates: detections[0].prohibited_dates || '알 수 없음',
-                    timestamp: Date.now(),
-                    assistant_id: assistant_id
-                },
+                    ...filteredQueryParams,
+                    _timestamp: Date.now()
+                }
             });
         }
     } else {
