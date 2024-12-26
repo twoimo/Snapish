@@ -125,11 +125,20 @@ const onFileChange = async (event) => {
                         await handlePredictResponse(response.data);
                     } catch (error) {
                         console.error('Error during Axios POST:', error);
+                        let errorType = 'analyze_failed';
+                        let errorMessage = error.message;
+
+                        // 백엔드 에러 응답 처리
+                        if (error.response?.data) {
+                            errorType = error.response.data.error || errorType;
+                            errorMessage = error.response.data.message || errorMessage;
+                        }
+
                         await router.push({
                             name: 'FishResultError',
                             query: {
-                                errorType: 'no_detection',
-                                message: `${error.message}`
+                                errorType: errorType,
+                                message: errorMessage
                             }
                         });
                     }
@@ -138,11 +147,20 @@ const onFileChange = async (event) => {
             }
         } catch (error) {
             console.error('Error during Axios POST:', error);
+            let errorType = 'analyze_failed';
+            let errorMessage = error.message;
+
+            // 백엔드 에러 응답 처리
+            if (error.response?.data) {
+                errorType = error.response.data.error || errorType;
+                errorMessage = error.response.data.message || errorMessage;
+            }
+
             await router.push({
                 name: 'FishResultError',
                 query: {
-                    errorType: 'no_detection',
-                    message: `${error.message}`
+                    errorType: errorType,
+                    message: errorMessage
                 }
             });
         } finally {
