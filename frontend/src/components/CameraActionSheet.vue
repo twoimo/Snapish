@@ -125,14 +125,26 @@ const onFileChange = async (event) => {
                         await handlePredictResponse(response.data);
                     } catch (error) {
                         console.error('Error during Axios POST:', error);
-                        alert('이미지 업로드 중 오류가 발생했습니다.');
+                        await router.push({
+                            name: 'FishResultError',
+                            query: {
+                                errorType: 'no_detection',
+                                message: `${error.message}`
+                            }
+                        });
                     }
                 };
                 reader.readAsDataURL(file);
             }
         } catch (error) {
-            console.error('Error during file upload:', error);
-            alert('이미지 업로드 중 오류가 발생했습니다.');
+            console.error('Error during Axios POST:', error);
+            await router.push({
+                name: 'FishResultError',
+                query: {
+                    errorType: 'no_detection',
+                    message: `${error.message}`
+                }
+            });
         } finally {
             // 전역 로딩 상태 비활성화
             store.dispatch('setGlobalLoading', false);
@@ -143,6 +155,19 @@ const onFileChange = async (event) => {
 };
 
 const handlePredictResponse = async (data) => {
+    // 에러 응답 처리
+    if (data.error === 'detection_failed') {
+        console.log('data.errorType:', data.errorType);
+        await router.push({
+            name: 'FishResultError',
+            query: {
+                errorType: data.errorType,
+                message: data.message
+            }
+        });
+        return;
+    }
+
     const detections = data.detections;
     const imageUrl = data.imageUrl || null;
     const imageBase64 = data.image_base64 || null;
