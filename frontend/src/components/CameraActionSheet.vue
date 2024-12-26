@@ -189,17 +189,22 @@ const handlePredictResponse = async (data) => {
 
         if (store.state.isAuthenticated) {
             await store.dispatch('fetchCatches');
-            navigationMethod({
+            await navigationMethod({
                 name: routeName,
-                query: queryParams
+                query: {
+                    ...queryParams,
+                    _timestamp: Date.now()
+                }
             });
         } else {
-            const filteredQueryParams = { ...queryParams }; // 원본 복사
-            delete filteredQueryParams.catchId; // catchId 제거
-            // 비인증 사용자
-            navigationMethod({
+            const filteredQueryParams = { ...queryParams };
+            delete filteredQueryParams.catchId;
+            await navigationMethod({
                 name: routeName,
-                query: filteredQueryParams
+                query: {
+                    ...filteredQueryParams,
+                    _timestamp: Date.now()
+                }
             });
         }
     } else {
