@@ -97,7 +97,7 @@
       <div v-show="!loading && !errorMessage" 
            class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
            :style="{ transitionDelay: '200ms' }">
-        <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
+        <p v-if="isDescriptionLoading" class="text-gray-500 center-align">
           <span class="inline-flex gap-1 center-align">
             정보를 찾아보는 중
             <span class="loading-dots">
@@ -496,7 +496,7 @@ const onImageLoad = () => {
 
     // resize 이벤트 리스너 추가
     window.addEventListener('resize', updateBoundingBoxes);
-    // 초기 bbox 업데이트를 위해 약��의 지연 추가
+    // 초기 bbox 업데이트를 위해 약간의 지연 추가
     setTimeout(updateBoundingBoxes, 100);
   }
 };
@@ -554,7 +554,7 @@ const imageContainerStyle = computed(() => {
   return style;
 });
 
-// 컴포넌트 ���마운트 시 이벤트 리스너 제거
+// 컴포넌트 언마운트 시 이벤트 리스너 제거
 onUnmounted(() => {
   window.removeEventListener('resize', updateBoundingBoxes);
 });
