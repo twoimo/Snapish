@@ -194,10 +194,12 @@ const handlePredictResponse = async (data) => {
                 query: queryParams
             });
         } else {
+            const filteredQueryParams = { ...queryParams }; // 원본 복사
+            delete filteredQueryParams.catchId; // catchId 제거
             // 비인증 사용자
             navigationMethod({
                 name: routeName,
-                query: queryParams  // imageUrl은 이미 null이므로 그대로 사용
+                query: filteredQueryParams
             });
         }
     } else {
