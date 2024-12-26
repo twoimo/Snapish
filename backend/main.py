@@ -466,7 +466,7 @@ def signup():
     password = data.get('password')
 
     if not username or not email or not password:
-        return jsonify({'message': '모든 필드를 채워세요.'}), 400
+        return jsonify({'message': '모든 필드를 채워주세요.'}), 400
 
     session = Session()
     existing_user = session.query(User).filter(
@@ -554,16 +554,43 @@ def predict():
     try:
         if 'image' in request.files:
             file = request.files['image']
+            # 파일 이름이 비어있는지 먼저 확인
+            if file.filename == '':
+                return jsonify({
+                    'error': 'invalid_file_name',
+                    'message': '파일이 선택되지 않았습니다.'
+                }), 400
+                
+            # 파일 타입 검증
             if not allowed_file(file.filename):
-                return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
-            img = Image.open(file.stream).convert('RGB')
+                return jsonify({
+                    'error': 'invalid_file_type',
+                    'message': '지원하지 않는 파일 형식입니다.'
+                }), 400
+                
+            try:
+                img = Image.open(file.stream).convert('RGB')
+            except Exception as e:
+                return jsonify({
+                    'error': 'invalid_file_open',
+                    'message': '이미지를 처리할 수 없습니다.'
+                }), 400
         else:
-            data = request.get_json()
-            image_base64 = data.get('image_base64')
-            if not image_base64:
-                return jsonify({'error': '유효한 이미지 데이터를 업로드해주세요.'}), 400
-            image_data = base64.b64decode(image_base64)
-            img = Image.open(io.BytesIO(image_data)).convert('RGB')
+            try:
+                data = request.get_json()
+                image_base64 = data.get('image_base64')
+                if not image_base64:
+                    return jsonify({                   
+                                    'error': 'invalid_image_formatting_error',
+                                    'message': '업로드 이미지를 변환하는 중 오류가 발생했습니다.'
+                                    }), 400
+                image_data = base64.b64decode(image_base64)
+                img = Image.open(io.BytesIO(image_data)).convert('RGB')
+            except Exception as e:
+                ({                   
+                    'error': 'invalid_image_open',
+                    'message': '업로드 이미지를 열지 못했습니다.'
+                    }), 400
 
         # 이미지 최적화
         optimized_buffer = optimize_image(img)
@@ -944,7 +971,7 @@ def get_detections(user_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/map_fishing_spot', methods=['POST'])
-# 추후 Token 관련 데코레이터 추가할 것
+# 추후 Token 관련 데코레이터 ��가할 것
 def map_fishing_spot():
     session = Session()
     fishing_spots = session.query(FishingPlace).all()
