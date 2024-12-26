@@ -99,7 +99,7 @@
         <div v-show="!loading && !errorMessage" 
              class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
              :style="{ transitionDelay: '200ms' }">
-          <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
+          <p v-if="isDescriptionLoading" class="mt-2 text-gray-500 center-align">
             <span class="inline-flex gap-1">
               정보를 찾아보는 중
               <span class="loading-dots">
@@ -210,7 +210,7 @@
 // Ensure the script setup section is correctly defined
 console.log("FishResultWarning script loaded"); // Debugging log
 
-import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
@@ -263,10 +263,10 @@ const shareResult = () => {
 
 // 이미지 소스 계산
 const imageSource = computed(() => {
-  if (imageBase64.value) {
-    return `data:image/jpeg;base64,${imageBase64.value}`;
-  } else if (imageUrl.value && store.state.isAuthenticated) {
+  if (imageUrl.value && store.state.isAuthenticated) {
     return `${BACKEND_BASE_URL}/uploads/${imageUrl.value}`;
+  } else if (imageBase64.value) {
+    return `data:image/jpeg;base64,${imageBase64.value}`;
   }
   return '/placeholder.svg';
 });
@@ -411,7 +411,7 @@ const imageContainerStyle = computed(() => {
     padding: '1rem'
   };
 
-  // 세로�� 긴 이미지일 경우 패딩 조정
+  // 세로 긴 이미지일 경우 패딩 조정
   if (aspectRatio < 1) {
     style.padding = '2rem 1rem';
   }
@@ -500,6 +500,64 @@ const imageClass = computed(() => {
 
 // isDescriptionLoading ref 추가
 const isDescriptionLoading = ref(true);
+
+// Add watch for route.query
+watch(
+  () => route.query,
+  async (newQuery) => {
+    console.log('Route query changed:', newQuery);
+    
+    // 이미지 관련 데이터 갱신
+    imageUrl.value = newQuery.imageUrl || '';
+    imageBase64.value = newQuery.imageBase64 ? decodeURIComponent(newQuery.imageBase64) : '';
+    
+    // detections 갱신
+    if (newQuery.detections) {
+      detections.value = JSON.parse(decodeURIComponent(newQuery.detections));
+    }
+
+    // ChatGPT 응답 갱신
+    if (newQuery.assistant_request_id) {
+      isDescriptionLoading.value = true;
+      try {
+        const [thread_id, run_id] = newQuery.assistant_request_id;
+        const response = await axios.get(`${BACKEND_BASE_URL}/backend/chat/${thread_id}/${run_id}`);
+        console.log('ChatGPT Response:', response.data);
+        if (response.data.status === 'Success') {
+          fishDescription.value = response.data.data || '잠시만 기다려 주세요';
+        } else {
+          console.error('Error in ChatGPT response:', response.data.status);
+          fishDescription.value = '현재 서비스를 이용할 수 없어요';
+        }
+      } catch (error) {
+        console.error('Error fetching ChatGPT response:', error);
+        fishDescription.value = '현재 서비스를 이용할 수 없어요';
+      } finally {
+        isDescriptionLoading.value = false;
+      }
+    }
+
+    // 이미지 로딩 처리
+    const img = new Image();
+    img.src = imageSource.value;
+    loading.value = true;
+    
+    img.onload = () => {
+      loading.value = false;
+      if (fishImage.value) {
+        onImageLoad();
+      }
+    };
+    
+    img.onerror = () => {
+      loading.value = false;
+      if (imageSource.value === '/placeholder.svg') {
+        errorMessage.value = '이미지를 불러오는 데 실패했습니다.';
+      }
+    };
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
