@@ -583,18 +583,18 @@ def predict():
         if detections:
             try:
                 top_fish = detections[0]['label']
-                assistant_id = assistant_talk_request(f"{top_fish}")
+                assistant_request_id = assistant_talk_request(f"{top_fish}")
                 
             except Exception as e:
-                print(f"assistant_id 호출 실패 : {e}")
-                assistant_id = None
+                print(f"assistant_request_id 호출 실패 : {e}")
+                assistant_request_id = None
                 
         if not detections:
             detections.append({
                 'label': '알 수 없음',
                 'confidence': 0.0
             })
-
+            
         session = Session()
         token = request.headers.get('Authorization')
         if token:
@@ -644,7 +644,7 @@ def predict():
                     'id': new_catch.catch_id,
                     'detections': detections,
                     'imageUrl': filename,
-                    'assistant_id': assistant_id
+                    'assistant_request_id': assistant_request_id
                 }
         else:
             # Do not save the image to disk or database
@@ -654,7 +654,7 @@ def predict():
             response_data = {
                 'detections': detections,
                 'image_base64': img_str,
-                'assistant_id': assistant_id
+                'assistant_request_id': assistant_request_id
             }
 
         session.close()

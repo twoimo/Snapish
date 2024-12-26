@@ -42,7 +42,7 @@
         </div>
 
         <!-- 업로드된 물고기 이미지 표시 -->
-        <div v-if="!loading && !errorMessage" class="mt-4 bg-gray-200 rounded-lg p-4">
+        <div class="mt-4 bg-gray-200 rounded-lg p-4 transition-all duration-300 fade-slide-enter">
           <div class="image-container" :style="imageContainerStyle">
             <div class="image-wrapper">
               <div class="detection-area">
@@ -58,25 +58,9 @@
           </div>
         </div>
 
-        <!-- AI 모델 경고 문구 추가 -->
-        <div class="mt-6 mb-4 bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
-          <div class="flex flex-col items-center gap-2">
-            <div class="flex items-center justify-center gap-2 text-yellow-500">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span class="font-semibold">AI 판별 주의사항</span>
-            </div>
-            <p class="text-sm text-gray-600 text-center leading-relaxed">
-              인공지능 모델의 판별 결과는 참고용입니다.<br>
-              실제 상황과 법적 규제를 반드시 확인하세요.
-            </p>
-          </div>
-        </div>
-
         <!-- AI 판별 결과 -->
-        <div v-if="!loading && fishName" class="mt-6 bg-red-50 rounded-lg p-4 border-2 border-red-500">
+        <div class="mt-6 bg-red-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '0ms' }">
           <div class="flex items-center mb-2">
             <AlertTriangleIcon class="w-6 h-6 text-red-500 mr-2" />
             <h2 class="text-lg font-bold text-red-700">경고: 현재 포획 금지 어종</h2>
@@ -112,46 +96,72 @@
           <p class="text-red-600 mt-2">금어기 기간: {{ prohibitedDates }}</p>
         </div>
 
-        <div v-if="!loading && !errorMessage" class="mt-6 bg-gray-50 rounded-lg p-4">
-          <h2 class="text-xl font-bold mb-2">{{ fishName }}</h2>
-          <p class="text-gray-600">학명: {{ scientificName }}</p>
-          <p class="mt-2 text-gray-700">{{ fishDescription }}</p>
+        <div v-show="!loading && !errorMessage" 
+             class="mt-6 bg-gray-50 rounded-lg p-4 transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '200ms' }">
+          <p v-if="isDescriptionLoading" class="mt-2 text-gray-500">
+            <span class="inline-flex gap-1">
+              정보를 찾아보는 중
+              <span class="loading-dots">
+                <span>.</span><span>.</span><span>.</span>
+              </span>
+            </span>
+          </p>
+          <p v-else class="mt-2">
+            <span class="text-gray-700">{{ fishDescription || '설명 없음' }}</span>
+            <span class="block text-xs text-gray-700 mt-1">MBRIS 생물종 상세정보 기반 생성형 답변입니다.</span>
+          </p>
         </div>
 
-        <div v-if="!loading && !errorMessage" class="mt-6 bg-yellow-50 rounded-lg p-4">
-          <h3 class="font-bold text-yellow-700 mb-2">포획 제한 이유</h3>
-          <ul class="list-disc list-inside text-yellow-800">
-            <li>ChatGPT로 생성된 포획 제한 이유</li>
-          </ul>
+        <!-- AI 모델 경고 문구 추가 -->
+        <div v-show="!loading && !errorMessage" 
+             class="mt-6 mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '400ms' }">
+          <div class="flex flex-col items-center gap-2">
+            <div class="flex items-center justify-center gap-2 text-yellow-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="font-semibold">AI 판별 주의사항</span>
+            </div>
+            <p class="text-sm text-gray-600 text-center leading-tight">
+              인공지능 모델의 판별 결과는 참고용입니다.<br>
+              실제 상황과 법적 규제를 반드시 확인하세요.
+            </p>
+          </div>
         </div>
 
         <!-- 공유하기 버튼 -->
-        <div v-if="!loading && !errorMessage" class="mt-4">
-          <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="shareResult">
-            <Share2Icon class="w-5 h-5 mr-2" />
-            <span>공유하기</span>
-          </button>
-        </div>
+        <div v-show="!loading && !errorMessage" 
+             class="transition-all duration-300 fade-slide-enter"
+             :style="{ transitionDelay: '600ms' }">
+          <div class="mt-4">
+            <button class="w-full bg-green-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="shareResult">
+              <Share2Icon class="w-5 h-5 mr-2" />
+              <span>공유하기</span>
+            </button>
+          </div>
 
-        <!-- 물고기 정보 수정 버튼 -->
-        <div v-if="!loading && !errorMessage && store.state.isAuthenticated" class="mt-4">
-          <button class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="openEditModal">
-            <Edit class="w-5 h-5 mr-2" />
-            <span>물고기 정보 수정</span>
-          </button>
-        </div>
+          <!-- 물고기 정보 수정 버튼 -->
+          <div v-if="store.state.isAuthenticated" class="mt-4">
+            <button class="w-full bg-red-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="openEditModal">
+              <Edit class="w-5 h-5 mr-2" />
+              <span>물고기 정보 수정</span>
+            </button>
+          </div>
 
-        <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
-        <div v-if="!loading && !errorMessage" class="mt-4">
-          <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-            @click="navigateToCatches">
-            <InfoIcon class="w-5 h-5 mr-2" />
-            <span>내가 잡은 물고기 리스트 보기</span>
-          </button>
+          <!-- 내가 잡은 물고기 페이지로 이동 버튼 -->
+          <div class="mt-4">
+            <button class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
+              @click="navigateToCatches">
+              <InfoIcon class="w-5 h-5 mr-2" />
+              <span>내가 잡은 물고기 리스트 보기</span>
+            </button>
+          </div>
         </div>
-
 
       </main>
 
@@ -216,12 +226,12 @@ const showEditModal = ref(false);
 const selectedCatch = ref(null);
 const showConsentModal = ref(false);
 const detections = JSON.parse(decodeURIComponent(route.query.detections || '[]'));
-const fishName = computed(() => {
-  if (detections.length > 0 && detections[0].label !== '알 수 없음') {
-    return detections[0].label;
-  }
-  return '알 수 없는 물고기';
-});
+// const fishName = computed(() => {
+//   if (detections.length > 0 && detections[0].label !== '알 수 없음') {
+//     return detections[0].label;
+//   }
+//   return '알 수 없는 물고기';
+// });
 const prohibitedDates = route.query.prohibitedDates || '알 수 없음';
 const loading = ref(true);
 const isLoadingMore = ref(false);
@@ -231,8 +241,10 @@ const imageBase64 = ref('');
 const showModal = ref(false);
 
 // ChatGPT assistant result
-const assistant_id = ref(route.query.assistant_id || null);
-const scientificName = ref('ChatGPT로 생성된 학명');
+const assistant_request_id = computed(() => {
+  const assistantIdFromQuery = route.query.assistant_request_id;
+  return assistantIdFromQuery || null;
+});
 const fishDescription = ref('ChatGPT로 생성된 물고기 설명');
 
 // Define backend base URL
@@ -274,9 +286,32 @@ function navigateToCatches() {
   router.push('/catches');
 }
 
+// ChatGPT 응답을 가져오는 메서드 추가
+const fetchChatGPTResponse = async () => {
+  const currentAssistantId = assistant_request_id.value;
+  if (currentAssistantId) {
+    try {
+      const [thread_id, run_id] = currentAssistantId;
+      const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
+      console.log('ChatGPT Response:', response.data);
+      if (response.data.status === 'Success') {
+        fishDescription.value = response.data.data || '잠시만 기다려 주세요';
+      } else {
+        console.error('Error in ChatGPT response:', response.data.status);
+        fishDescription.value = '현재 서비스를 이용할 수 없어요';
+      }
+    } catch (error) {
+      console.error('Error fetching ChatGPT response:', error);
+      fishDescription.value = '현재 서비스를 이용할 수 없어요';
+    } finally {
+      isDescriptionLoading.value = false;
+    }
+  }
+};
+
 // 컴포넌트 마운트 시 초기화
 onMounted(async () => {
-  console.log('포넌트가 마운트되었습니다.');
+  console.log('컴포넌트가 마운트되었습니다.');
 
   imageUrl.value = route.query.imageUrl || '';
   imageBase64.value = route.query.imageBase64 ? decodeURIComponent(route.query.imageBase64) : '';
@@ -294,23 +329,8 @@ onMounted(async () => {
     }
   };
 
-  if (assistant_id.value) {
-      try {
-        // assistant_id가 문자열화된 배열이므로 파싱
-        const [thread_id, run_id] = assistant_id.value;
-        const response = await axios.get(`${baseUrl}/backend/chat/${thread_id}/${run_id}`);
-        console.log(response.data);
-        if (response.data.status === 'Success') {
-          fishDescription.value = response.data.data || 'ChatGPT로 생성된 물고기 설명';
-        } else {
-          console.error('Error in ChatGPT response:', response.data.status);
-          fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-        }
-      } catch (error) {
-        console.error('Error fetching ChatGPT response:', error);
-        fishDescription.value = 'ChatGPT로 생성된 물고기 설명';
-      }
-    }
+  // ChatGPT 응답 가져오기
+  fetchChatGPTResponse();
 
   if (store.state.isAuthenticated) {
     try {
@@ -322,6 +342,14 @@ onMounted(async () => {
       console.error('Error checking consent:', error);
     }
   }
+
+  // 컴포넌트가 마운트된 후 약간의 지연을 두고 요소들이 보이도록 함
+  setTimeout(() => {
+    const elements = document.querySelectorAll('.fade-slide-enter');
+    elements.forEach(el => {
+      el.classList.add('fade-slide-enter-active');
+    });
+  }, 100);
 });
 
 const fishImage = ref(null);
@@ -383,7 +411,7 @@ const imageContainerStyle = computed(() => {
     padding: '1rem'
   };
 
-  // 세로로 긴 이미지일 경우 패딩 조정
+  // 세로�� 긴 이미지일 경우 패딩 조정
   if (aspectRatio < 1) {
     style.padding = '2rem 1rem';
   }
@@ -469,6 +497,9 @@ const handleImageClick = () => {
 const imageClass = computed(() => {
   return 'detection-image';
 });
+
+// isDescriptionLoading ref 추가
+const isDescriptionLoading = ref(true);
 </script>
 
 <style scoped>
@@ -551,5 +582,41 @@ const imageClass = computed(() => {
 
 .modal {
   background: white;
+}
+
+.loading-dots span {
+  animation: loadingDots 1.4s infinite;
+  opacity: 0;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loadingDots {
+  0% { opacity: 0; transform: translateY(0); }
+  25% { opacity: 1; transform: translateY(-4px); }
+  50% { opacity: 0; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+
+.fade-slide-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 초기 상태에서 요소들을 숨김 */
+div[v-show="false"] {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
