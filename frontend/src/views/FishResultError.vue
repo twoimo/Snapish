@@ -25,17 +25,9 @@
                         <!-- 이전으로 버튼 -->
                         <button 
                             class="w-full bg-gray-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-                            @click="goBack">
+                            @click="goHome">
                             <ChevronLeftIcon class="w-5 h-5 mr-2" />
-                            <span>이전으로</span>
-                        </button>
-
-                        <!-- 다시 촬영하기 버튼 -->
-                        <button 
-                            class="w-full bg-blue-500 text-white py-3 px-4 rounded-lg flex items-center justify-center"
-                            @click="goToCamera">
-                            <CameraIcon class="w-5 h-5 mr-2" />
-                            <span>다시 촬영하기</span>
+                            <span>홈으로 돌아가기</span>
                         </button>
                     </div>
                 </div>
@@ -47,7 +39,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeftIcon, CameraIcon } from 'lucide-vue-next';
+import { ChevronLeftIcon } from 'lucide-vue-next';
 
 // 이미지 불러오기
 import errorImagePath from '@/assets/images/Error_Page.png';
@@ -63,6 +55,10 @@ const errorTypes = {
     low_confidence: {
         message: '물고기를 정확하게 인식할 수 없습니다.',
         description: '더 선명한 사진으로 다시 시도해주세요.'
+    }, 
+    invalid_file_name: {
+        message: '파일명 형식 오류',
+        description: 'PNG, JPG, JPEG 형식의 이미지만 업로드 가능합니다.'
     },
     invalid_file_type: {
         message: '지원하지 않는 파일 형식입니다.',
@@ -87,12 +83,8 @@ const errorMessage = computed(() => route.query.message || errorTypes[errorType.
 const errorDescription = computed(() => errorTypes[errorType.value].description);
 const errorImage = errorImagePath; // 불러온 이미지 경로를 바인딩
 
-const goBack = () => {
-    router.go(-1);
-};
-
-const goToCamera = () => {
-    router.push('/camera');
+const goHome = () => {
+    router.push('/');
 };
 </script>
 
