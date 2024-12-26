@@ -399,6 +399,8 @@ PROHIBITED_DATES = {
     "문치가자미": "12.01~01.31"
 }
 
+CONF_SCORE = 0.5
+
 # REST API
 @app.route('/')
 def hello():
@@ -572,30 +574,22 @@ def predict():
         
         for result in results:  # Iterate over results
             for cls, conf, bbox in zip(result.boxes.cls, result.boxes.conf, result.boxes.xyxy):
-                detections.append({
-                    'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
-                    'confidence': float(conf),
-                    'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), ''),
-                    'bbox': bbox.tolist()  # Ensure bbox is included
-                })
+                if float(conf) > CONF_SCORE:  # 정확도가 0.5 이상인 경우만 추가
+                    detections.append({
+                        'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
+                        'confidence': float(conf),
+                        'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), ''),
+                        'bbox': bbox.tolist()
+                    })
 
-        detections.sort(key=lambda x: x['confidence'], reverse=True)
-        
-        if detections:
-            try:
-                top_fish = detections[0]['label']
-                assistant_request_id = assistant_talk_request(f"{top_fish}")
-                
-            except Exception as e:
-                print(f"assistant_request_id 호출 실패 : {e}")
-                assistant_request_id = None
-                
+        # 감지 결과가 없거나 모든 결과의 정확도가 낮은 경우
         if not detections:
-            detections.append({
-                'label': '알 수 없음',
-                'confidence': 0.0
-            })
-            
+            return jsonify({
+                'error': 'detection_failed',
+                'errorType': 'no_detection' if not results[0].boxes.cls.size(0) else 'low_confidence',
+                'message': '물고기를 감지할 수 없습니다.' if not results[0].boxes.cls.size(0) else '물고기를 정확하게 인식할 수 없습니다.'
+            }), 200  # 프론트엔드 처리를 위해 200 반환
+
         session = Session()
         token = request.headers.get('Authorization')
         if token:
