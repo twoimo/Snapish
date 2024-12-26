@@ -136,6 +136,8 @@ const onFileChange = async (event) => {
         } finally {
             // 전역 로딩 상태 비활성화
             store.dispatch('setGlobalLoading', false);
+            // 파일 입력 초기화
+            event.target.value = '';
         }
     }
 };
