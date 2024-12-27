@@ -3,7 +3,7 @@
         <!-- 헤더 -->
         <header class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-10 max-w-md mx-auto">
             <div class="flex items-center">
-                <button class="mr-2" @click="goBack">
+                <button class="mr-2" @click="goHome">
                     <ChevronLeftIcon class="w-6 h-6" />
                 </button>
                 <h1 class="text-xl font-bold">오류 발생</h1>
