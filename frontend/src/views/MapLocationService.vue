@@ -105,7 +105,6 @@ export default {
       selectedLocation: null, // 선택된 낚시터 데이터
       isDetailsVisible: false, // 상세 정보 슬라이드 표시 여부
       dynamicMaxHeight: window.innerHeight,
-      bodyScrollEnabled: true,
       locationTypes: ['바다', '저수지', '평지', '기타'],
       selectedTypes: [],
       showFilterMenu: false,
@@ -116,13 +115,10 @@ export default {
     this.fetchLocations();     // 컴포넌트가 마운트된 후에 DB에서 위치 정보 가져오기
     this.filteredLocations = this.locations; // 초기에는 모든 locations를 표시
     this.updateMaxHeight();     // 페이지 드래그 방지 및 스크롤 숨김 설정
-    this.toggleBodyScroll(false);     // 페이지 드래그 방지 및 스크롤 숨김 설정
     window.addEventListener("resize", this.updateMaxHeight); // 화면 크기 변화 감지
     window.addEventListener('click', this.handleClickOutside);
   },
   beforeUnmount() {
-    // 컴포넌트 제거 시 스크롤 복원
-    this.toggleBodyScroll(true);
     window.removeEventListener("resize", this.updateMaxHeight); // 이벤트 제거
     window.removeEventListener('click', this.handleClickOutside);
   },
@@ -152,10 +148,6 @@ export default {
       const footerHeight = 100;
       const availableHeight = window.innerHeight - headerHeight - footerHeight;
       this.dynamicMaxHeight = Math.max(availableHeight, 300);
-    },
-    toggleBodyScroll(enable) {
-      this.bodyScrollEnabled = enable;
-      document.body.style.overflow = enable ? "auto" : "hidden";
     },
     showDetails(location) {
       this.selectedLocation = location;
@@ -345,7 +337,7 @@ export default {
 
 /* body 스크롤 방지를 위한 클래스 */
 :global(body.detail-active) {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 .search-filter-container {
