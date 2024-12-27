@@ -10,6 +10,7 @@ import MapLocationService from "./views/MapLocationService.vue";
 import Profile from "./views/Profile.vue";
 import FishResultNormal from "./views/FishResultNormal.vue";
 import FishResultWarning from "./views/FishResultWarning.vue";
+import FishResultError from "./views/FishResultError.vue";
 import Login from "./views/Login.vue";
 import EditProfile from "./views/EditProfile.vue"; // 프로필 수정 컴포넌트 임포트
 import Signup from "./views/Signup.vue"; // Signup 컴포넌트 임포트
@@ -71,6 +72,11 @@ const routes = [
     path: "/fish-result-warning",
     name: "FishResultWarning",
     component: FishResultWarning, // 물고기 경고 컴포넌트
+  },
+  {
+    path: "/fish-result-error",
+    name: "FishResultError",
+    component: FishResultError, // 물고기 경고 컴포넌트
   },
   {
     path: "/login",
