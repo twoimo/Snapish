@@ -398,6 +398,8 @@ PROHIBITED_DATES = {
     "문치가자미": "12.01~01.31"
 }
 
+CONF_SCORE = 0.5
+
 # REST API
 @app.route('/')
 def hello():
@@ -463,7 +465,7 @@ def signup():
     password = data.get('password')
 
     if not username or not email or not password:
-        return jsonify({'message': '모든 필드를 채워세요.'}), 400
+        return jsonify({'message': '모든 필드를 채워주세요.'}), 400
 
     session = Session()
     existing_user = session.query(User).filter(
@@ -551,16 +553,43 @@ def predict():
     try:
         if 'image' in request.files:
             file = request.files['image']
+            # 파일 이름이 비어있는지 먼저 확인
+            if file.filename == '':
+                return jsonify({
+                    'error': 'invalid_file_name',
+                    'message': '파일이 선택되지 않았습니다.'
+                }), 400
+                
+            # 파일 타입 검증
             if not allowed_file(file.filename):
-                return jsonify({'error': '유효한 이미지 파일을 업로드해주세요.'}), 400
-            img = Image.open(file.stream).convert('RGB')
+                return jsonify({
+                    'error': 'invalid_file_type',
+                    'message': '지원하지 않는 파일 형식입니다.'
+                }), 400
+                
+            try:
+                img = Image.open(file.stream).convert('RGB')
+            except Exception as e:
+                return jsonify({
+                    'error': 'invalid_file_open',
+                    'message': '이미지를 처리할 수 없습니다.'
+                }), 400
         else:
-            data = request.get_json()
-            image_base64 = data.get('image_base64')
-            if not image_base64:
-                return jsonify({'error': '유효한 이미지 데이터를 업로드해주세요.'}), 400
-            image_data = base64.b64decode(image_base64)
-            img = Image.open(io.BytesIO(image_data)).convert('RGB')
+            try:
+                data = request.get_json()
+                image_base64 = data.get('image_base64')
+                if not image_base64:
+                    return jsonify({                   
+                                    'error': 'invalid_image_formatting_error',
+                                    'message': '업로드 이미지를 변환하는 중 오류가 발생했습니다.'
+                                    }), 400
+                image_data = base64.b64decode(image_base64)
+                img = Image.open(io.BytesIO(image_data)).convert('RGB')
+            except Exception as e:
+                ({                   
+                    'error': 'invalid_image_open',
+                    'message': '업로드 이미지를 열지 못했습니다.'
+                    }), 400
 
         # 이미지 최적화
         optimized_buffer = optimize_image(img)
@@ -571,30 +600,33 @@ def predict():
         
         for result in results:  # Iterate over results
             for cls, conf, bbox in zip(result.boxes.cls, result.boxes.conf, result.boxes.xyxy):
-                detections.append({
-                    'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
-                    'confidence': float(conf),
-                    'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), ''),
-                    'bbox': bbox.tolist()  # Ensure bbox is included
-                })
-
+                if float(conf) > CONF_SCORE:
+                    detections.append({
+                        'label': labels_korean.get(int(cls), '알 수 없는 라벨'),
+                        'confidence': float(conf),
+                        'prohibited_dates': PROHIBITED_DATES.get(labels_korean.get(int(cls), ''), ''),
+                        'bbox': bbox.tolist()
+                    })
+                    
         detections.sort(key=lambda x: x['confidence'], reverse=True)
         
         if detections:
             try:
                 top_fish = detections[0]['label']
                 assistant_request_id = assistant_talk_request(f"{top_fish}")
-                
+            
             except Exception as e:
                 print(f"assistant_request_id 호출 실패 : {e}")
                 assistant_request_id = None
-                
+
+        # 감지 결과가 없거나 모든 결과의 정확도가 낮은 경우
         if not detections:
-            detections.append({
-                'label': '알 수 없음',
-                'confidence': 0.0
-            })
-            
+            return jsonify({
+                'error': 'detection_failed',
+                'errorType': 'no_detection' if not results[0].boxes.cls.size(0) else 'low_confidence',
+                'message': '물고기를 감지할 수 없습니다.' if not results[0].boxes.cls.size(0) else '물고기를 정확하게 인식할 수 없습니다.'
+            }), 200  # 프론트엔드 처리를 위해 200 반환
+
         session = Session()
         token = request.headers.get('Authorization')
         if token:
@@ -938,7 +970,7 @@ def get_detections(user_id):
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/map_fishing_spot', methods=['POST'])
-# 추후 Token 관련 데코레이터 추가할 것
+# 추후 Token 관련 데코레이터 ��가할 것
 def map_fishing_spot():
     session = Session()
     fishing_spots = session.query(FishingPlace).all()
