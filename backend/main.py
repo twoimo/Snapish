@@ -329,7 +329,7 @@ baseUrl = os.getenv('BASE_URL')
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": [f'{baseUrl}:5000', f'{baseUrl}'],
+    "origins": [f'{baseUrl}:5001', f'{baseUrl}:81'],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
@@ -1439,7 +1439,7 @@ def update_post(user_id, post_id):
         if removed_images:
             logging.info(f"Removing images: {removed_images}")
             for image_url in removed_images:
-                if image_url in post.images:
+                if (image_url in post.images):
                     try:
                         post.images.remove(image_url)
                         # Delete the actual file
