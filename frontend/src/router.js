@@ -106,6 +106,10 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior() {
+    // 항상 페이지 상단으로 스크롤
+    return { top: 0 }
+  }
 });
 
 // 네비게이션 가드 설정 (인증 여부 확인)
