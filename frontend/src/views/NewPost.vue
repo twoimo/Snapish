@@ -27,25 +27,35 @@
         <form @submit.prevent="submitPost" class="h-full">
           <div class="p-4 space-y-6">
             <!-- Title input -->
-            <div>
+            <div class="relative">
               <input
                 type="text"
-                v-model="title"
+                v-model.trim="title"
                 required
+                :maxlength="maxTitleLength"
+                @input="handleTitleInput"
                 class="w-full text-2xl font-bold bg-transparent border-0 focus:ring-0 p-0 placeholder-gray-400"
                 placeholder="제목을 입력하세요"
               >
+              <div class="absolute top-0 right-0 text-sm" :class="isTitleLengthValid ? 'text-gray-400' : 'text-red-500'">
+                {{ title.length }}/{{ maxTitleLength }}
+              </div>
             </div>
 
             <!-- Content input -->
-            <div>
+            <div class="relative">
               <textarea
-                v-model="content"
+                v-model.trim="content"
                 required
                 rows="8"
+                :maxlength="maxContentLength"
+                @input="handleContentInput"
                 class="w-full text-lg bg-transparent border-0 focus:ring-0 p-0 placeholder-gray-400 resize-none"
                 placeholder="내용을 입력하세요"
               ></textarea>
+              <div class="absolute bottom-0 right-0 text-sm" :class="isContentLengthValid ? 'text-gray-400' : 'text-red-500'">
+                {{ content.length }}/{{ maxContentLength }}
+              </div>
             </div>
 
             <!-- Image upload -->
@@ -131,6 +141,10 @@ export default {
     const imageFiles = ref([])
     const imagePreviews = ref([])
     const isSubmitting = ref(false)
+    const maxContentLength = 500
+    const isContentLengthValid = ref(true)
+    const maxTitleLength = 50
+    const isTitleLengthValid = ref(true)
 
     const handleImageUpload = (event) => {
       const files = Array.from(event.target.files)
@@ -155,8 +169,37 @@ export default {
       imagePreviews.value.splice(index, 1)
     }
 
+    const handleContentInput = (event) => {
+      const text = event.target.value
+      if (text.length > maxContentLength) {
+        content.value = text.slice(0, maxContentLength)
+        isContentLengthValid.value = false
+      } else {
+        isContentLengthValid.value = true
+      }
+    }
+
+    const handleTitleInput = (event) => {
+      const text = event.target.value
+      if (text.length > maxTitleLength) {
+        title.value = text.slice(0, maxTitleLength)
+        isTitleLengthValid.value = false
+      } else {
+        isTitleLengthValid.value = true
+      }
+    }
+
     const submitPost = async () => {
       if (isSubmitting.value) return
+      if (!isContentLengthValid.value || content.value.length > maxContentLength) {
+        alert('내용은 500자를 초과할 수 없습니다.')
+        return
+      }
+      if (!isTitleLengthValid.value || title.value.length > maxTitleLength) {
+        alert('제목은 50자를 초과할 수 없습니다.')
+        return
+      }
+
       isSubmitting.value = true
 
       try {
@@ -191,7 +234,13 @@ export default {
       isSubmitting,
       handleImageUpload,
       removeImage,
-      submitPost
+      submitPost,
+      maxContentLength,
+      isContentLengthValid,
+      handleContentInput,
+      maxTitleLength,
+      isTitleLengthValid,
+      handleTitleInput
     }
   }
 }
@@ -217,6 +266,9 @@ img.loaded {
 textarea {
   scrollbar-width: thin;
   scrollbar-color: #CBD5E0 #EDF2F7;
+  resize: none;
+  overflow-y: auto;
+  min-height: 200px;
 }
 
 textarea::-webkit-scrollbar {
@@ -232,6 +284,11 @@ textarea::-webkit-scrollbar-thumb {
   border-radius: 2px;
 }
 
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Remove autofill background */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -242,4 +299,4 @@ textarea:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px white inset;
   transition: background-color 5000s ease-in-out 0s;
 }
-</style> 
+</style>

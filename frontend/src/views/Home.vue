@@ -78,8 +78,8 @@
                   />
                 </div>
                 <div class="flex-1 space-y-2">
-                  <h3 class="font-bold text-lg text-gray-800">{{ issue.title }}</h3>
-                  <p class="text-sm text-gray-600 line-clamp-2">{{ issue.content }}</p>
+                  <h3 class="font-bold text-lg text-gray-800 line-clamp-1 break-all">{{ issue.title }}</h3>
+                  <p class="text-sm text-gray-600 line-clamp-2 break-all whitespace-pre-wrap">{{ issue.content }}</p>
                   <div class="flex items-center justify-between text-sm text-gray-500">
                     <span class="font-medium text-blue-600">{{ issue.username }}</span>
                     <div class="flex items-center space-x-1">
@@ -238,10 +238,27 @@ const hotIssues = ref([]);
   display: none;
 }
 
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
 }
 </style>

@@ -60,8 +60,21 @@
 
             <!-- Post content -->
             <div class="space-y-4">
-              <h2 class="text-2xl font-bold text-gray-900 leading-tight">{{ post.title }}</h2>
-              <p class="text-gray-600 leading-relaxed">{{ post.content }}</p>
+              <h2 class="text-2xl font-bold text-gray-900 leading-tight break-all line-clamp-2">{{ post.title }}</h2>
+              <p class="text-gray-600 leading-relaxed break-all whitespace-pre-wrap">
+                <template v-if="post.content.length > 200">
+                  {{ post.showFullContent ? post.content : post.content.slice(0, 200) + '...' }}
+                  <button
+                    @click="post.showFullContent = !post.showFullContent"
+                    class="text-blue-500 hover:text-blue-600 font-medium ml-1 inline-block"
+                  >
+                    {{ post.showFullContent ? '접기' : '더보기' }}
+                  </button>
+                </template>
+                <template v-else>
+                  {{ post.content }}
+                </template>
+              </p>
               
               <!-- Image gallery -->
               <div v-if="post.images?.length" class="space-y-4">
@@ -320,7 +333,8 @@ export default {
           currentImageIndex: 0,
           translateX: 0,
           isDragging: false,
-          containerWidth: 0
+          containerWidth: 0,
+          showFullContent: false  // 추가된 속성
         }))
         totalPages.value = response.data.pages
       } catch (error) {
@@ -782,6 +796,35 @@ img.loaded {
 .comment-content {
   margin: 0;
   color: #333;
+}
+
+/* Post content text styles */
+.break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* 기존 break-words 스타일 제거 또는 대체 */
+.text-gray-600 {
+  max-width: 100%;
+  line-height: 1.6;
+}
+
+h2.text-2xl {
+  max-width: 100%;
+  line-height: 1.4;
 }
 </style>
 
