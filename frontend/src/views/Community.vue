@@ -101,15 +101,14 @@
                         class="w-full flex-shrink-0"
                         :style="{ width: `${100 / post.images.length}%` }"
                       >
-                        <div class="relative w-full pb-[56.25%]"> <!-- 16:9 비율로 변경 -->
-                          <img 
-                            :src="image" 
-                            alt="Post image"
-                            class="absolute inset-0 w-full h-full object-contain bg-gray-50"
-                            loading="lazy"
-                            @load="onImageLoad"
-                          >
-                        </div>
+                        <img 
+                          :src="image" 
+                          alt="Post image"
+                          class="w-full h-full object-cover"
+                          style="max-height: 32rem;"
+                          loading="lazy"
+                          @load="onImageLoad"
+                        >
                       </div>
                     </div>
                   </div>
