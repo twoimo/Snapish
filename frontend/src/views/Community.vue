@@ -409,15 +409,18 @@ export default {
     }
 
     const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat('ko-KR', {
+      const date = new Date(dateString);
+      date.setHours(date.getHours() + 9); // Manually add 9 hours
+      const options = {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      }).format(date)
-    }
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('ko-KR', options).format(date);
+    };
 
     const sharePost = async (post) => {
       try {
