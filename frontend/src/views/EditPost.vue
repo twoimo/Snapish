@@ -141,6 +141,7 @@ export default {
     const imagePreviews = ref([])
     const removedImages = ref([])
     const isSubmitting = ref(false)
+    const existingImages = ref([]) // 기존 이미지 배열 추가
 
     const fetchPost = async () => {
       try {
@@ -149,10 +150,12 @@ export default {
             'Authorization': `Bearer ${store.state.token}`
           }
         })
+        post.value = response.data
         title.value = response.data.title
         content.value = response.data.content
         if (response.data.images?.length) {
-          imagePreviews.value = response.data.images
+          imagePreviews.value = [...response.data.images]
+          existingImages.value = [...response.data.images] // 기존 이미지 저장
         }
       } catch (error) {
         console.error('Error fetching post:', error)
@@ -170,6 +173,7 @@ export default {
         }
 
         imageFiles.value.push(file)
+        // 새 이미지를 미리보기에 추가
         const reader = new FileReader()
         reader.onload = (e) => {
           imagePreviews.value.push(e.target.result)
@@ -179,10 +183,13 @@ export default {
     }
 
     const removeImage = (index) => {
-      if (post.value?.images?.[index]) {
-        removedImages.value.push(post.value.images[index])
+      const imageUrl = imagePreviews.value[index]
+      if (existingImages.value.includes(imageUrl)) {
+        // 기존 이미지인 경우
+        removedImages.value.push(imageUrl)
       }
-      imageFiles.value.splice(index, 1)
+      // 새로 추가된 이미지 파일과 미리보기 모두 제거
+      imageFiles.value = imageFiles.value.filter((_, i) => i !== (index - existingImages.value.length))
       imagePreviews.value.splice(index, 1)
     }
 
@@ -195,12 +202,21 @@ export default {
         formData.append('title', title.value)
         formData.append('content', content.value)
         
+        // 새 이미지 파일 추가
         imageFiles.value.forEach(file => {
           formData.append('images', file)
         })
         
+        // 삭제된 이미지 URL 추가
         removedImages.value.forEach(url => {
           formData.append('removed_images[]', url)
+        })
+
+        // 유지할 기존 이미지 URL 추가
+        imagePreviews.value.forEach(preview => {
+          if (existingImages.value.includes(preview)) {
+            formData.append('existing_images[]', preview)
+          }
         })
 
         if (route.params.id) {
@@ -210,14 +226,19 @@ export default {
               'Authorization': `Bearer ${store.state.token}`
             }
           })
-          console.log('Edit response:', response.data)
+
+          // Vuex store 업데이트
+          await store.dispatch('updatePost', response.data.post)
         } else {
-          await axios.post('/api/posts', formData, {
+          const response = await axios.post('/api/posts', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
               'Authorization': `Bearer ${store.state.token}`
             }
           })
+
+          // Vuex store 업데이트
+          await store.dispatch('addPost', response.data.post)
         }
 
         router.push('/community')
@@ -258,7 +279,8 @@ export default {
       handleImageUpload,
       removeImage,
       submitEdit,
-      confirmDelete
+      confirmDelete,
+      existingImages
     }
   }
 }
@@ -309,4 +331,4 @@ textarea:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 1000px white inset;
   transition: background-color 5000s ease-in-out 0s;
 }
-</style> 
+</style>
