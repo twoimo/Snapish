@@ -48,9 +48,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeftIcon, LogOutIcon } from 'lucide-vue-next';
 import { useStore } from 'vuex';  // Add this import
 
-// 이미지 불러오기
-import errorImagePath from '@/assets/images/Error_Page.png';
-
 const route = useRoute();
 const router = useRouter();
 const store = useStore();  // Add this line
@@ -89,7 +86,7 @@ const errorTypes = {
 const errorType = computed(() => route.query.errorType || 'analyze_failed');
 const errorMessage = computed(() => route.query.message || errorTypes[errorType.value].message);
 const errorDescription = computed(() => errorTypes[errorType.value].description);
-const errorImage = errorImagePath; // 불러온 이미지 경로를 바인딩
+const errorImage = '/error_page.png'; // 불러온 이미지 경로를 바인딩
 
 const goHome = () => {
     router.push('/');
