@@ -28,6 +28,7 @@ export default createStore({
     },
     globalLoading: false,
     services: [],
+    posts: []
   },
   mutations: {
     // Existing mutations
@@ -100,6 +101,18 @@ export default createStore({
     SET_SERVICES(state, services) {
       state.services = services;
     },
+    setPosts(state, posts) {
+      state.posts = posts;
+    },
+    UPDATE_POST(state, updatedPost) {
+      const index = state.posts.findIndex(post => post.post_id === updatedPost.post_id)
+      if (index !== -1) {
+        state.posts.splice(index, 1, updatedPost)
+      }
+    },
+    ADD_POST(state, newPost) {
+      state.posts.unshift(newPost)
+    }
   },
   actions: {
     // Existing actions
@@ -466,6 +479,24 @@ export default createStore({
         throw error;
       }
     },
+    async fetchPosts({ commit }) {
+      try {
+        const response = await axios.get('/api/posts', {
+          headers: {
+            'Authorization': `Bearer ${this.state.token}`
+          }
+        })
+        commit('setPosts', response.data.posts)
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+      }
+    },
+    async updatePost({ commit }, post) {
+      commit('UPDATE_POST', post)
+    },
+    async addPost({ commit }, post) {
+      commit('ADD_POST', post)
+    }
   },
   getters: {
     // Existing getters

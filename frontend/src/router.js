@@ -127,7 +127,25 @@ router.beforeEach(async (to, from, next) => {
       next("/login");
     }
   } else {
-    next();
+    // 인증된 경우 또는 인증이 필요 없는 라우트
+    next(); // 라우팅 진행
+  }
+});
+
+// 라우트 이동 후 스크롤 상태 관리
+router.afterEach((to) => {
+  // `MapLocationService` 라우트로 이동한 경우 스크롤 비활성화
+  if (to.name === 'MapLocationService') {
+    document.body.style.overflow = 'hidden';
+  } else {
+    // 다른 라우트로 이동한 경우 스크롤 초기화
+    document.body.style.overflow = 'auto';
+
+    // 혹시 Detail 컴포넌트 DOM 잔여물이 있다면 제거
+    const detailComponent = document.querySelector('.fixed.inset-0');
+    if (detailComponent) {
+      detailComponent.remove(); // DOM에서 제거
+    }
   }
 });
 

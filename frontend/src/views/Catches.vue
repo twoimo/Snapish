@@ -194,13 +194,23 @@ const hasMoreItems = computed(() => {
 
 const filteredCatches = computed(() => {
     if (!catches.value) return [];
-    const allFilteredCatches = catches.value.filter(catchItem => {
-        return catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase());
-    });
+    const allFilteredCatches = catches.value.filter(catchItem => 
+        catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
 
-    const sortedCatches = allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id);
-    
-    return sortedCatches;
+    if (sortOption.value === 'latest') {
+        // 가장 최근 날짜와 시간, 그리고 ID 기준으로 내림차순 정렬
+        return allFilteredCatches
+            .slice()
+            .sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id);
+    } else if (sortOption.value === 'oldest') {
+        // 오래된 날짜와 시간, 그리고 ID 기준으로 오름차순 정렬
+        return allFilteredCatches
+            .slice()
+            .sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
+    }
+
+    return allFilteredCatches;
 });
 
 onMounted(async () => {
@@ -262,18 +272,17 @@ function loadMoreCatches() {
     isLoadingMore.value = true;
 
     const loadNextBatch = async () => {
-        if (!catches.value || !catches.value.length) {
-            isLoadingMore.value = false;
-            return;
-        }
-
-        const allFilteredCatches = catches.value.filter(catchItem => 
-            catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
-
         const sortedCatches = sortOption.value === 'latest'
-            ? allFilteredCatches.sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
-            : allFilteredCatches.sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
+            ? catches.value
+                .filter(catchItem => 
+                    catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
+                )
+                .sort((a, b) => new Date(b.catch_date) - new Date(a.catch_date) || b.id - a.id)
+            : catches.value
+                .filter(catchItem => 
+                    catchItem.detections[0].label.toLowerCase().includes(searchQuery.value.toLowerCase())
+                )
+                .sort((a, b) => new Date(a.catch_date) - new Date(b.catch_date) || a.id - b.id);
 
         const nextItems = sortedCatches.slice(
             displayCount.value,
