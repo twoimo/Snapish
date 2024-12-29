@@ -5,6 +5,9 @@ import { fetchMulddae } from "../services/mulddaeService";
 
 const baseUrl = process.env.VUE_APP_BASE_URL;
 
+// Existing actions
+let isFetching = false;
+
 export default createStore({
   state: {
     // Existing state
@@ -102,24 +105,26 @@ export default createStore({
     },
   },
   actions: {
-    // Existing actions
     async fetchMulddae({ commit }) {
+      if (isFetching) {
+        console.log("info: Already fetching mulddae data, request ignored.");
+        return;
+      }
+
       console.log("vuex : fetchMulddae action triggered.");
+      isFetching = true;
       commit("setLoading", true);
 
       try {
-        // localStorage에서 데이터 확인
         const cachedMulddae = localStorage.getItem("mulddae");
-        const cachedDate = localStorage.getItem("mulddaeDate"); // 이전에 저장된 날짜
+        const cachedDate = localStorage.getItem("mulddaeDate");
         const now = new Date();
-        const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', ''); // 오늘 날짜 (yyyy-mm-dd 형식)
+        const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');
 
-        // 캐시된 데이터와 날짜 확인
         if (cachedMulddae && cachedDate === today) {
           console.log("success : Loaded mulddae from localStorage.");
           commit("setMulddae", JSON.parse(cachedMulddae));
         } else {
-          // 날짜가 다르거나 데이터가 없는 경우
           if (!cachedDate) {
             console.log(
               "info : mulddaeDate is not found in localStorage, fetching new data."
@@ -130,17 +135,13 @@ export default createStore({
             );
           }
 
-          // 물때 정 API 호출
           const mulddaeData = await fetchMulddae(today);
           commit("setMulddae", mulddaeData);
 
-          // 캐시에 저장 (오늘 날짜와 데이터)
           localStorage.setItem("mulddae", JSON.stringify(mulddaeData));
           localStorage.setItem("mulddaeDate", today);
         }
 
-        // **유효성 검증 로직 추가**
-        // 캐시된 날짜가 하루를 초과하면 자동 삭제
         const previousDate = cachedDate ? new Date(cachedDate) : null;
         if (previousDate && now.getDate() !== previousDate.getDate()) {
           console.log("info : Cached mulddae expired, clearing old data.");
@@ -151,6 +152,7 @@ export default createStore({
         console.error("Error fetching mulddae:", error);
         commit("setError", error);
       } finally {
+        isFetching = false;
         commit("setLoading", false);
       }
     },

@@ -76,7 +76,15 @@ const currentDate = computed(() => {
 
 const fetchTodayMulddae = () => {
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '')
-  store.dispatch('fetchMulddae', today)
+  const cachedDate = localStorage.getItem("mulddaeDate")
+  
+  // 캐시된 데이터가 없거나 날짜가 다른 경우에만 fetch 실행
+  if (!cachedDate || cachedDate !== today) {
+    console.log("info: No cached data found or date mismatch, fetching new data")
+    store.dispatch('fetchMulddae', today)
+  } else {
+    console.log("info: Using cached mulddae data")
+  }
 }
 
 const getMoonIcon = (phase) => {
