@@ -118,10 +118,15 @@ export default createStore({
       try {
         const cachedMulddae = localStorage.getItem("mulddae");
         const cachedDate = localStorage.getItem("mulddaeDate");
+        const cachedTimestamp = localStorage.getItem("mulddaeTimestamp");
         const now = new Date();
         const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');
 
-        if (cachedMulddae && cachedDate === today) {
+        // maxAge를 1시간(3600000 밀리초)으로 설정
+        const MAX_AGE = 3600000;
+        const isExpired = cachedTimestamp && (now.getTime() - parseInt(cachedTimestamp) > MAX_AGE);
+
+        if (cachedMulddae && cachedDate === today && !isExpired) {
           console.log("success : Loaded mulddae from localStorage.");
           commit("setMulddae", JSON.parse(cachedMulddae));
         } else {
@@ -140,6 +145,7 @@ export default createStore({
 
           localStorage.setItem("mulddae", JSON.stringify(mulddaeData));
           localStorage.setItem("mulddaeDate", today);
+          localStorage.setItem("mulddaeTimestamp", now.getTime().toString());
         }
 
         const previousDate = cachedDate ? new Date(cachedDate) : null;
