@@ -273,25 +273,13 @@ export default {
               'Authorization': `Bearer ${store.state.token}`
             }
           })
-
-          // Vuex store 업데이트
           await store.dispatch('updatePost', response.data.post)
-        } else {
-          const response = await axios.post('/api/posts', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${store.state.token}`
-            }
-          })
-
-          // Vuex store 업데이트
-          await store.dispatch('addPost', response.data.post)
         }
-
+        
         router.push('/community')
       } catch (error) {
         console.error('Error saving post:', error)
-        alert(route.params.id ? '게시물 수정 중 오류가 발생했습니다.' : '게시물 작성 중 오류가 발생했습니다.')
+        alert('게시물 수정 중 오류가 발생했습니다.')
       } finally {
         isSubmitting.value = false
       }

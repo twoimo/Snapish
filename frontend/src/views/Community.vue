@@ -77,9 +77,9 @@
               </p>
               
               <!-- Image gallery -->
-              <div v-if="post.images?.length" class="space-y-4">
+              <div v-if="post.images?.length" class="space-y-4 max-w-4xl mx-auto">
                 <div 
-                  class="relative rounded-2xl"
+                  class="relative rounded-2xl bg-gray-50"
                   :data-post-id="post.post_id"
                   @touchstart="handleTouchStart($event, post)"
                   @touchmove="handleTouchMove($event, post)"
@@ -87,7 +87,7 @@
                   style="touch-action: pan-y;"
                 >
                   <!-- Image container -->
-                  <div class="relative w-full overflow-hidden" ref="imageContainer">
+                  <div class="relative w-full overflow-hidden rounded-2xl" ref="imageContainer">
                     <div 
                       class="flex w-full transition-transform duration-300"
                       :style="{
@@ -101,14 +101,15 @@
                         class="w-full flex-shrink-0"
                         :style="{ width: `${100 / post.images.length}%` }"
                       >
-                        <img 
-                          :src="image" 
-                          alt="Post image"
-                          class="w-full h-full object-cover"
-                          style="max-height: 32rem;"
-                          loading="lazy"
-                          @load="onImageLoad"
-                        >
+                        <div class="relative w-full pb-[56.25%]"> <!-- 16:9 비율로 변경 -->
+                          <img 
+                            :src="image" 
+                            alt="Post image"
+                            class="absolute inset-0 w-full h-full object-contain bg-gray-50"
+                            loading="lazy"
+                            @load="onImageLoad"
+                          >
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -798,33 +799,67 @@ img.loaded {
   color: #333;
 }
 
-/* Post content text styles */
-.break-all {
-  word-break: break-all;
-  overflow-wrap: break-word;
-  white-space: normal;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+/* Add responsive image container styles */
+.image-container {
+  max-height: 480px; /* 최대 높이 설정 */
+  margin: 0 auto;
   overflow: hidden;
 }
 
-.whitespace-pre-wrap {
-  white-space: pre-wrap;
+@media (max-width: 768px) {
+  .image-container {
+    max-height: 360px;
+  }
 }
 
-/* 기존 break-words 스타일 제거 또는 대체 */
-.text-gray-600 {
-  max-width: 100%;
-  line-height: 1.6;
+@media (max-width: 480px) {
+  .image-container {
+    max-height: 240px;
+  }
 }
 
-h2.text-2xl {
+/* Optimize image loading */
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+}
+
+/* 이미지 컨테이너 크기 제한 */
+.image-container {
+  max-height: 400px; /* 데스크톱에서의 최대 높이 */
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* 반응형 이미지 크기 조정 */
+@media (max-width: 1024px) {
+  .image-container {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .image-container {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .image-container {
+    max-height: 240px;
+  }
+}
+
+/* 이미지 최적화 */
+img {
+  max-height: 100vh;
   max-width: 100%;
-  line-height: 1.4;
+  margin: auto;
+  object-fit: contain !important;
 }
 </style>
 
