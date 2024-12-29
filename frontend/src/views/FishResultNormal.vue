@@ -105,7 +105,7 @@
             </span>
           </span>
         </p>
-        <p v-else class="mt-2">
+        <p v-else>
           <span class="text-gray-700">{{ fishDescription || '설명 없음' }}</span>
           <span class="block text-xs text-gray-700 mt-1">MBRIS 생물종 상세정보 기반 생성형 답변입니다.</span>
         </p>
