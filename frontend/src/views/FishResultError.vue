@@ -1,12 +1,18 @@
 <template>
     <div class="min-h-screen bg-white flex flex-col">
         <!-- 헤더 -->
-        <header class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-10 max-w-md mx-auto">
+        <header
+            class="fixed top-0 left-0 right-0 bg-white px-4 py-3 flex items-center justify-between border-b z-10 max-w-md mx-auto">
             <div class="flex items-center">
                 <button class="mr-2" @click="goHome">
                     <ChevronLeftIcon class="w-6 h-6" />
                 </button>
                 <h1 class="text-xl font-bold">오류 발생</h1>
+            </div>
+            <div class="flex items-center">
+                <button class="p-2" @click="handleLogout" title="로그아웃">
+                    <LogOutIcon class="w-6 h-6" />
+                </button>
             </div>
         </header>
 
@@ -39,13 +45,15 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeftIcon } from 'lucide-vue-next';
+import { ChevronLeftIcon, LogOutIcon } from 'lucide-vue-next';
+import { useStore } from 'vuex';  // Add this import
 
 // 이미지 불러오기
 import errorImagePath from '@/assets/images/Error_Page.png';
 
 const route = useRoute();
 const router = useRouter();
+const store = useStore();  // Add this line
 
 const errorTypes = {
     no_detection: {
@@ -85,6 +93,12 @@ const errorImage = errorImagePath; // 불러온 이미지 경로를 바인딩
 
 const goHome = () => {
     router.push('/');
+};
+
+// Add logout handler
+const handleLogout = async () => {
+    await store.dispatch('logout')
+    router.push('/login')
 };
 </script>
 
