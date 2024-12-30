@@ -52,6 +52,8 @@
 
                                 // 2. 지도 생성이 끝난 후 클러스터러 실행
                                 map.addListener('tilesloaded', () => { // 지도 타일 로드 완료 이벤트
+                                    console.log('지도 타일이 모두 로드되었습니다.');
+                                    
                                     var clusterer = new kakao.maps.MarkerClusterer({
                                         map: map,
                                         averageCenter: true,
