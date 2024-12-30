@@ -55,6 +55,9 @@ const cameraInput = ref(null);
 const galleryInput = ref(null);
 const fileInput = ref(null);
 
+// 파일 업로드 용량 제한
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 // 옵션 목록
 const options = [
     { text: '사진 촬영', action: 'camera' },
@@ -97,6 +100,12 @@ const handleOption = (action) => {
 const onFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+            alert('파일 용량이 너무 큽니다. 10MB 이하의 파일을 선택해주세요.');
+            event.target.value = ''; // 파일 입력 초기화
+            return;
+        }
+
         try {
             // 전역 로딩 상태 활성화
             store.dispatch('setGlobalLoading', true);
