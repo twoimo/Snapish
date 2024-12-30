@@ -41,6 +41,7 @@
 
                     script.onload = () => { 
                         kakao.maps.load(() => {
+                            // 1. 지도 생성
                             var container = document.getElementById('kakaoMap');
                             var options = {
                                 center: new kakao.maps.LatLng(36.0, 128.0),
@@ -48,22 +49,25 @@
                             };
                             var map = new kakao.maps.Map(container, options);
 
-                            var clusterer = new kakao.maps.MarkerClusterer({
-                                map: map,
-                                averageCenter: true,
-                                minLevel: 10
-                            });
-
-                            var markers = this.locations.map(location => {
-                                return new kakao.maps.Marker({
-                                    position: new kakao.maps.LatLng(
-                                        parseFloat(location.latitude),
-                                        parseFloat(location.longitude)
-                                    ),
+                            // 2. 지도 생성이 끝난 후 클러스터러 실행
+                            map.addListener('tilesloaded', () => { // 지도 타일 로드 완료 이벤트
+                                var clusterer = new kakao.maps.MarkerClusterer({
+                                    map: map,
+                                    averageCenter: true,
+                                    minLevel: 10
                                 });
-                            });
 
-                            clusterer.addMarkers(markers);
+                                var markers = this.locations.map(location => {
+                                    return new kakao.maps.Marker({
+                                        position: new kakao.maps.LatLng(
+                                            parseFloat(location.latitude),
+                                            parseFloat(location.longitude)
+                                        ),
+                                    });
+                                });
+
+                                clusterer.addMarkers(markers);
+                            });
                         });
                     };
                 } catch (error) {
