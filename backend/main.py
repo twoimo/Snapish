@@ -329,7 +329,7 @@ baseUrl = os.getenv('BASE_URL')
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": [f'{baseUrl}:5000', f'{baseUrl}'],
+    "origins": [f'{baseUrl}:5000', f'{baseUrl}:80'],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
@@ -1425,32 +1425,24 @@ def update_post(user_id, post_id):
         if not post:
             return jsonify({'error': '게시물을 찾을 수 없거나 수정 권한이 없습니다.'}), 404
 
+        # 현재 이미지 목록 백업
+        current_images = post.images.copy() if post.images else []
+
+        # 폼 데이터와 파일 가져오기
         data = request.form
         new_images = request.files.getlist('images')
         removed_images = request.form.getlist('removed_images[]')
+        existing_images = request.form.getlist('existing_images[]')
 
-        # Initialize images list if it doesn't exist
-        if not hasattr(post, 'images') or post.images is None:
-            post.images = []
-        elif not isinstance(post.images, list):
-            post.images = []
+        # 이미지 목록 초기화
+        post.images = []
 
-        # Handle removed images
-        if removed_images:
-            logging.info(f"Removing images: {removed_images}")
-            for image_url in removed_images:
-                if image_url in post.images:
-                    try:
-                        post.images.remove(image_url)
-                        # Delete the actual file
-                        image_path = os.path.join(app.root_path, image_url.lstrip('/'))
-                        if os.path.exists(image_path):
-                            os.remove(image_path)
-                            logging.info(f"Deleted file: {image_path}")
-                    except Exception as e:
-                        logging.error(f"Error removing image {image_url}: {str(e)}")
+        # 기존 이미지 처리
+        for image_url in existing_images:
+            if image_url in current_images:
+                post.images.append(image_url)
 
-        # Add new images
+        # 새 이미지 처리
         for image in new_images:
             if image and allowed_file(image.filename):
                 try:
@@ -1458,29 +1450,36 @@ def update_post(user_id, post_id):
                     image_path = os.path.join(UPLOAD_FOLDER, filename)
                     image.save(image_path)
                     post.images.append(f'/uploads/{filename}')
-                    logging.info(f"Added new image: {filename}")
                 except Exception as e:
                     logging.error(f"Error saving image {image.filename}: {str(e)}")
 
-        # Update post content
+        # 삭제된 이미지 파일 제거
+        for image_url in removed_images:
+            if image_url in current_images:
+                try:
+                    file_path = os.path.join(app.root_path, image_url.lstrip('/'))
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                except Exception as e:
+                    logging.error(f"Error removing file {image_url}: {str(e)}")
+
+        # 게시물 내용 업데이트
         post.title = data.get('title', post.title)
         post.content = data.get('content', post.content)
         post.updated_at = datetime.utcnow()
 
         session.commit()
-        
-        # Prepare response with updated data
+
         response_data = {
             'message': '게시물이 성공적으로 수정되었습니다.',
             'post': {
                 'post_id': post.post_id,
                 'title': post.title,
                 'content': post.content,
-                'images': [get_full_url(url) for url in (post.images or [])],
+                'images': [get_full_url(url) for url in post.images],
                 'updated_at': post.updated_at.isoformat()
             }
         }
-        logging.info(f"Successfully updated post {post_id} with images: {post.images}")
         return jsonify(response_data)
 
     except Exception as e:

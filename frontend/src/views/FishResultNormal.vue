@@ -9,12 +9,9 @@
         </button>
         <h1 class="text-xl font-bold">물고기 판별 결과</h1>
       </div>
-      <div class="flex items-center gap-4">
-        <button class="p-2" :disabled="isLoading">
-          <BellIcon class="w-6 h-6" />
-        </button>
-        <button class="p-2" :disabled="isLoading">
-          <Settings2Icon class="w-6 h-6" />
+      <div class="flex items-center">
+        <button class="p-2" @click="handleLogout" title="로그아웃">
+          <LogOutIcon class="w-6 h-6" />
         </button>
       </div>
     </header>
@@ -221,7 +218,7 @@ console.log("FishResultNormal script loaded"); // Debugging log
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import html2canvas from 'html2canvas';
-import { ChevronLeftIcon, BellIcon, Settings2Icon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
+import { ChevronLeftIcon, LogOutIcon, Share2Icon, InfoIcon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
@@ -607,6 +604,11 @@ const openEditModal = () => {
     console.error('Catch ID not found in route query'); // Debugging log
     alert('수정할 수 있는 물고기 정보가 없습니다.');
   }
+};
+
+const handleLogout = async () => {
+  await store.dispatch('logout')
+  router.push('/login')
 };
 </script>
 

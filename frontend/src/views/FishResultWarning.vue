@@ -9,12 +9,9 @@
           </button>
           <h1 class="text-xl font-bold">물고기 판별 결과</h1>
         </div>
-        <div class="flex items-center gap-4">
-          <button class="p-2">
-            <BellIcon class="w-6 h-6" />
-          </button>
-          <button class="p-2">
-            <Settings2Icon class="w-6 h-6" />
+        <div class="flex items-center">
+          <button class="p-2" @click="handleLogout" title="로그아웃">
+            <LogOutIcon class="w-6 h-6" />
           </button>
         </div>
       </header>
@@ -163,6 +160,24 @@
           </div>
         </div>
 
+        <!-- 포토카드 모달 -->
+        <div v-if="showModal && !loading"
+          class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] max-w-md mx-auto">
+          <div class="bg-white rounded-lg shadow-lg p-6 w-10/12 max-w-sm">
+            <h2 class="text-lg font-bold mb-4 text-center">나만의 포토카드</h2>
+            <div ref="photocard" class="bg-gray-100 p-4 rounded-lg overflow-auto">
+              <img :src="imageSource" alt="물고기 사진" class="w-full h-64 object-contain rounded-lg" />
+              <h3 class="text-md font-semibold mt-4 text-center">{{ detections[0].label }}</h3>
+              <p class="text-center text-sm">신뢰도: {{ (detections[0].confidence * 100).toFixed(2) }}%</p>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+              <button @click="closeModal" class="px-4 py-2 bg-gray-300 rounded" :disabled="loading">닫기</button>
+              <button @click="downloadPhotocard" class="px-4 py-2 bg-blue-500 text-white rounded"
+                :disabled="loading">저장하기</button>
+            </div>
+          </div>
+        </div>
+
       </main>
 
       <!-- 이미지 팝업 -->
@@ -178,20 +193,6 @@
               <X class="w-5 h-5 text-gray-600" />
             </button>
           </div>
-        </div>
-      </div>
-
-      <!-- 공유 모달 -->
-      <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-        <div class="bg-white p-6 rounded-lg relative">
-          <button class="absolute top-2 right-2" @click="showModal = false">
-            &times;
-          </button>
-          <h2 class="text-xl font-bold mb-4">공유하기</h2>
-          <!-- 공유 옵션들 -->
-          <button class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg mb-2">Facebook으로 공유</button>
-          <button class="w-full bg-blue-700 text-white py-2 px-4 rounded-lg mb-2">Twitter로 공유</button>
-          <button class="w-full bg-green-500 text-white py-2 px-4 rounded-lg">링크 복사</button>
         </div>
       </div>
 
@@ -212,11 +213,12 @@ console.log("FishResultWarning script loaded"); // Debugging log
 
 import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeftIcon, AlertTriangleIcon, BellIcon, Settings2Icon, InfoIcon, Share2Icon, Edit, X } from 'lucide-vue-next';
+import { ChevronLeftIcon, AlertTriangleIcon, LogOutIcon, InfoIcon, Share2Icon, Edit, X } from 'lucide-vue-next';
 import { useStore } from 'vuex';
 import ConsentModal from '../components/ConsentModal.vue';
 import EditFishModal from '../components/EditFishModal.vue';
 import axios from 'axios';
+import html2canvas from 'html2canvas';
 
 const store = useStore();
 const route = useRoute();
@@ -544,6 +546,31 @@ watch(
   },
   { deep: true }
 );
+
+const handleLogout = async () => {
+  await store.dispatch('logout')
+  router.push('/login')
+};
+
+// 포토카드 모달 상태 추가
+const photocard = ref(null);
+
+// 포토카드 모달 닫기
+const closeModal = () => {
+  showModal.value = false;
+};
+
+// 포토카드 다운로드
+const downloadPhotocard = () => {
+  if (photocard.value) {
+    html2canvas(photocard.value, { useCORS: true, scale: 2 }).then((canvas) => {
+      const link = document.createElement('a');
+      link.download = 'photocard.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+};
 </script>
 
 <style scoped>

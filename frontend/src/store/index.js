@@ -5,6 +5,9 @@ import { fetchMulddae } from "../services/mulddaeService";
 
 const baseUrl = process.env.VUE_APP_BASE_URL;
 
+// Existing actions
+let isFetching = false;
+
 export default createStore({
   state: {
     // Existing state
@@ -28,6 +31,7 @@ export default createStore({
     },
     globalLoading: false,
     services: [],
+    posts: []
   },
   mutations: {
     // Existing mutations
@@ -100,26 +104,45 @@ export default createStore({
     SET_SERVICES(state, services) {
       state.services = services;
     },
+    setPosts(state, posts) {
+      state.posts = posts;
+    },
+    UPDATE_POST(state, updatedPost) {
+      const index = state.posts.findIndex(post => post.post_id === updatedPost.post_id)
+      if (index !== -1) {
+        state.posts.splice(index, 1, updatedPost)
+      }
+    },
+    ADD_POST(state, newPost) {
+      state.posts.unshift(newPost)
+    }
   },
   actions: {
-    // Existing actions
     async fetchMulddae({ commit }) {
+      if (isFetching) {
+        console.log("info: Already fetching mulddae data, request ignored.");
+        return;
+      }
+
       console.log("vuex : fetchMulddae action triggered.");
+      isFetching = true;
       commit("setLoading", true);
 
       try {
-        // localStorage에서 데이터 확인
         const cachedMulddae = localStorage.getItem("mulddae");
-        const cachedDate = localStorage.getItem("mulddaeDate"); // 이전에 저장된 날짜
+        const cachedDate = localStorage.getItem("mulddaeDate");
+        const cachedTimestamp = localStorage.getItem("mulddaeTimestamp");
         const now = new Date();
-        const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', ''); // 오늘 날짜 (yyyy-mm-dd 형식)
+        const today = now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '');
 
-        // 캐시된 데이터와 날짜 확인
-        if (cachedMulddae && cachedDate === today) {
+        // maxAge를 1시간(3600000 밀리초)으로 설정
+        const MAX_AGE = 3600000;
+        const isExpired = cachedTimestamp && (now.getTime() - parseInt(cachedTimestamp) > MAX_AGE);
+
+        if (cachedMulddae && cachedDate === today && !isExpired) {
           console.log("success : Loaded mulddae from localStorage.");
           commit("setMulddae", JSON.parse(cachedMulddae));
         } else {
-          // 날짜가 다르거나 데이터가 없는 경우
           if (!cachedDate) {
             console.log(
               "info : mulddaeDate is not found in localStorage, fetching new data."
@@ -130,17 +153,14 @@ export default createStore({
             );
           }
 
-          // 물때 정 API 호출
           const mulddaeData = await fetchMulddae(today);
           commit("setMulddae", mulddaeData);
 
-          // 캐시에 저장 (오늘 날짜와 데이터)
           localStorage.setItem("mulddae", JSON.stringify(mulddaeData));
           localStorage.setItem("mulddaeDate", today);
+          localStorage.setItem("mulddaeTimestamp", now.getTime().toString());
         }
 
-        // **유효성 검증 로직 추가**
-        // 캐시된 날짜가 하루를 초과하면 자동 삭제
         const previousDate = cachedDate ? new Date(cachedDate) : null;
         if (previousDate && now.getDate() !== previousDate.getDate()) {
           console.log("info : Cached mulddae expired, clearing old data.");
@@ -151,6 +171,7 @@ export default createStore({
         console.error("Error fetching mulddae:", error);
         commit("setError", error);
       } finally {
+        isFetching = false;
         commit("setLoading", false);
       }
     },
@@ -466,6 +487,24 @@ export default createStore({
         throw error;
       }
     },
+    async fetchPosts({ commit }) {
+      try {
+        const response = await axios.get('/api/posts', {
+          headers: {
+            'Authorization': `Bearer ${this.state.token}`
+          }
+        })
+        commit('setPosts', response.data.posts)
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+      }
+    },
+    async updatePost({ commit }, post) {
+      commit('UPDATE_POST', post)
+    },
+    async addPost({ commit }, post) {
+      commit('ADD_POST', post)
+    }
   },
   getters: {
     // Existing getters

@@ -60,13 +60,26 @@
 
             <!-- Post content -->
             <div class="space-y-4">
-              <h2 class="text-2xl font-bold text-gray-900 leading-tight">{{ post.title }}</h2>
-              <p class="text-gray-600 leading-relaxed">{{ post.content }}</p>
+              <h2 class="text-2xl font-bold text-gray-900 leading-tight break-all line-clamp-2">{{ post.title }}</h2>
+              <p class="text-gray-600 leading-relaxed break-all whitespace-pre-wrap">
+                <template v-if="post.content.length > 200">
+                  {{ post.showFullContent ? post.content : post.content.slice(0, 200) + '...' }}
+                  <button
+                    @click="post.showFullContent = !post.showFullContent"
+                    class="text-blue-500 hover:text-blue-600 font-medium ml-1 inline-block"
+                  >
+                    {{ post.showFullContent ? '접기' : '더보기' }}
+                  </button>
+                </template>
+                <template v-else>
+                  {{ post.content }}
+                </template>
+              </p>
               
               <!-- Image gallery -->
-              <div v-if="post.images?.length" class="space-y-4">
+              <div v-if="post.images?.length" class="space-y-4 max-w-4xl mx-auto">
                 <div 
-                  class="relative rounded-2xl"
+                  class="relative rounded-2xl bg-gray-50"
                   :data-post-id="post.post_id"
                   @touchstart="handleTouchStart($event, post)"
                   @touchmove="handleTouchMove($event, post)"
@@ -74,7 +87,7 @@
                   style="touch-action: pan-y;"
                 >
                   <!-- Image container -->
-                  <div class="relative w-full overflow-hidden" ref="imageContainer">
+                  <div class="relative w-full overflow-hidden rounded-2xl" ref="imageContainer">
                     <div 
                       class="flex w-full transition-transform duration-300"
                       :style="{
@@ -320,7 +333,8 @@ export default {
           currentImageIndex: 0,
           translateX: 0,
           isDragging: false,
-          containerWidth: 0
+          containerWidth: 0,
+          showFullContent: false  // 추가된 속성
         }))
         totalPages.value = response.data.pages
       } catch (error) {
@@ -409,15 +423,18 @@ export default {
     }
 
     const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat('ko-KR', {
+      const date = new Date(dateString);
+      date.setHours(date.getHours() + 9); // Manually add 9 hours
+      const options = {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      }).format(date)
-    }
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Intl.DateTimeFormat('ko-KR', options).format(date);
+    };
 
     const sharePost = async (post) => {
       try {
@@ -779,6 +796,69 @@ img.loaded {
 .comment-content {
   margin: 0;
   color: #333;
+}
+
+/* Add responsive image container styles */
+.image-container {
+  max-height: 480px; /* 최대 높이 설정 */
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .image-container {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-container {
+    max-height: 240px;
+  }
+}
+
+/* Optimize image loading */
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+}
+
+/* 이미지 컨테이너 크기 제한 */
+.image-container {
+  max-height: 400px; /* 데스크톱에서의 최대 높이 */
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* 반응형 이미지 크기 조정 */
+@media (max-width: 1024px) {
+  .image-container {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .image-container {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .image-container {
+    max-height: 240px;
+  }
+}
+
+/* 이미지 최적화 */
+img {
+  max-height: 100vh;
+  max-width: 100%;
+  margin: auto;
+  object-fit: contain !important;
 }
 </style>
 
