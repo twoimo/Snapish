@@ -1,5 +1,10 @@
 # 낚시 입문자를 위한 금어종 판별 AI 웹 서비스
-![image](https://github.com/user-attachments/assets/ce26f167-06ef-4978-b4bb-d459eeed751b)
+
+<p align="center">
+  <img src="frontend/public/header_snapish.png">
+</p>
+
+
 
 # 서버 설정 (/etc/rc.local)
 ```bash
