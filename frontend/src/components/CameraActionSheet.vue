@@ -31,7 +31,7 @@
 
     <!-- 로딩 오버레이 -->
     <div v-if="isGlobalLoading" class="loading-overlay">
-        <div class="spinner"></div>
+        <img src="/loading_overlay_white.png" alt="Loading" class="floating-image" />
     </div>
 </template>
 
@@ -342,18 +342,22 @@ const handlePredictResponse = async (data) => {
     z-index: 9999;
 }
 
-.spinner {
-    border: 16px solid #f3f3f3;
-    border-top: 16px solid #3498db;
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    animation: spin 2s linear infinite;
+.floating-image {
+    width: 300px; /* 원하는 너비로 설정 */
+    height: 140px; /* 원하는 높이로 설정 */
+    animation: float 2.5s ease-in-out infinite;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
 </style>
