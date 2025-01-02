@@ -28,10 +28,15 @@
         @change="onFileChange" />
     <input ref="galleryInput" type="file" accept="image/*" style="display: none;" @change="onFileChange" />
     <input ref="fileInput" type="file" accept="*/*" style="display: none;" @change="onFileChange" />
+
+    <!-- 로딩 오버레이 -->
+    <div v-if="isGlobalLoading" class="loading-overlay">
+        <img src="/loading_overlay_white.png" alt="Loading" class="floating-image" />
+    </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref , computed } from 'vue';
 import axios from '../axios'; // Ensure this is the correct path to your Axios instance
 import { useRouter } from 'vue-router';
 import store from '../store'; // Vuex store 임포트
@@ -54,6 +59,12 @@ const router = useRouter();
 const cameraInput = ref(null);
 const galleryInput = ref(null);
 const fileInput = ref(null);
+
+// 파일 업로드 용량 제한
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// 전역 로딩 상태 가져오기
+const isGlobalLoading = computed(() => store.getters.isGlobalLoading);
 
 // 옵션 목록
 const options = [
@@ -97,6 +108,12 @@ const handleOption = (action) => {
 const onFileChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+            alert('파일 용량이 너무 큽니다. 10MB 이하의 파일을 선택해주세요.');
+            event.target.value = ''; // 파일 입력 초기화
+            return;
+        }
+
         try {
             // 전역 로딩 상태 활성화
             store.dispatch('setGlobalLoading', true);
@@ -311,4 +328,36 @@ const handlePredictResponse = async (data) => {
     /* 버튼 간 간격 */
     margin-top: 0.5rem;
 }
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.floating-image {
+    width: 300px; /* 원하는 너비로 설정 */
+    height: 140px; /* 원하는 높이로 설정 */
+    animation: float 2.5s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
 </style>

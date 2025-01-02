@@ -105,6 +105,9 @@ const store = useStore();
 const router = useRouter();
 const avatarInput = ref(null);
 
+// 파일 업로드 용량 제한
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 const user = computed(() => store.getters.user);
 const stats = computed(() => {
     const originalStats = store.getters.stats;
@@ -148,8 +151,16 @@ const triggerFileInput = () => {
 };
 
 const uploadAvatar = async (event) => {
-    const file = event.target.files[0];
+    const file = event.target.files[0]
+
     if (file) {
+        if (file.size > MAX_FILE_SIZE) {
+            alert('파일 용량이 너무 큽니다. 10MB 이하의 파일을 선택해주세요.');
+            event.target.value = ''; // 파일 입력 초기화
+            return;
+        }
+
+
         const formData = new FormData();
         formData.append('avatar', file);
         try {
