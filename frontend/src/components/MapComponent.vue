@@ -102,7 +102,7 @@
                                         parseFloat(this.locations[0].latitude),
                                         parseFloat(this.locations[0].longitude)
                                     ),
-                                    level: 15
+                                    level: 5
                                 };
                                 const map = new kakao.maps.Map(container, options);
 
