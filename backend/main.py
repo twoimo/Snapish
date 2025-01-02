@@ -329,7 +329,7 @@ baseUrl = os.getenv('BASE_URL')
 # Flask 앱 초기화
 app = Flask(__name__)
 CORS(app, resources={r"/*": {
-    "origins": [f'{baseUrl}:5000', f'{baseUrl}:80'],  # Ensure this matches your frontend's origin
+    "origins": [f'{baseUrl}:5000', f'{baseUrl}'],  # Ensure this matches your frontend's origin
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }}, supports_credentials=True)
@@ -406,7 +406,7 @@ def hello():
     return 'Welcome to SNAPISH'
 
 # 물떼 정보 받아오기
-@app.route('/backend/mulddae', methods=['POST'])
+@app.route('/backend/mulddae', methods=['POST', 'GET'])
 def get_mulddae():
     now_date = request.form.get('nowdate')
     if not now_date:
@@ -457,7 +457,7 @@ def token_required(f):
         return f(user_id, *args, **kwargs)
     return decorated
 
-@app.route('/signup', methods=['POST'])
+@app.route('/signup', methods=['POST', 'GET'])
 def signup():
     data = request.get_json()
     username = data.get('username')
@@ -490,7 +490,7 @@ def signup():
 
     return jsonify({'message': '회원가입이 성공적으로 완료되었습니다.'}), 201
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
     data = request.get_json()
     username = data.get('username')
@@ -548,7 +548,7 @@ def optimize_image(image, max_size=1024):
     return buffer
 
 # predict 라트 수정
-@app.route('/backend/predict', methods=['POST'])
+@app.route('/backend/predict', methods=['POST', 'GET'])
 def predict():
     try:
         if 'image' in request.files:
@@ -695,7 +695,7 @@ def predict():
         logging.error(f"Error processing image: {e}")
         return jsonify({'error': '이미지 처리 중 오류가 발생했습니다.'}), 500
     
-@app.route('/backend/chat/<thread_id>/<run_id>', methods=['GET'])
+@app.route('/backend/chat/<thread_id>/<run_id>', methods=['GET', 'POST'])
 def assistant_talk_result(thread_id, run_id):
     try:
         formatted_text = assistant_talk_get(thread_id, run_id)
@@ -764,7 +764,7 @@ def profile(user_id):
         session.close()
         return jsonify({'message': '프로필이 성공적으로 업데이트되었습니다.'}), 200
 
-@app.route('/recent-activities', methods=['GET'])
+@app.route('/recent-activities', methods=['GET', 'POST'])
 @token_required
 def recent_activities(user_id):
     session = Session()
@@ -822,7 +822,7 @@ def create_catch(user_id):
     finally:
         session.close()
 
-@app.route('/catches', methods=['GET'])
+@app.route('/catches', methods=['GET', 'POST'])
 @token_required
 def get_catches(user_id):
     session = Session()
@@ -941,7 +941,7 @@ def delete_catch(user_id, catch_id):
         logging.error(f"Error deleting catch: {e}")
         return jsonify({'error': 'Error deleting catch'}), 500
 
-@app.route('/uploads/<path:filename>', methods=['GET'])
+@app.route('/uploads/<path:filename>', methods=['GET', 'POST'])
 def uploaded_file(filename):
     response = send_from_directory('uploads', filename)
     # 캐시 컨트롤 헤더 추가
@@ -949,7 +949,7 @@ def uploaded_file(filename):
     response.headers['Vary'] = 'Accept-Encoding'
     return response
 
-@app.route('/backend/get-detections', methods=['GET'])
+@app.route('/backend/get-detections', methods=['GET', 'POST'])
 @token_required
 def get_detections(user_id):
     imageUrl = request.args.get('imageUrl')
@@ -969,7 +969,7 @@ def get_detections(user_id):
         logging.error(f"Error in get_detections: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/map_fishing_spot', methods=['POST'])
+@app.route('/api/map_fishing_spot', methods=['POST', 'GET'])
 # 추후 Token 관련 데코레이터 ��가할 것
 def map_fishing_spot():
     session = Session()
@@ -1006,7 +1006,7 @@ if not os.path.exists(AVATAR_UPLOAD_FOLDER):
     os.makedirs(AVATAR_UPLOAD_FOLDER)
 
 # Endpoint to handle avatar upload
-@app.route('/profile/avatar', methods=['POST'])
+@app.route('/profile/avatar', methods=['POST', 'GET'])
 @token_required
 def upload_avatar(user_id):
     if 'avatar' not in request.files:
@@ -1042,7 +1042,7 @@ def upload_avatar(user_id):
         return jsonify({'error': 'Invalid file type'}), 400
     
 # 요청 위치 기준 가장 가까운 관 위치 반환 
-@app.route('/backend/closest-sealoc', methods=['POST'])
+@app.route('/backend/closest-sealoc', methods=['POST', 'GET'])
 def get_closest_sealoc():
     user_lat = request.form.get('lat')
     user_lon = request.form.get('lon')
@@ -1130,7 +1130,7 @@ def get_closest_sealoc():
     finally:
         session.close()
         
-@app.route('/backend/get-weather', methods=['POST'])
+@app.route('/backend/get-weather', methods=['POST', 'GET'])
 def get_weather_api():
     try:
         # Get and validate coordinates
@@ -1172,7 +1172,7 @@ def check_consent(user_id):
     finally:
         session.close()
 
-@app.route('/api/consent', methods=['POST'])
+@app.route('/api/consent', methods=['POST', 'GET'])
 @token_required
 def update_consent(user_id):
     data = request.get_json()
@@ -1197,7 +1197,7 @@ def update_consent(user_id):
         session.close()
 
 # 서비스 목록 API 추가
-@app.route('/api/services', methods=['GET'])
+@app.route('/api/services', methods=['GET', 'POST'])
 def get_services():
     # 기본 서비스 목록 반환
     services = [
@@ -1237,7 +1237,7 @@ def get_full_url(url):
     return f"{baseUrl}{url}"
 
 
-@app.route('/api/posts', methods=['GET'])
+@app.route('/api/posts', methods=['GET', 'POST'])
 @token_required
 def get_posts(user_id):
     try:
@@ -1295,7 +1295,7 @@ def get_posts(user_id):
     finally:
         session.close()
 
-@app.route('/api/posts', methods=['POST'])
+@app.route('/api/posts', methods=['POST', 'GET'])
 @token_required
 def create_post(user_id):
     session = Session()
@@ -1362,7 +1362,7 @@ def create_post(user_id):
     finally:
         session.close()
 
-@app.route('/api/posts/<int:post_id>', methods=['GET'])
+@app.route('/api/posts/<int:post_id>', methods=['GET', 'POST'])
 @token_required
 def get_post(user_id, post_id):
     session = Session()
@@ -1516,7 +1516,7 @@ def delete_post(user_id, post_id):
     finally:
         session.close()
 
-@app.route('/api/posts/<int:post_id>/like', methods=['POST'])
+@app.route('/api/posts/<int:post_id>/like', methods=['POST', 'GET'])
 @token_required
 def toggle_like(user_id, post_id):
     session = Session()
@@ -1561,7 +1561,7 @@ def toggle_like(user_id, post_id):
     finally:
         session.close()
 
-@app.route('/api/posts/<int:post_id>/comments', methods=['GET'])
+@app.route('/api/posts/<int:post_id>/comments', methods=['GET', 'POST'])
 @token_required
 def get_comments(user_id, post_id):
     session = Session()
@@ -1597,7 +1597,7 @@ def get_comments(user_id, post_id):
     finally:
         session.close()
 
-@app.route('/api/posts/<int:post_id>/comments', methods=['POST'])
+@app.route('/api/posts/<int:post_id>/comments', methods=['POST', 'GET'])
 @token_required
 def create_comment(user_id, post_id):
     session = Session()
@@ -1644,7 +1644,7 @@ def create_comment(user_id, post_id):
     finally:
         session.close()
 
-@app.route('/api/posts/top', methods=['GET'])
+@app.route('/api/posts/top', methods=['GET', 'POST'])
 def get_top_posts():
     session = Session()
     try:
