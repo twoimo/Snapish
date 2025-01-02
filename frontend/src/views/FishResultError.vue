@@ -118,6 +118,8 @@ const handleLogout = async () => {
 }
 
 .floating-image {
+    width: 350px;
+    height: 175px;
     animation: float 2.5s ease-in-out infinite;
 }
 
