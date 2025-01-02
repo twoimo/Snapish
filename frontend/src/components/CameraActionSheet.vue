@@ -28,10 +28,15 @@
         @change="onFileChange" />
     <input ref="galleryInput" type="file" accept="image/*" style="display: none;" @change="onFileChange" />
     <input ref="fileInput" type="file" accept="*/*" style="display: none;" @change="onFileChange" />
+
+    <!-- 로딩 오버레이 -->
+    <div v-if="isGlobalLoading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref , computed } from 'vue';
 import axios from '../axios'; // Ensure this is the correct path to your Axios instance
 import { useRouter } from 'vue-router';
 import store from '../store'; // Vuex store 임포트
@@ -57,6 +62,9 @@ const fileInput = ref(null);
 
 // 파일 업로드 용량 제한
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// 전역 로딩 상태 가져오기
+const isGlobalLoading = computed(() => store.getters.isGlobalLoading);
 
 // 옵션 목록
 const options = [
@@ -320,4 +328,32 @@ const handlePredictResponse = async (data) => {
     /* 버튼 간 간격 */
     margin-top: 0.5rem;
 }
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #3498db;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 </style>
