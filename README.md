@@ -29,9 +29,12 @@
 - 모델 파일:
   - [가중치 파일 다운로드](https://drive.google.com/file/d/1wPJOQI87bVANbdyzxKJHHB2N3zZvuqg9/view?usp=drive_link)
   - `models` 폴더 생성 후 `.pth` 파일 복사
-- 데이터 파일:
+- 물떼 및 낚시 정보 데이터 파일:
   - [데이터 파일 다운로드](https://drive.google.com/drive/folders/1XaJ8nUDu5BpJc9YafbfTWh_Y3_x5m1-5?usp=drive_link)
   - `data` 폴더 생성 후 `.json` 파일 복사
+- YOLO 전이학습을 위한 물고기 데이터셋:
+  - [학습 데이터 다운로드](https://drive.google.com/file/d/1g3iwH6v3763P5DkGyKcsn3KEYhde27rE/view?usp=drive_link)
+  - `data` 폴더에 압축 해제
 
 ### 서버 실행
 - Windows:
