@@ -2,6 +2,9 @@
 
 [![프로젝트 발표자료](https://github.com/SnapishAgent/Snapish/blob/main/public/presentation-preview.jpg)](https://github.com/SnapishAgent/Snapish/blob/main/public/2%EC%A1%B0%20%ED%8C%8C%EC%9D%B4%EB%84%90%20%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EB%B0%9C%ED%91%9C%EC%9E%90%EB%A3%8C.pdf)
 
+## 🔍 프로젝트 개요
+Snapish는 대한민국 1,000만 낚시인들을 위한 딥러닝 기반 금어종 판별 시스템입니다. 국립수산과학원의 [금어기·금지체장 정보](https://www.nifs.go.kr/contents/actionContentsCons0148.do)를 기반으로 개발되었으며, 낚시 종사자들의 법규 준수와 해양 생태계 보호를 지원합니다. 현재 17개 어종에 대해 88%의 탐지 정확도를 달성했으며, 사용자 참여형 데이터 수집을 통해 95% 이상의 정확도 달성을 목표로 하고 있습니다.
+
 ## 📌 프로젝트 정보
 - **기간**: 2024.12.03 ~ 2025.01.02 (평일 26일)
 - **인원**: 4인
@@ -10,9 +13,6 @@
   - 💻 백엔드 개발
   - 🎨 프론트엔드 개발
   - 📊 DB 설계 및 데이터 수집
-
-## 🔍 프로젝트 개요
-Snapish는 대한민국 1,000만 낚시인들을 위한 딥러닝 기반 금어종 판별 시스템입니다. 국립수산과학원의 [금어기·금지체장 정보](https://www.nifs.go.kr/contents/actionContentsCons0148.do)를 기반으로 개발되었으며, 낚시 종사자들의 법규 준수와 해양 생태계 보호를 지원합니다. 현재 17개 어종에 대해 88%의 탐지 정확도를 달성했으며, 사용자 참여형 데이터 수집을 통해 95% 이상의 정확도 달성을 목표로 하고 있습니다.
 
 ## 🐟 탐지 가능 어종
 
