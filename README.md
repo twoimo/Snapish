@@ -1,6 +1,6 @@
 # 낚시 입문자를 위한 금어종 판별 AI 웹 서비스
 
-<iframe src="./public/2조%20파이널%20프로젝트%20발표자료.pdf" width="100%" height="600px"></iframe>
+[![프로젝트 발표자료](./public/presentation-preview.png)](./public/2조%20파이널%20프로젝트%20발표자료.pdf)
 
 ## 1. 백엔드 설정
 ### 환경 설정
