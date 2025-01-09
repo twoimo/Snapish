@@ -1,6 +1,20 @@
 # 낚시 입문자를 위한 금어종 판별 AI 웹 서비스
 
-[![프로젝트 발표자료](./public/presentation-preview.png)](./public/2조%20파이널%20프로젝트%20발표자료.pdf)
+[![프로젝트 발표자료](https://github.com/SnapishAgent/Snapish/blob/main/public/presentation-preview.jpg)](https://github.com/SnapishAgent/Snapish/blob/main/public/2%EC%A1%B0%20%ED%8C%8C%EC%9D%B4%EB%84%90%20%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%EB%B0%9C%ED%91%9C%EC%9E%90%EB%A3%8C.pdf)
+
+## 기술 스택
+### AI/ML
+- **Object Detection**: Ultralytics YOLOv11
+- **Dataset Management**: Roboflow
+- **Image Generation**: OpenAI, Robobrush, ideogram
+
+### Backend
+- **Web Framework**: Flask `v3.1.0`
+- **Database**: MySQL Server `v8.0`
+
+### Frontend
+- **Runtime**: Node.js `v20.15.1`
+- **Framework**: Vue.js `v3.5.13`
 
 ## 1. 백엔드 설정
 ### 환경 설정
