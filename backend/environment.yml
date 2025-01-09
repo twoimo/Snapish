@@ -13,4 +13,11 @@ dependencies:
   - flask-cors
   - waitress
   - gdrive
-prefix: /opt/miniconda3/envs/snapish
+  - ultralytics
+  - pillow
+  - python-dotenv
+  - korean_lunar_calendar
+  - pymysql
+  - PyJWT
+  - openai
+prefix: /opt/anaconda3/envs/snapish
