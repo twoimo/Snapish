@@ -3,21 +3,23 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - numpy
-  - pandas
-  - scipy
-  - torchvision
-  - pytorch
-  - flask
-  - flask-sqlalchemy
-  - flask-cors
-  - waitress
-  - gdrive
-  - ultralytics
-  - pillow
-  - python-dotenv
-  - korean_lunar_calendar
-  - pymysql
-  - PyJWT
-  - openai
+  - python=3.12.3
+  - numpy=1.26.4
+  - pandas=2.2.3
+  - scipy=1.14.1
+  - torchvision=0.18.1
+  - pytorch=2.3.1
+  - flask=3.1.0
+  - flask-sqlalchemy=3.1.1
+  - flask-cors=5.0.0
+  - waitress=3.0.2
+  - gdrive=2.1.0
+  - ultralytics=8.3.40
+  - pillow=11.0.0
+  - python-dotenv=1.0.1
+  - korean_lunar_calendar=0.2.1
+  - pip:
+    - pymysql==1.1.1
+    - PyJWT==2.10.1
+    - openai==1.58.1
 prefix: /opt/anaconda3/envs/snapish
