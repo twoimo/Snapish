@@ -71,7 +71,7 @@ conda activate snapish
 
 - 📦 [AI 모델 가중치 파일](https://drive.google.com/file/d/1wPJOQI87bVANbdyzxKJHHB2N3zZvuqg9/view?usp=drive_link) → `/backend/models/`
 - 📍 [지역별 낚시터 메타데이터](https://drive.google.com/drive/folders/1XaJ8nUDu5BpJc9YafbfTWh_Y3_x5m1-5?usp=drive_link) → `/backend/data/`
-- 📊 [학습 데이터셋](https://drive.google.com/file/d/1g3iwH6v3763P5DkGyKcsn3KEYhde27rE/view?usp=drive_link) → `/backend/data/`
+- 📊 [학습 데이터셋](https://drive.google.com/drive/folders/17KH-xu6vKP_P100asU2G-P0ma_Pf8Zd5?usp=drive_link) → `/backend/data/`
 - 🔬 [모델 학습 프로세스](https://www.kaggle.com/code/twoimo/yolo11-fish-transfer-learning) → `/backend/`
 
 ### 3️⃣ 서비스 실행
